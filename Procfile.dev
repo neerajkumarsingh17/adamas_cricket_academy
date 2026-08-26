@@ -1,0 +1,4 @@
+web:      cd backend && .venv/bin/python manage.py runserver 0.0.0.0:8000
+worker:   cd backend && .venv/bin/celery -A config worker -l info
+beat:     cd backend && .venv/bin/celery -A config beat -l info
+frontend: cd frontend && npm run dev

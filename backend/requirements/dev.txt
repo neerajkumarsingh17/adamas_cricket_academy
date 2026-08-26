@@ -1,0 +1,13 @@
+-r base.txt
+
+honcho
+pytest
+pytest-django
+pytest-cov
+factory-boy
+django-extensions
+ruff
+mypy
+django-stubs
+djangorestframework-stubs
+pre-commit

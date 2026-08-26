@@ -1,0 +1,11 @@
+Django==5.1.*
+djangorestframework
+django-environ
+django-filter
+drf-spectacular
+djangorestframework-simplejwt
+psycopg[binary]
+celery
+redis
+django-storages[boto3]
+Pillow

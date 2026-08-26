@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+staticfiles/
+*.sqlite3
+celerybeat-schedule.db
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage

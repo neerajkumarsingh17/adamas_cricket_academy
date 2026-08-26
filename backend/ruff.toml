@@ -1,0 +1,12 @@
+target-version = "py312"
+line-length = 100
+
+[lint]
+select = ["E", "F", "I", "UP", "B", "DJ"]
+ignore = []
+
+[lint.isort]
+known-first-party = ["apps", "config"]
+
+[format]
+quote-style = "double"

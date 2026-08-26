@@ -1,0 +1,10 @@
+[run]
+source = apps
+omit =
+    */migrations/*
+    */tests/*
+    manage.py
+
+[report]
+fail_under = 75
+show_missing = true
