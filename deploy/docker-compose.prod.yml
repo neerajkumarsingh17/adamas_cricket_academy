@@ -1,0 +1,71 @@
+# Single-EC2-instance production stack.
+#
+# Postgres is NOT here — per the deploy guide, it's an existing RDS
+# instance in a different AWS account. Redis runs locally in this stack
+# (its own container) since nothing here needs it to survive an instance
+# replacement the way the database does.
+#
+# `backend/Dockerfile` was originally written for ECS Fargate (see its own
+# header comment) but is reused as-is here — it already builds the right
+# gunicorn image, nothing Fargate-specific is baked into it.
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+
+  web:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ../backend/.env
+    volumes:
+      - static:/app/staticfiles
+      - ../global-bundle.pem:/app/global-bundle.pem:ro
+    depends_on:
+      - redis
+    expose:
+      - "8000"
+
+  worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    command: celery -A config worker -l info
+    restart: unless-stopped
+    env_file: ../backend/.env
+    volumes:
+      - ../global-bundle.pem:/app/global-bundle.pem:ro
+    depends_on:
+      - redis
+
+  beat:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    command: celery -A config beat -l info
+    restart: unless-stopped
+    env_file: ../backend/.env
+    volumes:
+      - ../global-bundle.pem:/app/global-bundle.pem:ro
+    depends_on:
+      - redis
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - static:/static:ro
+      - ../frontend/dist:/frontend:ro
+    depends_on:
+      - web
+
+volumes:
+  redis-data:
+  static:

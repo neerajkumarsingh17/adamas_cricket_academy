@@ -5,6 +5,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    // Exposes the dev server on the LAN (e.g. http://<your-ip>:5173) so
+    // other devices on the same Wi-Fi can reach it, not just localhost.
+    host: true,
     proxy: {
       // Dev-only: avoids needing CORS headers from Django. Vite forwards
       // /api/* to the natively-running backend (see LOCAL-SETUP.md).

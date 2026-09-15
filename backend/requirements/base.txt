@@ -9,3 +9,5 @@ celery
 redis
 django-storages[boto3]
 Pillow
+reportlab
+qrcode

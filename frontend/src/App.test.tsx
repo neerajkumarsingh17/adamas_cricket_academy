@@ -1,11 +1,17 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import App from './App'
 
 describe('App', () => {
-  it('renders without crashing', () => {
+  afterEach(() => {
+    localStorage.clear()
+  })
+
+  it('shows the public landing page at /', async () => {
     render(<App />)
-    expect(screen.getByText(/ACA-OMS/)).toBeTruthy()
+    expect(
+      await screen.findByRole('link', { name: /sign in to your dashboard/i }),
+    ).toBeTruthy()
   })
 })

@@ -1,0 +1,56 @@
+/* Design tokens for the direct-admission wizard (Prompt E). Every colour
+   in this feature comes from one of these — no component hardcodes a hex
+   value. `--accent`/`--good` resolve to the same indigo/emerald already
+   used across the rest of the app (tailwind.config.js's `brand` alias,
+   Pill.tsx's "success" tone) so the wizard doesn't introduce a second,
+   disconnected palette.
+
+   --accent means "needs action" and nothing else. --good means complete.
+   Waiting is --ink-3 on --surface-2. There is no third status hue. */
+
+:root {
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --ink: #111827;
+  --ink-2: #4b5563;
+  --ink-3: #9ca3af;
+  --line: #e5e7eb;
+  --line-2: #d1d5db;
+
+  --accent: #4f46e5;
+  --accent-soft: #eef2ff;
+  --good: #059669;
+  --good-soft: #ecfdf5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surface: #1e293b;
+    --surface-2: #0f172a;
+    --ink: #f1f5f9;
+    --ink-2: #94a3b8;
+    --ink-3: #64748b;
+    --line: #334155;
+    --line-2: #475569;
+
+    --accent: #818cf8;
+    --accent-soft: rgba(129, 140, 248, 0.16);
+    --good: #34d399;
+    --good-soft: rgba(52, 211, 153, 0.16);
+  }
+}
+
+:root[data-theme="dark"] {
+  --surface: #1e293b;
+  --surface-2: #0f172a;
+  --ink: #f1f5f9;
+  --ink-2: #94a3b8;
+  --ink-3: #64748b;
+  --line: #334155;
+  --line-2: #475569;
+
+  --accent: #818cf8;
+  --accent-soft: rgba(129, 140, 248, 0.16);
+  --good: #34d399;
+  --good-soft: rgba(52, 211, 153, 0.16);
+}

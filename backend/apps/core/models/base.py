@@ -19,5 +19,10 @@ class AuditedModel(TimeStampedModel):
     capture and the write (CLAUDE.md rule 4). Adds no fields of its own.
     """
 
+    # Not a model field (no models.Field instance -> no column/migration) —
+    # a plain per-instance scratch attribute apps.audit.signals.
+    # capture_before() stashes the pre-save row on, so mypy knows about it.
+    _audit_before: dict | None = None
+
     class Meta:
         abstract = True

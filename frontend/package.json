@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "generate:api": "cd ../backend && .venv/bin/python manage.py spectacular --file /tmp/aca-oms-openapi.yml && cd ../frontend && openapi-typescript /tmp/aca-oms-openapi.yml -o src/api/types.gen.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
@@ -16,6 +17,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.86.0",
+    "react-router-dom": "^6.30.6",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -30,6 +32,7 @@
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.11.0",
     "jsdom": "^26.1.0",
+    "openapi-typescript": "^7.13.0",
     "postcss": "^8.5.26",
     "tailwindcss": "^3.4.19",
     "typescript": "~5.6.2",

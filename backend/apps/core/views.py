@@ -1,11 +1,54 @@
+from typing import Protocol, cast
+
 import redis
 from django.conf import settings
 from django.db import connections
 from django.db.utils import OperationalError
-from rest_framework import viewsets
+from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
+from rest_framework import generics, viewsets
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .models import (
+    AgeCategory,
+    ApprovalRequest,
+    AssessmentCriterion,
+    DocumentType,
+    EnquirySource,
+    Programme,
+    Season,
+    TrainingType,
+    Venue,
+)
+from .serializers import (
+    AgeCategorySerializer,
+    ApprovalDecisionSerializer,
+    ApprovalRequestSerializer,
+    AssessmentCriterionSerializer,
+    DashboardSerializer,
+    DocumentTypeSerializer,
+    EnquirySourceSerializer,
+    ProgrammeSerializer,
+    SeasonSerializer,
+    TrainingTypeSerializer,
+    VenueSerializer,
+)
+from .services import approvals, dashboards
+
+
+class _PermissionCheckable(Protocol):
+    """The slice of apps.iam.User this module needs — a Protocol, not an
+    import, so apps/core still imports nothing from apps/ (docs/00-project
+    -structure.md). Structural typing lets mypy check callers without core
+    knowing the concrete User class exists.
+    """
+
+    def has_perm_for(self, module: str, verb: str) -> bool: ...
+    def scope_for(self, module: str, verb: str) -> str | None: ...
 
 
 class ModuleScopedViewSet(viewsets.ModelViewSet):
@@ -15,14 +58,16 @@ class ModuleScopedViewSet(viewsets.ModelViewSet):
             module = "enquiry"
 
     Maps the HTTP method to a permission verb (GET->view, POST->add,
-    PUT/PATCH->edit, DELETE->edit). A custom @action declares its own verb
-    explicitly, which DRF's router passes through as an init kwarg:
+    PUT/PATCH->edit, DELETE->edit), checks it via request.user.has_perm_for,
+    and — for roles whose widest scope on this module+verb is "own" —
+    filters the queryset via filter_to_own(), which subclasses must
+    implement (docs/03-rbac.md rule 3: enforced at the queryset level).
+
+    A custom @action declares its own verb explicitly, which DRF's router
+    passes through as an init kwarg:
 
         @action(detail=True, methods=["post"], verb="approve")
         def approve(self, request, pk=None): ...
-
-    The permission check itself is a TODO stub until apps.iam exists
-    (T-104) — see docs/06-conventions.md, the Permissions section.
     """
 
     module: str = ""
@@ -43,9 +88,143 @@ class ModuleScopedViewSet(viewsets.ModelViewSet):
 
     def check_permissions(self, request):
         super().check_permissions(request)
-        # TODO(T-104): once apps.iam exists —
-        #   if not request.user.has_perm_for(self.module, self.get_required_verb()):
-        #       self.permission_denied(request)
+        user = cast(_PermissionCheckable, request.user)
+        if not user.has_perm_for(self.module, self.get_required_verb()):
+            self.permission_denied(request)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = cast(_PermissionCheckable, self.request.user)
+        if user.scope_for(self.module, self.get_required_verb()) == "own":
+            queryset = self.filter_to_own(queryset)
+        return queryset
+
+    def filter_to_own(self, queryset):
+        """Restrict `queryset` to rows belonging to the current user.
+        "Belonging to" means something different per model (Enquiry.owner,
+        a student's own record via Person, ...), so every module ViewSet
+        whose module has a scope="own" role must implement this.
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__} must implement filter_to_own() to support scope='own'"
+        )
+
+
+class ProgrammeViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only for now — docs/03-rbac.md has no "master" module row, so
+    a permission-gated write endpoint isn't safely buildable without
+    inventing RBAC policy (same gap as "idcard": flagged, not guessed at).
+    Write access is Django admin only until that row exists. Any
+    authenticated user can read master data — it's reference data nearly
+    every role needs, not something to gate per-module.
+    """
+
+    queryset = Programme.objects.all()
+    serializer_class = ProgrammeSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class AgeCategoryViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = AgeCategory.objects.all()
+    serializer_class = AgeCategorySerializer
+    permission_classes = [IsAuthenticated]
+
+
+class VenueViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Venue.objects.all()
+    serializer_class = VenueSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class SeasonViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Season.objects.all()
+    serializer_class = SeasonSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class EnquirySourceViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = EnquirySource.objects.all()
+    serializer_class = EnquirySourceSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class TrainingTypeViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = TrainingType.objects.all()
+    serializer_class = TrainingTypeSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class DocumentTypeViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = DocumentType.objects.all()
+    serializer_class = DocumentTypeSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class AssessmentCriterionViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = AssessmentCriterion.objects.all()
+    serializer_class = AssessmentCriterionSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class ApprovalListView(generics.ListAPIView):
+    """GET /approvals — docs/02-api-spec.md: returns only requests this
+    user may decide. Not a ModuleScopedViewSet: the module to check varies
+    per row (it's on each request's rule), not fixed for the whole view.
+    """
+
+    serializer_class = ApprovalRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return approvals.decidable_by(self.request.user)
+
+
+class _ApprovalDecisionView(APIView):
+    permission_classes = [IsAuthenticated]
+    approve: bool
+
+    def post(self, request, pk=None):
+        approval_request = get_object_or_404(ApprovalRequest, pk=pk)
+        serializer = ApprovalDecisionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        approvals.decide(
+            approval_request,
+            request.user,
+            approve=self.approve,
+            reason=serializer.validated_data["reason"],
+        )
+        return Response(ApprovalRequestSerializer(approval_request).data)
+
+
+class ApprovalApproveView(_ApprovalDecisionView):
+    approve = True
+
+
+class ApprovalRejectView(_ApprovalDecisionView):
+    approve = False
+
+
+class DashboardMeView(APIView):
+    """GET /api/v1/dashboards/me — the dashboard for the CALLING user's
+    role. No role parameter exists anywhere on this endpoint: the client
+    cannot ask for another role's payload by changing anything in the
+    request, because the role is resolved server-side from request.user.
+
+    Not a ModuleScopedViewSet: docs/03-rbac.md has no "dashboard" module
+    row (same documented gap as "idcard" and "master") — IsAuthenticated
+    only, same precedent as the master-data ViewSets above.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(responses=DashboardSerializer)
+    def get(self, request):
+        try:
+            payload = dashboards.build_dashboard(request.user)
+        except dashboards.NoDashboardForRole:
+            raise NotFound("No dashboard is available for your role.") from None
+        return Response(payload)
 
 
 def _database_ok() -> bool:

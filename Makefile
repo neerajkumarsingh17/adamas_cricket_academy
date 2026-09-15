@@ -8,7 +8,8 @@ migrate:
 
 seed:
 	cd backend && .venv/bin/python manage.py seed_roles && \
-	  .venv/bin/python manage.py seed_master_data
+	  .venv/bin/python manage.py seed_master_data && \
+	  .venv/bin/python manage.py seed_direct_admission_masters
 
 test:
 	cd backend && .venv/bin/pytest -q

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -26,12 +27,14 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "django_filters",
     "drf_spectacular",
 ]
 
-# The custom User model lives in apps.iam (docs/01-data-model.md section 1) and
-# is not built until T-102. AUTH_USER_MODEL stays at Django's default until then.
+AUTH_USER_MODEL = "iam.User"
+
 LOCAL_APPS = [
     "apps.core",
     "apps.iam",
@@ -44,6 +47,8 @@ LOCAL_APPS = [
     "apps.admissions.parent",
     "apps.admissions.document",
     "apps.admissions.idcard",
+    "apps.finance.fee",
+    "apps.finance.payment",
     "apps.engagement.communication",
 ]
 
@@ -51,6 +56,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "apps.core.middleware.RequestIDMiddleware",
+    "apps.audit.middleware.CurrentRequestMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -118,6 +124,15 @@ AWS_QUERYSTRING_EXPIRE = 300
 AWS_S3_FILE_OVERWRITE = False
 AWS_S3_SIGNATURE_VERSION = "s3v4"
 
+# docs/07-storage.md assumes one bucket per environment
+# (aca-oms-{dev|staging|prod}); this project instead shares one real
+# bucket across environments, so every S3 key apps.admissions.document
+# generates is namespaced under this prefix instead — same isolation,
+# folder-based rather than bucket-based. Blank by default (nothing to
+# namespace against once an environment has its own bucket);
+# config/settings/dev.py sets its own default for the shared-bucket case.
+AWS_S3_KEY_PREFIX = env("AWS_S3_KEY_PREFIX", default="")
+
 STORAGES = {
     "default": {
         "BACKEND": "storages.backends.s3.S3Storage",
@@ -130,6 +145,9 @@ STORAGES = {
 NOTIFICATION_BACKEND = env("NOTIFICATION_BACKEND", default="console")
 
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
@@ -139,11 +157,33 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "apps.core.pagination.DefaultCursorPagination",
     "EXCEPTION_HANDLER": "apps.core.exceptions.exception_handler",
+    "DEFAULT_THROTTLE_RATES": {
+        # docs/02-api-spec.md: "public, rate-limited, captcha" for the
+        # website enquiry widget. No rate is specified in the docs —
+        # 10/hour per IP is a conservative starting point against scripted
+        # abuse, tunable without a code change once real traffic is seen.
+        "public_enquiry": "10/hour",
+    },
+}
+
+SIMPLE_JWT = {
+    # "Short-lived access, rotating refresh, old refresh blacklisted on
+    # use" — docs/02-api-spec.md, Auth section.
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    # last_login_at (docs/01-data-model.md section 1) is updated explicitly
+    # in apps.iam views instead, since OTP login doesn't go through
+    # simplejwt's own TokenObtainPairView at all.
+    "UPDATE_LAST_LOGIN": False,
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
 }
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "ACA-OMS API",
     "DESCRIPTION": "Adamas Cricket Academy Operations & Athlete Management System",
     "VERSION": "1.0.0",
-    "SERVE_INCLUDE_SCHEMA": False,
+    "SERVE_INCLUDE_SCHEMA": True,
 }

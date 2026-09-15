@@ -6,3 +6,6 @@ class AuditConfig(AppConfig):
     name = "apps.audit"
     label = "audit"
     verbose_name = "Audit"
+
+    def ready(self):
+        from . import signals  # noqa: F401  — registers the pre/post-save receivers

@@ -22,6 +22,9 @@ Error envelope on every non-2xx:
 | POST | `/auth/logout` | any | Blacklists the refresh token |
 | GET | `/auth/me` | any | User, person, roles, and the flattened permission set |
 
+Dev-only (LOCAL-SETUP.md): setting `DEV_STATIC_OTP` in `.env` makes `/auth/otp/request` issue
+that fixed code for every mobile number instead of a random one — never set in staging/prod.
+
 ## IAM
 
 | Method | Path | M / V | Notes |
@@ -48,7 +51,7 @@ No POST, PATCH or DELETE on individual log rows. Ever.
 |---|---|---|---|
 | POST | `/documents/presign` | `documents` / add | `{document_type, owner_type, owner_id, filename, mime}` → S3 presigned PUT |
 | POST | `/documents/confirm` | `documents` / add | Confirms the upload, sets `submitted` |
-| GET | `/documents` | `documents` / view | Scoped: a parent sees only their children's |
+| GET | `/documents` | `documents` / view | Scoped: a parent sees only their children's. `?status=`, `?document_type=`, `?owner_object_id=` narrow the list — the parent portal's child detail page uses the last one so a multi-child parent doesn't see every child's documents mixed together |
 | PATCH | `/documents/{id}/verify` | `documents` / approve | |
 | PATCH | `/documents/{id}/reject` | `documents` / approve | `rejection_reason` required |
 | GET | `/documents/{id}/download` | `documents` / view | Presigned GET, 5-minute expiry |
@@ -113,10 +116,16 @@ after reconnection cannot double-write.
 | GET PATCH | `/admissions/{id}` | `admission` / view, edit | |
 | GET | `/admissions/{id}/checklist` | `admission` / view | |
 | POST | `/admissions/{id}/advance` | `admission` / edit | `{to_step, reason?}`. Runs the guard. 409 on an invalid transition |
-| POST | `/admissions/{id}/record-payment` | `admission` / edit | Phase 1 stub: `{reference, amount}` or `{waiver_reason}` |
+| POST | `/admissions/{id}/record-payment` | `admission` / edit **or** the `accounts` role¹ | Phase 1 stub: `{reference, payment_method, amount}`, `{waiver_reason}`, or `{mark_unpaid: true}` to correct a mistaken entry. Collected via UPI/card/cash. Auto-advances `fee_pending → fee_cleared` itself (or the reverse, on `mark_unpaid`) — no separate `/advance` call needed |
 | POST | `/admissions/{id}/approve` | `admission` / approve | Creates `Student`, issues `student_code` |
 | POST | `/admissions/{id}/reject` | `admission` / approve | `reason` required |
 | POST | `/admissions/direct` | `admission` / approve | Trial waiver path. `reason` required, raises an approval |
+
+¹ docs/04-state-machines.md section 1 names Accounts as permitted on `fee_pending → fee_cleared`
+alongside Administration, but docs/03-rbac.md's matrix gives Accounts only `view` on this module —
+one of the documented "rules that override the matrix" cases. Enforced in
+`AdmissionRecordPaymentView` directly (a plain `APIView`, not the `ModuleScopedViewSet` action
+every other admission endpoint uses), not via a `RolePermission` row.
 
 ## Students
 
@@ -129,6 +138,10 @@ after reconnection cannot double-write.
 | GET | `/students/{id}/status-history` | `students` / view | |
 | POST | `/students/re-admission` | `students` / add | `{person_id, programme}`. **Refuses** to create a second Person |
 | GET | `/students/export` | `students` / export | Async. Audited with the filter and row count |
+| GET | `/students/{id}/guardians` | `students` / edit | Management view of the Parent tab — a parent/student already sees their own via the composite profile |
+| POST | `/students/{id}/guardians` | `students` / edit | `{person_id}` **or** `{first_name, last_name, date_of_birth, gender, mobile, email}`, plus `{relationship, is_primary, is_emergency_contact, grant_portal_access}`. Resolves/creates the `Person` (never bypasses `resolve_person()`), gets-or-creates the `Guardian`, and — if `grant_portal_access` — provisions their OTP login with role `parent` |
+| DELETE | `/students/{id}/guardians/{guardian_link_id}` | `students` / edit | Removes the `StudentGuardian` mapping only — the `Guardian`/login are untouched (a sibling may still need them) |
+| POST | `/students/{id}/login-access` | `students` / edit | `{mobile?}`. Provisions the student's own OTP login (role `student`). Not automatic on approval — see docs/04-state-machines.md's note on the guardian-mobile collision this avoids |
 
 ## ID cards
 

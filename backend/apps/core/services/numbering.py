@@ -25,6 +25,7 @@ SERIES_FORMATS: dict[str, _SeriesConfig] = {
     "TRL": _SeriesConfig("core_numbering_trl_seq", 5),
     "ADM": _SeriesConfig("core_numbering_adm_seq", 5),
     "ACA": _SeriesConfig("core_numbering_aca_seq", 4),
+    "RCP": _SeriesConfig("core_numbering_rcp_seq", 5),
 }
 
 

@@ -260,7 +260,7 @@ ApprovalRequest null, `fee_payment_reference`, `fee_payment_status`, `approved_b
 | Field | Type | Notes |
 |---|---|---|
 | `student_code` | CharField, unique | generated |
-| `person` | O2O Person | **reused** on re-admission |
+| `person` | **FK** Person | **reused** on re-admission — see note below |
 | `admission` | FK Admission | the admission that created this enrolment |
 | `admission_date` | DateField | |
 | `programme` | FK Programme | |
@@ -270,6 +270,13 @@ ApprovalRequest null, `fee_payment_reference`, `fee_payment_status`, `approved_b
 
 `StudentStatusHistory`: `student` FK, `from_status`, `to_status`, `reason` (required),
 `changed_by` FK User, `approval` FK ApprovalRequest null, `changed_at`.
+
+**Correction (Phase 1 build):** `person` was originally specified as O2O above. That
+contradicts section 5 of `docs/04-state-machines.md`, which requires re-admission to create a
+**new** `Student` row against the **same** `Person` while the prior row is retained — impossible
+under a database-level one-to-one. Changed to a plain FK so a `Person` can accumulate more than
+one `Student` row over a lifetime (one per admission), which is the behaviour SOP §67 actually
+describes.
 
 ### IDCard
 `student` FK, `card_no` unique, `issued_on`, `valid_until`, `qr_payload` (signed token,

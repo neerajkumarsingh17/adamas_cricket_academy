@@ -113,6 +113,12 @@ AWS_S3_ENDPOINT_URL=http://localhost:9000
 AWS_S3_REGION_NAME=ap-south-1
 
 NOTIFICATION_BACKEND=console          # prints instead of sending
+
+# Optional. When set, every OTP request (any mobile, any role) returns this
+# code instead of a random one — no more fishing the real code out of the
+# console log when testing several accounts. config/settings/dev.py only;
+# never set this in staging/prod .env.
+DEV_STATIC_OTP=765432
 ```
 
 `AWS_S3_ENDPOINT_URL` is the only setting that differs from production. Leave it unset in

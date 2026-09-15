@@ -8,5 +8,10 @@ ignore = []
 [lint.isort]
 known-first-party = ["apps", "config"]
 
+[lint.per-file-ignores]
+# Machine-generated. Long lines come from Django's own field help_text
+# (e.g. PermissionsMixin) and long choices lists, not code we wrote.
+"*/migrations/*.py" = ["E501"]
+
 [format]
 quote-style = "double"
