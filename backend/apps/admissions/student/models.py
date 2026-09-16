@@ -57,8 +57,11 @@ class Student(AuditedModel):
         Programme, on_delete=models.PROTECT, null=True, blank=True, related_name="students"
     )
     residential = models.BooleanField(default=False)
+    # Filtered directly by StudentFilter, counted in every dashboard's
+    # active_students tile (apps.core.services.dashboards), and scanned by
+    # student.services.re_admit's withdrawn-record lookup.
     status = models.CharField(
-        max_length=20, choices=StudentStatus.choices, default=StudentStatus.ACTIVE
+        max_length=20, choices=StudentStatus.choices, default=StudentStatus.ACTIVE, db_index=True
     )
     withdrawn_on = models.DateField(null=True, blank=True)
     completed_on = models.DateField(null=True, blank=True)

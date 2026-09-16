@@ -82,8 +82,12 @@ class Enquiry(AuditedModel):
     source = models.ForeignKey(EnquirySource, on_delete=models.PROTECT, related_name="enquiries")
     referred_by = models.CharField(max_length=200, blank=True)
 
+    # Filtered directly by EnquiryFilter (docs/02-api-spec.md's "Filters:
+    # status, source, owner, from, to, search") on every pipeline board
+    # load, and joined through from EnquiryFollowUp's overdue-followup
+    # dashboard query (apps.core.services.dashboards).
     status = models.CharField(
-        max_length=20, choices=EnquiryStatus.choices, default=EnquiryStatus.NEW
+        max_length=20, choices=EnquiryStatus.choices, default=EnquiryStatus.NEW, db_index=True
     )
     remarks = models.TextField(blank=True)
 

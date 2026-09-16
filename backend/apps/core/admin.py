@@ -5,8 +5,10 @@ from .models import (
     ApprovalRequest,
     ApprovalRule,
     AssessmentCriterion,
+    ConsentType,
     DocumentType,
     EnquirySource,
+    FeeHead,
     Programme,
     Season,
     TrainingType,
@@ -61,6 +63,20 @@ class DocumentTypeAdmin(admin.ModelAdmin):
     list_display = ["name", "code", "applies_to", "is_mandatory_default", "has_expiry"]
     list_filter = ["applies_to", "is_mandatory_default", "has_expiry"]
     search_fields = ["code", "name"]
+
+
+@admin.register(FeeHead)
+class FeeHeadAdmin(admin.ModelAdmin):
+    list_display = ["label", "code", "applies_to", "is_mandatory", "display_order", "is_active"]
+    list_filter = ["applies_to", "is_mandatory", "is_active"]
+    search_fields = ["code", "label"]
+
+
+@admin.register(ConsentType)
+class ConsentTypeAdmin(admin.ModelAdmin):
+    list_display = ["label", "code", "version", "is_mandatory", "is_active"]
+    list_filter = ["is_mandatory", "is_active"]
+    search_fields = ["code", "label"]
 
 
 @admin.register(AssessmentCriterion)

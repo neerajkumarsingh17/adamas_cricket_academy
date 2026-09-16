@@ -97,7 +97,10 @@ class TrialResult(AuditedModel):
     registration = models.OneToOneField(
         TrialRegistration, on_delete=models.CASCADE, related_name="result"
     )
-    outcome = models.CharField(max_length=20, choices=TrialOutcome.choices)
+    # Filtered directly by TrialRegistrationFilter's outcome= param
+    # (docs/02-api-spec.md's "Filters: slot, date, outcome") on every trial
+    # results listing.
+    outcome = models.CharField(max_length=20, choices=TrialOutcome.choices, db_index=True)
     declared_by = models.ForeignKey(
         "iam.User", on_delete=models.PROTECT, null=True, blank=True, related_name="+"
     )

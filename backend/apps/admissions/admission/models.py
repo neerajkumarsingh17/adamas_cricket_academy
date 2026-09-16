@@ -94,8 +94,12 @@ class Admission(AuditedModel):
         Programme, on_delete=models.PROTECT, null=True, blank=True, related_name="admissions"
     )
     residential = models.BooleanField(default=False)
+    # Filtered directly by AdmissionFilter on the admission pipeline
+    # listing, excluded-from on the "in progress" queue
+    # (AdmissionViewSet's next_actions view), and aggregated over in
+    # apps.core.services.dashboards' Count(filter=Q(step=...)).
     step = models.CharField(
-        max_length=20, choices=AdmissionStep.choices, default=AdmissionStep.DRAFT
+        max_length=20, choices=AdmissionStep.choices, default=AdmissionStep.DRAFT, db_index=True
     )
 
     # Renamed from `trial_waiver_reason` — there is no trial to waive on a

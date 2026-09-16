@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Student, StudentStatusHistory
+from .models import Student, StudentProfile, StudentStatusHistory
 
 
 class StudentStatusHistoryInline(admin.TabularInline):
@@ -25,3 +25,10 @@ class StudentStatusHistoryAdmin(admin.ModelAdmin):
     list_filter = ["to_status"]
     search_fields = ["student__student_code"]
     autocomplete_fields = ["student", "changed_by"]
+
+
+@admin.register(StudentProfile)
+class StudentProfileAdmin(admin.ModelAdmin):
+    list_display = ["student", "school_name", "class_or_course", "playing_experience_years"]
+    search_fields = ["student__student_code", "school_name"]
+    autocomplete_fields = ["student"]

@@ -37,8 +37,13 @@ class Document(AuditedModel):
     mime_type = models.CharField(max_length=100)
     size_bytes = models.PositiveBigIntegerField()
 
+    # Filtered directly by DocumentFilter — the verification queue lists
+    # status='submitted' on every load — and by
+    # apps.core.services.dashboards' pending-verification counts and
+    # apps.admissions.admission.state's documents_verified/documents_rejected
+    # checklist guards.
     status = models.CharField(
-        max_length=20, choices=DocumentStatus.choices, default=DocumentStatus.PENDING
+        max_length=20, choices=DocumentStatus.choices, default=DocumentStatus.PENDING, db_index=True
     )
     verified_by = models.ForeignKey(
         "iam.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
