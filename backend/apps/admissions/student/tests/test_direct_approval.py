@@ -9,7 +9,12 @@ from apps.admissions.document.models import DocumentStatus
 from apps.admissions.document.tests.factories import DocumentFactory
 from apps.admissions.student import services
 from apps.core.models import DocumentRequiredStage
-from apps.core.tests.factories import ConsentTypeFactory, DocumentTypeFactory, FeeHeadFactory
+from apps.core.tests.factories import (
+    ConsentTypeFactory,
+    DocumentTypeFactory,
+    FeeHeadFactory,
+    PaymentTypeFactory,
+)
 from apps.finance.fee.tests.factories import AdmissionFeeLineFactory
 from apps.iam.tests.factories import UserFactory
 from apps.people.models import Relationship
@@ -17,6 +22,10 @@ from apps.people.tests.factories import PersonFactory
 
 
 def _ready_for_approval_admission(*, full_name: str, date_of_birth, guardian_mobile: str):
+    # approve_admission() mirrors the verified AdmissionPayment into the
+    # unified ledger (apps.finance.payment.services.admission_fee_paid),
+    # which looks this code up by name — must exist before approval runs.
+    PaymentTypeFactory(code="admission_fee", label="Admission Fee", is_recurring=False)
     admission = DirectAdmissionFactory()
     AdmissionIntakeFactory(
         admission=admission,

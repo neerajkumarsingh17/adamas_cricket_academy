@@ -230,3 +230,39 @@ class StudentProfileWriteSerializer(serializers.ModelSerializer):
             "past_injuries",
             "family_doctor_contact",
         ]
+
+
+class StudentAccommodationSerializer(serializers.ModelSerializer):
+    """GET /students/{id}/accommodation/ — read shape, own module
+    (`residential`) from `students`/`student_profile` for the same reason
+    StudentProfileViewSet's docstring gives: a Coach holds `students:view`
+    but docs/03-rbac.md's Residential / Transport row gives Coach no
+    access to this at all, so this can't be folded into StudentSerializer
+    (visible to anyone who can see a Student at all) without leaking past
+    that boundary.
+    """
+
+    building_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Student
+        fields = ["id", "residential", "building", "building_name", "room_number"]
+        read_only_fields = fields
+
+    def get_building_name(self, obj) -> str | None:
+        return obj.building.name if obj.building_id else None
+
+
+class StudentAccommodationWriteSerializer(serializers.Serializer):
+    """PATCH /students/{id}/accommodation/ body — Hostel/Admin only
+    (enforced by the `residential:edit` grant itself, not scope logic:
+    Student/Parent hold own-scope `view` only on this module, so they
+    never reach this action). Plain Serializer, not a ModelSerializer,
+    since `building` needs to resolve from id to instance in the view
+    (services.update_accommodation expects a real Building instance or
+    None), same convention as apps.academics.attendance.serializers'
+    TrainingSessionUpdateSerializer.
+    """
+
+    building = serializers.UUIDField(required=False, allow_null=True)
+    room_number = serializers.CharField(required=False, allow_blank=True, max_length=20)

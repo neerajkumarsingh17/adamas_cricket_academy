@@ -40,6 +40,18 @@ const STATUS_TONES: Record<string, keyof typeof TONE_CLASSES> = {
   expired: 'danger',
   replaced: 'neutral',
   lost_card: 'danger',
+  confirmed: 'info',
+  settled: 'success',
+  void: 'danger',
+  // Batch roster fee status (apps.academics.batch's fee_status field).
+  paid: 'success',
+  due: 'warning',
+  // TrainingSession status — derived client-side (is_conducted +
+  // cancel_reason have no single status field of their own), see
+  // features/batch/api/batch.ts's sessionStatusLabel.
+  conducted: 'success',
+  cancelled: 'danger',
+  scheduled: 'info',
 }
 
 export function Pill({ label, tone }: { label: string; tone?: keyof typeof TONE_CLASSES }) {

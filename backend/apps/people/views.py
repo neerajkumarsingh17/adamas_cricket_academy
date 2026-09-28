@@ -1,7 +1,8 @@
 from django.contrib.postgres.search import TrigramSimilarity
-from django.db.models import Value
+from django.db.models import Q, Value
 from django.db.models.functions import Concat, Lower
 from django.utils.dateparse import parse_date
+from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -65,3 +66,34 @@ class PersonSearchView(APIView):
                 "fuzzy": PersonSerializer(fuzzy, many=True).data,
             }
         )
+
+
+class PersonLookupView(APIView):
+    """GET /persons/lookup/?q= — a mobile-or-name substring lookup for
+    picking an *existing* Person, e.g. apps.finance.payment's record-
+    payment form. Deliberately separate from PersonSearchView above: that
+    endpoint's contract (name+DOB required, dedupe-oriented) is wrong for
+    "staff types a mobile number to find someone already in the system" —
+    changing its behaviour would risk the admission-intake duplicate-
+    check flows every intake form already depends on.
+
+    Gated on `payment:add` rather than `students:view` since this is
+    specifically for the payment-recording use case, not a general person
+    directory.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(responses=PersonSerializer(many=True))
+    def get(self, request):
+        if not request.user.has_perm_for("payment", "add"):
+            self.permission_denied(request)
+
+        q = request.query_params.get("q", "").strip()
+        if len(q) < 3:
+            return Response([])
+
+        matches = Person.objects.filter(
+            Q(mobile__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q)
+        )[:10]
+        return Response(PersonSerializer(matches, many=True).data)

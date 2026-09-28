@@ -51,6 +51,31 @@ def test_parent_sees_only_their_own_children(api_client, seeded_roles):
 
 
 @pytest.mark.django_db
+def test_parent_cannot_fetch_another_parents_childs_payments(api_client, seeded_roles):
+    """CLAUDE.md rule 6 — object-level authorisation: naming another
+    parent's child's id must 404, not 403, matching
+    test_parent_sees_only_their_own_children's own_detail/other_detail
+    pattern for the sibling endpoint.
+    """
+    parent = _parent_user()
+    guardian = GuardianFactory(person=parent.person)
+    own_child = StudentFactory()
+    StudentGuardianFactory(
+        student=own_child, guardian=guardian, relationship=PeopleRelationship.MOTHER
+    )
+    other_child = StudentFactory()
+
+    api_client.force_authenticate(parent)
+
+    own_payments = api_client.get(f"/api/v1/parents/me/children/{own_child.id}/payments/")
+    assert own_payments.status_code == 200
+    assert own_payments.data["history"] == []
+
+    other_payments = api_client.get(f"/api/v1/parents/me/children/{other_child.id}/payments/")
+    assert other_payments.status_code == 404
+
+
+@pytest.mark.django_db
 def test_portal_settings_are_created_on_first_access(api_client, seeded_roles):
     parent = _parent_user()
     GuardianFactory(person=parent.person)

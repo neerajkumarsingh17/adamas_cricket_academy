@@ -13,9 +13,9 @@ class StudentStatusHistoryInline(admin.TabularInline):
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
     list_display = ["student_code", "person", "programme", "status", "admission_date"]
-    list_filter = ["status", "programme", "residential"]
+    list_filter = ["status", "programme", "residential", "building"]
     search_fields = ["student_code", "person__first_name", "person__last_name"]
-    autocomplete_fields = ["person", "admission", "programme"]
+    autocomplete_fields = ["person", "admission", "programme", "building"]
     inlines = [StudentStatusHistoryInline]
 
 

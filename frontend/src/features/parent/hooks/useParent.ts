@@ -13,6 +13,14 @@ export function useMyChild(id: string | undefined) {
   })
 }
 
+export function useChildPayments(id: string | undefined) {
+  return useQuery({
+    queryKey: ['parent', 'children', id, 'payments'],
+    queryFn: () => parentApi.childPayments(id as string),
+    enabled: !!id,
+  })
+}
+
 export function useParentSettings() {
   return useQuery({ queryKey: ['parent', 'settings'], queryFn: parentApi.settings })
 }

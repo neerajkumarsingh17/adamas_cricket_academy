@@ -5,7 +5,24 @@ import { Card } from '../../../components/Card'
 import { Pill } from '../../../components/Pill'
 import { DocumentPreviewLink, DocumentUploader } from '../../document/components/DocumentUploader'
 import { useOwnerDocuments } from '../../document/hooks/useDocuments'
-import { useMyChild } from '../hooks/useParent'
+import { PaymentHistoryPanel } from '../../payment/components/PaymentHistoryPanel'
+import { useChildPayments, useMyChild } from '../hooks/useParent'
+
+function ChildPaymentsPanel({ studentId }: { studentId: string }) {
+  const { data, isPending, isError, error, refetch } = useChildPayments(studentId)
+  return (
+    <AsyncBoundary
+      isPending={isPending}
+      isError={isError}
+      error={error}
+      data={data}
+      onRetry={() => void refetch()}
+      skeleton={<RowSkeleton rows={3} />}
+    >
+      {(d) => <PaymentHistoryPanel data={d} />}
+    </AsyncBoundary>
+  )
+}
 
 function ChildDocumentsList({ studentId }: { studentId: string }) {
   const { data, isPending, isError, error, refetch } = useOwnerDocuments(studentId)
@@ -105,6 +122,11 @@ export function ParentChildDetailPage() {
               <Card className="mb-4">
                 <h3 className="mb-3 text-sm font-semibold text-gray-700">Documents</h3>
                 <ChildDocumentsList studentId={id as string} />
+              </Card>
+
+              <Card className="mb-4">
+                <h3 className="mb-3 text-sm font-semibold text-gray-700">Payments</h3>
+                <ChildPaymentsPanel studentId={id as string} />
               </Card>
 
               <Card>

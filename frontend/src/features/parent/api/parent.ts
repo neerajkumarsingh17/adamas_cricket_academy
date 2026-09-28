@@ -1,10 +1,17 @@
 import { request } from '../../../api/client'
+import type { PaymentHistoryResponse } from '../../payment/api/payment'
 import type { CompositeProfile, Student } from '../../student/api/student'
 
 export const parentApi = {
   children: () => request<Student[]>('/parents/me/children/'),
 
   child: (id: string) => request<CompositeProfile>(`/parents/me/children/${id}/`),
+
+  // GET /parents/me/children/{id}/payments/ — object-level authorisation
+  // via _own_children_queryset server-side (a parent can't reach another
+  // parent's child by changing this id), same as child() above.
+  childPayments: (id: string) =>
+    request<PaymentHistoryResponse>(`/parents/me/children/${id}/payments/`),
 
   settings: () =>
     request<{

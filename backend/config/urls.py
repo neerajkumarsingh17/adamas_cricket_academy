@@ -31,4 +31,7 @@ urlpatterns = [
     path("api/v1/", include("apps.admissions.document.urls")),
     path("api/v1/", include("apps.admissions.idcard.urls")),
     path("api/v1/", include("apps.admissions.parent.urls")),
+    path("api/v1/", include("apps.academics.batch.urls")),
+    path("api/v1/", include("apps.academics.attendance.urls")),
+    path("api/v1/", include("apps.finance.payment.urls")),
 ]

@@ -30,9 +30,18 @@ from django.utils import timezone
 
 from apps.core.models import AssessmentCriterion
 from apps.core.services import approvals
-from apps.core.services.dates import month_start, upcoming_weekend, week_start
+from apps.core.services.dates import (
+    last_n_months,
+    month_end,
+    month_start,
+    upcoming_weekend,
+    week_start,
+)
 
 if TYPE_CHECKING:
+    from apps.academics.batch.models import Batch as Batch
+    from apps.academics.batch.models import BatchEnrollment as BatchEnrollment
+    from apps.academics.batch.models import TrainingSession as TrainingSession
     from apps.admissions.admission.models import Admission as Admission
     from apps.admissions.document.models import Document as Document
     from apps.admissions.enquiry.models import Enquiry as Enquiry
@@ -45,6 +54,9 @@ if TYPE_CHECKING:
     from apps.admissions.trial.models import TrialSlot as TrialSlot
     from apps.people.models import StudentGuardian as StudentGuardian
 else:
+    Batch = django_apps.get_model("batch", "Batch")
+    BatchEnrollment = django_apps.get_model("batch", "BatchEnrollment")
+    TrainingSession = django_apps.get_model("batch", "TrainingSession")
     Admission = django_apps.get_model("admission", "Admission")
     Document = django_apps.get_model("document", "Document")
     Enquiry = django_apps.get_model("enquiry", "Enquiry")
@@ -56,6 +68,29 @@ else:
     TrialResult = django_apps.get_model("trial", "TrialResult")
     TrialSlot = django_apps.get_model("trial", "TrialSlot")
     StudentGuardian = django_apps.get_model("people", "StudentGuardian")
+
+
+def _attendance_trend(student, today) -> list[dict]:
+    """Last 6 months' attendance %, oldest first — attendance_percentage()
+    itself, called once per month, never re-derived here. Months with no
+    conducted sessions (None) are omitted rather than shown as 0 — "no
+    data" and "0% attendance" are different facts (see that function's own
+    docstring).
+    """
+    from apps.academics.attendance.services import attendance_percentage
+
+    trend = []
+    for month in last_n_months(today, 6):
+        pct = attendance_percentage(student, month_start(month), month_end(month))
+        if pct is not None:
+            trend.append({"label": month.strftime("%b %Y"), "value": float(pct)})
+    return trend
+
+
+def _current_month_pct(student, today):
+    from apps.academics.attendance.services import attendance_percentage
+
+    return attendance_percentage(student, month_start(today), month_end(today))
 
 
 class DashboardUser(Protocol):
@@ -631,6 +666,21 @@ def _student_dashboard(user: DashboardUser) -> dict:
     verified_count = sum(1 for d in documents if d.status == "verified")
     has_active_card = IDCard.objects.filter(student=student, status="active").exists()
 
+    today = timezone.localdate()
+    enrollment = (
+        BatchEnrollment.objects.select_related("batch")
+        .filter(student=student, is_active=True)
+        .first()
+    )
+    upcoming_sessions = (
+        TrainingSession.objects.filter(batch=enrollment.batch, date__gte=today).order_by("date")[
+            :5
+        ]
+        if enrollment
+        else []
+    )
+    month_pct = _current_month_pct(student, today)
+
     tiles = [
         _tile("status", "My status", student.status),
         _tile(
@@ -640,6 +690,12 @@ def _student_dashboard(user: DashboardUser) -> dict:
         ),
         _tile("documents_verified", "Documents verified", f"{verified_count}/{len(documents)}"),
         _tile("id_card", "ID card", "Issued" if has_active_card else "Not issued"),
+        _tile("my_batch", "My batch", enrollment.batch.name if enrollment else "Not enrolled"),
+        _tile(
+            "attendance",
+            "Attendance this month",
+            f"{month_pct}%" if month_pct is not None else "—",
+        ),
     ]
 
     cards = [
@@ -656,6 +712,30 @@ def _student_dashboard(user: DashboardUser) -> dict:
                 }
                 for d in documents
             ],
+        ),
+        _card(
+            "upcoming_sessions",
+            "Upcoming sessions",
+            None,
+            "list",
+            [
+                {
+                    "key": f"session-{s.id}",
+                    "label": s.date.strftime("%d-%m-%Y"),
+                    "detail": f"{s.start_time.strftime('%H:%M')}–{s.end_time.strftime('%H:%M')}",
+                }
+                for s in upcoming_sessions
+            ],
+        ),
+        _card(
+            "attendance_trend",
+            "Attendance — last 6 months",
+            None,
+            "bars",
+            # Not gated on an *active* enrollment — a student's past
+            # attendance under a since-ended enrolment is still real data
+            # attendance_percentage() should surface, not hide.
+            _attendance_trend(student, today),
         ),
     ]
     return {"tiles": tiles, "cards": cards, "student_id": str(student.id)}
@@ -682,6 +762,26 @@ def _parent_dashboard(user: DashboardUser) -> dict:
         [c for c in children if c.admission_id and c.admission.fee_payment_status != "paid"]
     )
     active_children = len([c for c in children if c.status == "active"])
+
+    today = timezone.localdate()
+    enrollments_by_child = {
+        e.student_id: e
+        for e in BatchEnrollment.objects.select_related("batch").filter(
+            student_id__in=[c.id for c in children], is_active=True
+        )
+    }
+    upcoming_sessions = []
+    for child in children:
+        enrollment = enrollments_by_child.get(child.id)
+        if enrollment is None:
+            continue
+        for s in TrainingSession.objects.filter(batch=enrollment.batch, date__gte=today).order_by(
+            "date"
+        )[:5]:
+            upcoming_sessions.append((s, child))
+    upcoming_sessions.sort(key=lambda pair: pair[0].date)
+    upcoming_sessions = upcoming_sessions[:8]
+    month_pct_by_child = {c.id: _current_month_pct(c, today) for c in children}
 
     tiles = [
         _tile("my_children", "My children", len(children)),
@@ -720,6 +820,52 @@ def _parent_dashboard(user: DashboardUser) -> dict:
                     "href": f"/parent/children/{d.owner_object_id}",
                 }
                 for d in docs_pending.select_related("document_type")
+            ],
+        ),
+        _card(
+            "children_attendance",
+            "Attendance",
+            None,
+            "table",
+            [
+                {
+                    "child": _person_name(c.person),
+                    "batch": enrollments_by_child[c.id].batch.name
+                    if c.id in enrollments_by_child
+                    else "Not enrolled",
+                    "attendance_this_month": (
+                        f"{month_pct_by_child[c.id]}%"
+                        if month_pct_by_child[c.id] is not None
+                        else "—"
+                    ),
+                    "href": f"/parent/children/{c.id}",
+                }
+                for c in children
+            ],
+        ),
+        _card(
+            "children_attendance_this_month",
+            "This month's attendance",
+            None,
+            "bars",
+            [
+                {"label": _person_name(c.person), "value": float(month_pct_by_child[c.id])}
+                for c in children
+                if month_pct_by_child[c.id] is not None
+            ],
+        ),
+        _card(
+            "upcoming_sessions",
+            "Upcoming sessions",
+            None,
+            "list",
+            [
+                {
+                    "key": f"session-{s.id}",
+                    "label": f"{_person_name(child.person)} — {s.date.strftime('%d-%m-%Y')}",
+                    "detail": f"{s.start_time.strftime('%H:%M')}–{s.end_time.strftime('%H:%M')}",
+                }
+                for s, child in upcoming_sessions
             ],
         ),
     ]

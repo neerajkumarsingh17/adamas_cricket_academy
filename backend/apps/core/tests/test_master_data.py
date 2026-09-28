@@ -6,6 +6,7 @@ from rest_framework.test import APIClient
 from apps.core.models import (
     AgeCategory,
     AssessmentCriterion,
+    Building,
     DocumentType,
     EnquirySource,
     Programme,
@@ -25,6 +26,7 @@ def test_seed_master_data_creates_expected_counts():
     # categories (under12/14/16/19/23, senior) — see ADMISSION_AGE_BRACKETS.
     assert AgeCategory.objects.count() == 16
     assert Venue.objects.count() == 2
+    assert Building.objects.count() == 2
     assert Season.objects.count() == 1
     assert EnquirySource.objects.count() == 9
     assert TrainingType.objects.count() == 5

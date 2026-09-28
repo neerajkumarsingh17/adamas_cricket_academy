@@ -15,6 +15,7 @@ from apps.core.models import (
     AgeCategory,
     ApprovalRule,
     AssessmentCriterion,
+    Building,
     DocumentType,
     EnquirySource,
     Programme,
@@ -52,6 +53,11 @@ ADMISSION_AGE_BRACKETS = [
 VENUES = [
     ("main_ground", "Main Ground"),
     ("indoor_nets", "Indoor Nets"),
+]
+
+BUILDINGS = [
+    ("hostel_a", "Hostel Block A"),
+    ("hostel_b", "Hostel Block B"),
 ]
 
 SEASONS = [
@@ -144,6 +150,7 @@ class Command(BaseCommand):
             },
         )
         counts["venues"] = self._seed(Venue, VENUES, lambda code, name: {"name": name})
+        counts["buildings"] = self._seed(Building, BUILDINGS, lambda code, name: {"name": name})
         counts["seasons"] = self._seed(
             Season,
             SEASONS,

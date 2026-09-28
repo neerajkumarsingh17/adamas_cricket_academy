@@ -5,6 +5,7 @@ calling user's own roles, never from a client-supplied parameter.
 import datetime
 
 import pytest
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from apps.admissions.admission.tests.factories import AdmissionFactory
@@ -84,8 +85,8 @@ EXPECTED_CARD_COUNT = {
     "head_coach": 4,
     "coach": 3,  # the brief lists only 3 cards for Coach
     "academy_head": 4,
-    "student": 1,
-    "parent": 2,
+    "student": 3,  # + upcoming_sessions, attendance_trend
+    "parent": 5,  # + children_attendance, children_attendance_this_month, upcoming_sessions
 }
 
 _SPECIAL_CASE_USERS = {
@@ -100,6 +101,8 @@ _EXPECTED_TILE_COUNTS = {
     # (nothing ever set trial_waiver_approval), and the field it queried
     # no longer exists post direct-admission redesign.
     "head_coach": 3,
+    # + my_batch, attendance (this month)
+    "student": 6,
 }
 
 
@@ -148,6 +151,62 @@ def test_academy_head_approval_tile_reflects_a_real_pending_request():
     tile = next(t for t in payload["tiles"] if t["key"] == "waiting_on_your_approval")
     assert tile["value"] == 1
     assert tile["urgent"] is True
+
+
+@pytest.mark.django_db
+def test_student_tiles_show_real_attendance_and_batch():
+    from apps.academics.attendance.tests.factories import AttendanceFactory
+    from apps.academics.batch.tests.factories import (
+        BatchEnrollmentFactory,
+        BatchFactory,
+        TrainingSessionFactory,
+    )
+
+    user = _user_with_role("student", person=PersonFactory())
+    student = StudentFactory(person=user.person)
+    batch = BatchFactory(name="U-14 Morning")
+    BatchEnrollmentFactory(student=student, batch=batch, is_active=True)
+
+    today = timezone.localdate()
+    session = TrainingSessionFactory(batch=batch, date=today, is_conducted=True)
+    AttendanceFactory(session=session, student=student, status="present")
+
+    payload = dashboards.build_dashboard(user)
+
+    batch_tile = next(t for t in payload["tiles"] if t["key"] == "my_batch")
+    assert batch_tile["value"] == "U-14 Morning"
+    attendance_tile = next(t for t in payload["tiles"] if t["key"] == "attendance")
+    assert attendance_tile["value"] == "100.00%"
+
+    trend_card = next(c for c in payload["cards"] if c["key"] == "attendance_trend")
+    assert trend_card["items"] == [{"label": today.strftime("%b %Y"), "value": 100.0}]
+
+
+@pytest.mark.django_db
+def test_parent_attendance_table_has_one_row_per_child():
+    from apps.academics.batch.tests.factories import BatchEnrollmentFactory, BatchFactory
+
+    user = _user_with_role("parent", person=PersonFactory())
+    guardian = GuardianFactory(person=user.person)
+    enrolled_child = StudentFactory()
+    unenrolled_child = StudentFactory()
+    StudentGuardianFactory(student=enrolled_child, guardian=guardian)
+    StudentGuardianFactory(student=unenrolled_child, guardian=guardian)
+    BatchEnrollmentFactory(
+        student=enrolled_child, batch=BatchFactory(name="U-16 Evening"), is_active=True
+    )
+
+    payload = dashboards.build_dashboard(user)
+
+    table = next(c for c in payload["cards"] if c["key"] == "children_attendance")
+    rows = {row["child"]: row for row in table["items"]}
+    assert len(rows) == 2
+    enrolled_row = rows[f"{enrolled_child.person.first_name} {enrolled_child.person.last_name}"]
+    assert enrolled_row["batch"] == "U-16 Evening"
+    unenrolled_row = rows[
+        f"{unenrolled_child.person.first_name} {unenrolled_child.person.last_name}"
+    ]
+    assert unenrolled_row["batch"] == "Not enrolled"
 
 
 @pytest.mark.django_db

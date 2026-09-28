@@ -9,6 +9,11 @@ import { AdmissionListPage } from './features/admission/pages/AdmissionListPage'
 import { MyAdmissionPage } from './features/admission/pages/MyAdmissionPage'
 import { DirectAdmission } from './features/admission/pages/DirectAdmission'
 import { ApprovalsQueuePage } from './features/approvals/pages/ApprovalsQueuePage'
+import { AttendanceReportPage } from './features/attendance/pages/AttendanceReportPage'
+import { CorrectionsQueuePage } from './features/attendance/pages/CorrectionsQueuePage'
+import { MarkAttendancePage } from './features/attendance/pages/MarkAttendancePage'
+import { BatchListPage } from './features/batch/pages/BatchListPage'
+import { BatchRosterPage } from './features/batch/pages/BatchRosterPage'
 import { HomePage } from './features/dashboard/pages/HomePage'
 import { DocumentVerificationQueuePage } from './features/document/pages/DocumentVerificationQueuePage'
 import { EnquiryDetailPage } from './features/enquiry/pages/EnquiryDetailPage'
@@ -19,7 +24,9 @@ import { IDCardListPage } from './features/idcard/pages/IDCardListPage'
 import { LandingPage } from './features/landing/pages/LandingPage'
 import { ParentChildDetailPage } from './features/parent/pages/ParentChildDetailPage'
 import { ParentChildrenPage } from './features/parent/pages/ParentChildrenPage'
+import { PaymentsPage } from './features/payment/pages/PaymentsPage'
 import { StudentListPage } from './features/student/pages/StudentListPage'
+import { MyPaymentsPage } from './features/student/pages/MyPaymentsPage'
 import { ProfileCompletion } from './features/student/pages/ProfileCompletion'
 import { StudentProfilePage } from './features/student/pages/StudentProfilePage'
 import { TrialAssessmentPage } from './features/trial/pages/TrialAssessmentPage'
@@ -64,13 +71,21 @@ function App() {
 
               <Route path="/approvals" element={<ApprovalsQueuePage />} />
               <Route path="/my-admission" element={<MyAdmissionPage />} />
+              <Route path="/my-payments" element={<MyPaymentsPage />} />
 
               <Route path="/students" element={<StudentListPage />} />
               <Route path="/students/:id" element={<StudentProfilePage />} />
               <Route path="/students/:id/profile-completion" element={<ProfileCompletion />} />
 
               <Route path="/documents" element={<DocumentVerificationQueuePage />} />
+              <Route path="/payments" element={<PaymentsPage />} />
               <Route path="/id-cards" element={<IDCardListPage />} />
+
+              <Route path="/batches" element={<BatchListPage />} />
+              <Route path="/batches/:id" element={<BatchRosterPage />} />
+              <Route path="/batches/:id/attendance-report" element={<AttendanceReportPage />} />
+              <Route path="/sessions/:sessionId/mark" element={<MarkAttendancePage />} />
+              <Route path="/attendance/corrections" element={<CorrectionsQueuePage />} />
 
               <Route path="/parent/children" element={<ParentChildrenPage />} />
               <Route path="/parent/children/:id" element={<ParentChildDetailPage />} />

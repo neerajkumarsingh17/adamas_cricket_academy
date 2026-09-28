@@ -17,8 +17,10 @@ from .models import (
     AgeCategory,
     ApprovalRequest,
     AssessmentCriterion,
+    Building,
     DocumentType,
     EnquirySource,
+    PaymentType,
     Programme,
     Season,
     TrainingType,
@@ -29,9 +31,11 @@ from .serializers import (
     ApprovalDecisionSerializer,
     ApprovalRequestSerializer,
     AssessmentCriterionSerializer,
+    BuildingSerializer,
     DashboardSerializer,
     DocumentTypeSerializer,
     EnquirySourceSerializer,
+    PaymentTypeSerializer,
     ProgrammeSerializer,
     SeasonSerializer,
     TrainingTypeSerializer,
@@ -72,6 +76,13 @@ class ModuleScopedViewSet(viewsets.ModelViewSet):
 
     module: str = ""
     verb: str | None = None
+    # Per-action module override — e.g. {"create": "batch_admin", "destroy":
+    # "batch_admin"} on a ViewSet whose write actions need a narrower role
+    # set than its own list/retrieve/custom-actions (docs/03-rbac.md's
+    # "split the row" pattern, applied at the action level instead of the
+    # whole-ViewSet level for the first time). Empty by default, so every
+    # existing ViewSet is unaffected.
+    action_modules: dict[str, str] = {}
 
     permission_classes = [IsAuthenticated]
 
@@ -86,16 +97,19 @@ class ModuleScopedViewSet(viewsets.ModelViewSet):
     def get_required_verb(self) -> str:
         return self.verb or self._METHOD_VERBS.get(self.request.method or "", "view")
 
+    def get_module(self) -> str:
+        return self.action_modules.get(self.action, self.module)
+
     def check_permissions(self, request):
         super().check_permissions(request)
         user = cast(_PermissionCheckable, request.user)
-        if not user.has_perm_for(self.module, self.get_required_verb()):
+        if not user.has_perm_for(self.get_module(), self.get_required_verb()):
             self.permission_denied(request)
 
     def get_queryset(self):
         queryset = super().get_queryset()
         user = cast(_PermissionCheckable, self.request.user)
-        if user.scope_for(self.module, self.get_required_verb()) == "own":
+        if user.scope_for(self.get_module(), self.get_required_verb()) == "own":
             queryset = self.filter_to_own(queryset)
         return queryset
 
@@ -136,6 +150,21 @@ class VenueViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
 
 
+class BuildingViewSet(viewsets.ReadOnlyModelViewSet):
+    """GET /master/buildings/ — populates the accommodation-assignment
+    form's building picker (apps.admissions.student's
+    StudentAccommodationViewSet). Read-only and ungated beyond
+    IsAuthenticated, same reasoning as VenueViewSet/ProgrammeViewSet
+    above: reference data, writable only through Django admin until a
+    real RBAC row exists for managing the building list itself (distinct
+    from `residential`, which governs *assigning* a student to one).
+    """
+
+    queryset = Building.objects.all()
+    serializer_class = BuildingSerializer
+    permission_classes = [IsAuthenticated]
+
+
 class SeasonViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Season.objects.all()
     serializer_class = SeasonSerializer
@@ -157,6 +186,12 @@ class TrainingTypeViewSet(viewsets.ReadOnlyModelViewSet):
 class DocumentTypeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DocumentType.objects.all()
     serializer_class = DocumentTypeSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class PaymentTypeViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = PaymentType.objects.all()
+    serializer_class = PaymentTypeSerializer
     permission_classes = [IsAuthenticated]
 
 

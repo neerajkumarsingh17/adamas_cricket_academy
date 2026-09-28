@@ -91,7 +91,35 @@ MATRIX: list[tuple[list[str], str]] = [
     # branch, the object-level check that keeps this to their *own*
     # admission rather than opening self-service uploads generally.
     (["documents"], "VX VAEPX VAE VAEP V - - - V - V - V OA OA V"),
-    (["batch", "training", "attendance"], "VX VAEPX VAE VAE - VAEP VAE VAE V V V - V O O V"),
+    # "training" dropped from this row's slug list — it was seeded
+    # alongside `batch` from the start but no ViewSet has ever used
+    # module="training" (confirmed by direct inspection); keeping it would
+    # have implied a second real module that doesn't exist.
+    (["batch"], "VX VAEPX VAE VAE - VAEP VAE VAE V V V - V O O V"),
+    # Split from `batch` on purpose: creating/editing/deleting the Batch
+    # record itself (docs/05-build-sequence.md's later batch-management
+    # prompt) needs a narrower role set than enrolling/transferring
+    # students, which the row above already grants broadly to Sports Ops,
+    # Coach and S&C. Only Administration, Academy Head and Head Coach get
+    # `A`/`E` here — `DELETE` also maps to verb "edit"
+    # (ModuleScopedViewSet._METHOD_VERBS), so no separate delete verb is
+    # needed. Everyone else keeps `V` for matrix completeness even though
+    # no endpoint checks batch_admin:view yet, same as any other
+    # not-yet-bold row in docs/03-rbac.md.
+    (["batch_admin"], "V VAEX V VAE - VAE V V V V V - V - - V"),
+    # Split from the bundled row above, same reasoning as `trial`'s own
+    # split (comment further up): approving an AttendanceCorrection was
+    # originally "Head Coach only" (SOP §70) — since extended to
+    # Administration and Academy Head too (both P now), matching the same
+    # dual/triple-role decision-maker precedent `payment`'s row already
+    # uses for settling a payment. Coach's cell is now `OAE` (own scope)
+    # instead of `VAE` (all scope) — a Coach only sees/marks/cancels
+    # attendance for sessions they are TrainingSession.coach on, enforced
+    # via SessionAttendanceViewSet/AttendanceViewSet/
+    # AttendanceCorrectionViewSet/BatchReportViewSet's filter_to_own.
+    # Administration/Academy Head/Head Coach/Sports Ops/S&C are unaffected
+    # (still `all` scope).
+    (["attendance"], "VX VAEPX VAE VAEP - VAEP OAE VAE V V V - V O O V"),
     (["fees"], "VX VAEPX V VAE VAEPX - - - - - V V - O O V"),
     # New for the fee-first direct-admission wizard: verifying a recorded
     # payment (Prompt D's /admissions/{id}/verify-payment/) is its own
@@ -101,7 +129,11 @@ MATRIX: list[tuple[list[str], str]] = [
     # (CLAUDE.md rule 3). Administration and Accounts both get `approve`,
     # matching the same dual-role precedent docs/04-state-machines.md
     # already documents for the trial chain's own fee_pending -> fee_cleared.
-    (["payment"], "V V - VAEP VAEP - - - - - - - - - - V"),
+    # `student`/`parent` gained own-scope `V` here for the unified payment
+    # ledger's portal view (GET /students/me/payments,
+    # /parents/me/children/{id}/payments/) — record/settle stay
+    # Administration+Accounts only, same as before.
+    (["payment"], "V V - VAEP VAEP - - - - - - - - O O V"),
     (["performance"], "VX VAEPX VAE V - VAEP VAE VAE V V - - V O O V"),
     (["coach_evaluation"], "VX VAEPX VAE V - VAE O - - - - - - - - V"),
     (["medical"], "V V - - - V - V VAEPX VAE V - - O O -"),

@@ -9,13 +9,16 @@ from apps.core.models import (
     ApprovalRule,
     AssessmentCriterion,
     AssessmentCriterionGroup,
+    Building,
     ConsentType,
     DocumentApplicability,
     DocumentType,
     EnquirySource,
     FeeHead,
+    PaymentType,
     Programme,
     Season,
+    TrainingType,
     Venue,
 )
 from apps.iam.tests.factories import RoleFactory, UserFactory
@@ -61,6 +64,16 @@ class FeeHeadFactory(DjangoModelFactory):
     is_mandatory = True
 
 
+class PaymentTypeFactory(DjangoModelFactory):
+    class Meta:
+        model = PaymentType
+        django_get_or_create = ("code",)
+
+    code = factory.Sequence(lambda n: f"payment-type-{n}")
+    label = factory.Sequence(lambda n: f"Payment Type {n}")
+    is_recurring = False
+
+
 class ConsentTypeFactory(DjangoModelFactory):
     class Meta:
         model = ConsentType
@@ -80,12 +93,28 @@ class VenueFactory(DjangoModelFactory):
     name = factory.Sequence(lambda n: f"Venue {n}")
 
 
+class BuildingFactory(DjangoModelFactory):
+    class Meta:
+        model = Building
+
+    code = factory.Sequence(lambda n: f"building-{n}")
+    name = factory.Sequence(lambda n: f"Building {n}")
+
+
 class EnquirySourceFactory(DjangoModelFactory):
     class Meta:
         model = EnquirySource
 
     code = factory.Sequence(lambda n: f"source-{n}")
     name = factory.Sequence(lambda n: f"Source {n}")
+
+
+class TrainingTypeFactory(DjangoModelFactory):
+    class Meta:
+        model = TrainingType
+
+    code = factory.Sequence(lambda n: f"training-type-{n}")
+    name = factory.Sequence(lambda n: f"Training Type {n}")
 
 
 class DocumentTypeFactory(DjangoModelFactory):

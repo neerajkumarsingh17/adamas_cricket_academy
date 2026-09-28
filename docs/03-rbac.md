@@ -19,9 +19,11 @@ may already view.
 | **Student Master Profile** | `students` | VX | VAEPX | VAE | VAE | V | V | V | V | V | V | V | V | V | O | O | V |
 | Student profile completion⁴ | `student_profile` | VX | VAEPX | VAE | VAE | V | V | V | V | V | V | V | V | V | OE | OE | V |
 | **Documents** | `documents` | VX | VAEPX | VAE | VAEP | V | - | - | - | V | - | V | - | V | O | OA | V |
-| Batch / Training / Attendance | `batch, training, attendance` | VX | VAEPX | VAE | VAE | - | VAEP | VAE | VAE | V | V | V | - | V | O | O | V |
+| Batch / Training | `batch` | VX | VAEPX | VAE | VAE | - | VAEP | VAE | VAE | V | V | V | - | V | O | O | V |
+| Batch management⁵ | `batch_admin` | V | VAEX | V | VAE | - | VAE | V | V | V | V | V | - | V | - | - | V |
+| Attendance⁴ | `attendance` | VX | VAEPX | VAE | VAEP | - | VAEP | **OAE** | VAE | V | V | V | - | V | O | O | V |
 | Fees / Payments / Discounts | `fees` | VX | VAEPX | V | VAE | VAEPX | - | - | - | - | - | V | V | - | O | O | V |
-| Direct-admission payment verification³ | `payment` | V | V | - | VAEP | VAEP | - | - | - | - | - | - | - | - | - | - | V |
+| Direct-admission payment verification / unified ledger³ | `payment` | V | V | - | VAEP | VAEP | - | - | - | - | - | - | - | - | O | O | V |
 | Performance & IDP | `performance` | VX | VAEPX | VAE | V | - | VAEP | VAE | VAE | V | V | - | - | V | O | O | V |
 | Coach Evaluation | `coach_evaluation` | VX | VAEPX | VAE | V | - | VAE | O | - | - | - | - | - | - | - | - | V |
 | Medical & Injury (confidential) | `medical` | V | V | - | - | - | V | - | V | VAEPX | VAE | V | - | - | O | O | - |
@@ -52,6 +54,51 @@ replaces the old trial-chain's hardcoded `"accounts" in held_roles` check on `re
 (`AdmissionRecordPaymentView`, still in place for that older endpoint) with real RBAC data, per
 CLAUDE.md rule 3. Administration and Accounts both get `approve`, the same dual-role precedent
 docs/04-state-machines.md already documents for the trial chain's own `fee_pending -> fee_cleared`.
+`student`/`parent` hold own-scope `V` only, for the unified payment ledger's portal view
+(`GET /students/me/payments/`, `GET /parents/me/children/{id}/payments/`) — recording and
+settling a payment stay Administration/Accounts-only.
+
+⁴ Split from the bundled `batch, training, attendance` row above for the same reason as ².
+`POST /corrections/{id}/approve/` (deciding an `AttendanceCorrection`) was originally Head Coach
+only per SOP §70 — since widened to Administration and Academy Head too (both now `P`), the
+same multi-role decision-maker precedent `payment`'s row already uses for settling a payment.
+`coach`'s cell is `OAE` (own scope), not `VAE` (all scope): a Coach only sees, marks or cancels
+attendance for sessions where they are `TrainingSession.coach` — enforced at the queryset level
+by `SessionAttendanceViewSet`/`AttendanceViewSet`/`AttendanceCorrectionViewSet`/
+`BatchReportViewSet`'s `filter_to_own`, same rule 3 as every other own-scope grant below.
+Administration, Academy Head, Head Coach and S&C are unaffected (still `all` scope).
+
+⁵ New — `batch` grants create/edit/delete broadly (Sports Ops, Coach, S&C all get `A`/`E`
+there too, for enrolling/transferring students), but only Administration, Academy Head and Head
+Coach may create, edit or delete the *Batch record itself*. Same "split the row" pattern as
+every other footnote here, applied per-action via `ModuleScopedViewSet.action_modules` rather
+than per-ViewSet — `BatchViewSet`'s `list`/`retrieve`/`enrol` still check `batch`, only
+`create`/`update`/`partial_update`/`destroy` check `batch_admin`. Edit and delete are further
+restricted in code (not data) to a batch that hasn't started yet (no `TrainingSession` with
+`date <= today`), and delete is refused outright if the batch has ever had an enrolment.
+`POST /sessions/{id}/delete/` (a hard delete of one `TrainingSession`, distinct from
+`.../cancel/`'s soft not-conducted flip) also checks `batch_admin` for the same reason — a bigger
+authority than the `attendance` module's own-scope Coach grant, which still covers
+`.../update-details/` (reschedule + edit training_type/objective/report on your own session),
+`.../cancel/`, `.../attendance/` (bulk mark) and `.../mark-conducted/` (flip `is_conducted` True —
+nothing else in the codebase ever does).
+Both `.../delete/` and a schedule-field change via `.../update-details/` are refused in code once
+the session started more than 24 hours ago or it already has attendance recorded — cancel it
+instead so the history survives; unlike `.../cancel/`/`.../attendance/`/`.../mark-conducted/`
+below, these two stay available for a session that **hasn't** started yet — rescheduling and
+deleting are exactly the tools for a session that hasn't happened, so only the upper bound
+applies to them. `.../cancel/`, `.../attendance/` and `.../mark-conducted/` share a *closed*
+24-hour window instead — not just an upper bound: refused both before the session's scheduled
+start (nothing to mark, confirm or cancel yet — `SessionNotYetStarted`, 409) and more than 24
+hours after it (`SessionWindowClosed`, 409). That window is not tied to `date <= today` on either
+side, so a session run late in the evening or logged the next morning isn't locked out, and a
+same-day session dated ahead of its actual start time is refused exactly like a future one.
+Unlike delete/reschedule, these three are never blocked by attendance already existing — that's
+the whole point of `.../cancel/` and `.../mark-conducted/`. Both boundaries are enforced in
+`apps.academics.attendance.services` itself, the same way `SessionNotEditable`'s own boundary
+always has been — they apply to *every* caller of all five actions regardless of role (own-scope
+Coach or an all-scope role alike), not just Coach; once a session's mark window is closed, only
+an `AttendanceCorrection` (for already-marked attendance) can still change the record.
 
 ⁴ `student_profile` is new for the profile-completion feature (Prompt G) — split from `students`
 because that module's own-scope grant for Student/Parent is view-only, and several of its `edit`

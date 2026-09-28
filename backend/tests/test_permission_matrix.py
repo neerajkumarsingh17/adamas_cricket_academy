@@ -27,7 +27,18 @@ def _walk(patterns):
             yield pattern
 
 
-def _verb_for_action(viewset_cls, action_name: str, http_method: str) -> str:
+def _verb_for_action(callback, viewset_cls, action_name: str, http_method: str) -> str:
+    # `callback.initkwargs` is what DRF's own ViewSetMixin.as_view() stores
+    # from *any* extra kwarg passed to it — including an explicit
+    # `.as_view({...}, verb="edit")` call (apps.academics.attendance.urls'
+    # three explicit-path routes), which the previous two-tier check below
+    # never looked at. Checking it first covers both wiring styles with
+    # one mechanism, rather than guessing the explicit-path verb from the
+    # HTTP method (wrong for SessionAttendanceViewSet.cancel: POST would
+    # guess "add", but urls.py passes verb="edit").
+    initkwarg_verb = getattr(callback, "initkwargs", {}).get("verb")
+    if initkwarg_verb:
+        return initkwarg_verb
     bound = getattr(viewset_cls, action_name, None)
     verb_override = getattr(bound, "kwargs", {}).get("verb") if bound else None
     if verb_override:
@@ -48,9 +59,11 @@ def _discover_route_cases() -> list[tuple[str, str, str]]:
         if not (isinstance(viewset_cls, type) and issubclass(viewset_cls, ModuleScopedViewSet)):
             continue
         actions = getattr(callback, "actions", None) or {}
+        action_modules = getattr(viewset_cls, "action_modules", {})
         for http_method, action_name in actions.items():
-            verb = _verb_for_action(viewset_cls, action_name, http_method)
-            key = (viewset_cls.module, verb)
+            verb = _verb_for_action(callback, viewset_cls, action_name, http_method)
+            module = action_modules.get(action_name, viewset_cls.module)
+            key = (module, verb)
             seen.setdefault(key, viewset_cls.__name__)
     return [(name, module, verb) for (module, verb), name in sorted(seen.items())]
 

@@ -57,6 +57,17 @@ class Student(AuditedModel):
         Programme, on_delete=models.PROTECT, null=True, blank=True, related_name="students"
     )
     residential = models.BooleanField(default=False)
+    # Hostel room assignment — only meaningful when residential=True (see
+    # services.update_accommodation's guard). Admin/Hostel-only to set
+    # (module="residential", verb="edit" — docs/03-rbac.md's Residential /
+    # Transport row); the student and their guardian can only view it
+    # (StudentAccommodationViewSet's own-scope `view`, not `edit`), same
+    # split-module reasoning as StudentProfile above but the other
+    # direction: here it's the *student* who is read-only.
+    building = models.ForeignKey(
+        "core.Building", on_delete=models.PROTECT, null=True, blank=True, related_name="students"
+    )
+    room_number = models.CharField(max_length=20, blank=True)
     # Filtered directly by StudentFilter, counted in every dashboard's
     # active_students tile (apps.core.services.dashboards), and scanned by
     # student.services.re_admit's withdrawn-record lookup.

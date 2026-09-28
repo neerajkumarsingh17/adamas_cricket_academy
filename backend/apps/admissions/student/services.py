@@ -114,6 +114,19 @@ def approve_admission(admission: Admission, *, user) -> Student:
     if is_direct:
         _link_direct_admission_guardian(admission, student)
 
+    # Mirrors the wizard's one-time AdmissionPayment into the unified
+    # payment ledger (apps.finance.payment) now that admission.person is
+    # guaranteed set — doing this any earlier, e.g. at
+    # verify_direct_payment time, isn't possible: a fresh direct-intake
+    # admission has no Person until the resolution above runs, and that
+    # only happens here, at approval. `hasattr(admission, "payment")` is
+    # only True when the new fee-first wizard actually recorded one (the
+    # legacy trial-waiver direct-admission path never does).
+    if hasattr(admission, "payment"):
+        from apps.finance.payment.services import admission_fee_paid
+
+        admission_fee_paid(admission, admission.payment, user=user)
+
     _notify_training_activation(student)
 
     return student
@@ -625,3 +638,28 @@ def update_profile(
             setattr(person, field, value)
         person.save(update_fields=[*person_fields.keys(), "updated_at"])
     return profile
+
+
+def update_accommodation(student: Student, **fields) -> Student:
+    """PATCH /students/{id}/accommodation/ — Hostel/Admin only (see
+    StudentAccommodationViewSet). `fields` holds only what was actually
+    provided (partial-update semantics): `building` a Building instance
+    or None, `room_number` a string.
+
+    Refuses to assign a building to a non-residential student — a day
+    scholar with a room number is exactly the kind of state nothing else
+    in this app can reach through normal use, so it's rejected here
+    rather than left to become a silent, confusing "why does this
+    day-scholar have a hostel room" support ticket later. Clearing a
+    building (`building=None`) is always allowed, same as leaving
+    `room_number` blank.
+    """
+    if fields.get("building") is not None and not student.residential:
+        raise ValidationError(
+            {"building": "Only a residential student can be assigned a building/room."}
+        )
+    for field, value in fields.items():
+        setattr(student, field, value)
+    if fields:
+        student.save(update_fields=[*fields.keys(), "updated_at"])
+    return student

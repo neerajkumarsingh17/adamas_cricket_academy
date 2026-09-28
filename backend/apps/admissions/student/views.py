@@ -2,6 +2,7 @@ from typing import cast
 
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.permissions import IsAuthenticated
@@ -9,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.admissions.admission.models import Admission
-from apps.core.models import Programme
+from apps.core.models import Building, Programme
 from apps.core.views import ModuleScopedViewSet
 from apps.iam.models import User
 from apps.people.models import Person, StudentGuardian
@@ -23,6 +24,8 @@ from .serializers import (
     GrantLoginSerializer,
     LinkGuardianSerializer,
     ReAdmissionSerializer,
+    StudentAccommodationSerializer,
+    StudentAccommodationWriteSerializer,
     StudentGuardianSerializer,
     StudentProfileSerializer,
     StudentProfileWriteSerializer,
@@ -262,6 +265,59 @@ class AdmissionApproveView(APIView):
         return Response(ApproveAdmissionResponseSerializer({"student": student}).data, status=201)
 
 
+class StudentPaymentsView(APIView):
+    """GET /students/me/payments/ — the unified payment ledger's portal
+    view for the logged-in student themself (the parent-side equivalent,
+    scoped per-child, is
+    apps.admissions.parent.views.ParentChildPaymentsView). Scoped to
+    `request.user.person` directly rather than a queryset lookup — there
+    is nothing to 404 on, since "me" is always exactly one person (or
+    none, for a User with no linked Person, e.g. the IT admin account).
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.has_perm_for("payment", "view"):
+            self.permission_denied(request)
+        if request.user.person_id is None:
+            return Response({"current_month": None, "history": []})
+        from apps.finance.payment.services import payment_history
+
+        return Response(payment_history(request.user.person))
+
+
+class StudentLookupView(APIView):
+    """GET /students/lookup/?q= — a name-or-code substring lookup for
+    picking an existing Student, e.g. apps.academics.batch's enrol form.
+    Same shape as apps.people.views.PersonLookupView (built for the
+    payment-recording form's person search) — that endpoint looks up
+    Person, not Student, so it isn't reusable here directly.
+
+    Gated on `batch:add` rather than `students:view` since this is
+    specifically for the enrol-a-student-into-a-batch use case, not a
+    general student directory.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(responses=StudentSerializer(many=True))
+    def get(self, request):
+        if not request.user.has_perm_for("batch", "add"):
+            self.permission_denied(request)
+
+        q = request.query_params.get("q", "").strip()
+        if len(q) < 3:
+            return Response([])
+
+        matches = Student.objects.select_related("person").filter(
+            Q(student_code__icontains=q)
+            | Q(person__first_name__icontains=q)
+            | Q(person__last_name__icontains=q)
+        )[:10]
+        return Response(StudentSerializer(matches, many=True).data)
+
+
 class StudentProfileViewSet(ModuleScopedViewSet):
     """GET/PATCH /students/{id}/profile/ — the deferred half of the
     offline form (Prompt G), student/parent side. A distinct module from
@@ -315,3 +371,57 @@ class StudentProfileViewSet(ModuleScopedViewSet):
             person_fields["email"] = person_fields.pop("student_email")
         profile = services.update_profile(student, profile_fields=data, person_fields=person_fields)
         return Response(StudentProfileSerializer(profile).data)
+
+
+class StudentAccommodationViewSet(ModuleScopedViewSet):
+    """GET/PATCH /students/{id}/accommodation/ — a student's hostel
+    building/room. Its own module (`residential`, docs/03-rbac.md's
+    Residential / Transport row) rather than `students` or
+    `student_profile`, for the same "don't leak past this module's own
+    RBAC boundary" reason StudentProfileViewSet's docstring gives — but
+    the split runs the other way here: Hostel/Admin hold `edit` at *all*
+    scope, while Student/Parent hold only own-scope `view` (no `edit` at
+    all, enforced by that grant simply not existing — see
+    services.update_accommodation for the one extra guard beyond that).
+    """
+
+    module = "residential"
+    queryset = Student.objects.select_related("person", "building").all()
+
+    def get_serializer_class(self):
+        if self.action == "accommodation_update":
+            return StudentAccommodationWriteSerializer
+        return StudentAccommodationSerializer
+
+    def filter_to_own(self, queryset):
+        # Same "self, or a child I guardian" scope as
+        # StudentProfileViewSet.filter_to_own — duplicated rather than
+        # imported, for the same reason that one gives.
+        user = cast(User, self.request.user)
+        if user.person_id is None:
+            return queryset.none()
+        guardian_student_ids = StudentGuardian.objects.filter(
+            guardian__person=user.person
+        ).values_list("student_id", flat=True)
+        return queryset.filter(Q(person=user.person) | Q(id__in=guardian_student_ids))
+
+    @extend_schema(responses=StudentAccommodationSerializer)
+    @action(detail=True, methods=["get"], url_path="accommodation", verb="view")
+    def accommodation(self, request, pk=None):
+        student = self.get_object()
+        return Response(StudentAccommodationSerializer(student).data)
+
+    @extend_schema(
+        request=StudentAccommodationWriteSerializer, responses=StudentAccommodationSerializer
+    )
+    @action(detail=True, methods=["patch"], url_path="accommodation", verb="edit")
+    def accommodation_update(self, request, pk=None):
+        student = self.get_object()
+        serializer = StudentAccommodationWriteSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        data = dict(serializer.validated_data)
+        if "building" in data:
+            building_id = data.pop("building")
+            data["building"] = get_object_or_404(Building, pk=building_id) if building_id else None
+        student = services.update_accommodation(student, **data)
+        return Response(StudentAccommodationSerializer(student).data)

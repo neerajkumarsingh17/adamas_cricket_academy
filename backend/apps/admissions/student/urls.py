@@ -25,4 +25,24 @@ urlpatterns = [
         views.StudentProfileViewSet.as_view({"get": "profile", "patch": "profile_update"}),
         name="student-profile",
     ),
+    # Same explicit-path reasoning as students/{id}/profile/ above —
+    # StudentAccommodationViewSet has its own `module` and only these two
+    # actions.
+    path(
+        "students/<uuid:pk>/accommodation/",
+        views.StudentAccommodationViewSet.as_view(
+            {"get": "accommodation", "patch": "accommodation_update"}
+        ),
+        name="student-accommodation",
+    ),
+    path(
+        "students/me/payments/",
+        views.StudentPaymentsView.as_view(),
+        name="student-payments",
+    ),
+    path(
+        "students/lookup/",
+        views.StudentLookupView.as_view(),
+        name="students-lookup",
+    ),
 ] + router.urls

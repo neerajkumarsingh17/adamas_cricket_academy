@@ -62,7 +62,24 @@ const NAV_ITEMS: {
     verb: 'view',
     selfServiceHidden: true,
   },
+  {
+    to: '/payments',
+    label: 'Payments',
+    // Gated on `add`, not `view` — Student/Parent hold own-scope `view`
+    // on `payment` for their own self-service history, which now lives
+    // at /my-payments (MyPaymentsPage) and, per child, on
+    // ParentChildDetailPage — not this screen, whose record-payment form
+    // and settle action are Administration/Accounts-only. Gating the nav
+    // link itself on `add` keeps it out of Student/Parent nav even
+    // though `view` alone would technically let `Can` render it.
+    module: 'payment',
+    verb: 'add',
+    selfServiceHidden: true,
+  },
   { to: '/id-cards', label: 'ID cards', module: 'idcard', verb: 'view' },
+  // Mark/report/corrections are reached from inside a batch, the way
+  // every document action hangs off /documents — one entry, not four.
+  { to: '/batches', label: 'Batches', module: 'batch', verb: 'view', selfServiceHidden: true },
 ]
 
 function linkClass({ isActive }: { isActive: boolean }) {
@@ -105,6 +122,11 @@ export function AppShell() {
             {isStudent && (
               <NavLink to="/my-admission" className={linkClass}>
                 My admission
+              </NavLink>
+            )}
+            {isStudent && (
+              <NavLink to="/my-payments" className={linkClass}>
+                My payments
               </NavLink>
             )}
           </div>

@@ -26,6 +26,10 @@ SERIES_FORMATS: dict[str, _SeriesConfig] = {
     "ADM": _SeriesConfig("core_numbering_adm_seq", 5),
     "ACA": _SeriesConfig("core_numbering_aca_seq", 4),
     "RCP": _SeriesConfig("core_numbering_rcp_seq", 5),
+    # apps.finance.payment.Payment's two-stage paper trail: PCF minted
+    # immediately on record, INV minted later on settlement.
+    "PCF": _SeriesConfig("core_numbering_pcf_seq", 5),
+    "INV": _SeriesConfig("core_numbering_inv_seq", 5),
 }
 
 

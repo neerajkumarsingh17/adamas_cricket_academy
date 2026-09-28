@@ -10,6 +10,11 @@ urlpatterns = [
         name="parent-child-detail",
     ),
     path(
+        "parents/me/children/<uuid:student_id>/payments/",
+        views.ParentChildPaymentsView.as_view(),
+        name="parent-child-payments",
+    ),
+    path(
         "parents/me/documents/",
         views.ParentDocumentUploadView.as_view(),
         name="parent-documents",

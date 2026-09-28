@@ -1,5 +1,6 @@
 import { request } from '../../../api/client'
 import type { components } from '../../../api/types.gen'
+import type { PaymentHistoryResponse } from '../../payment/api/payment'
 
 export type Student = components['schemas']['Student']
 export type Person = components['schemas']['Person']
@@ -106,6 +107,10 @@ export const studentApi = {
 
   statusHistory: (id: string) => request<StatusHistory[]>(`/students/${id}/status-history/`),
 
+  // GET /students/me/payments/ — self-service only ("me" always resolves
+  // to the logged-in user's own person; no id param). See MyPaymentsPage.
+  myPayments: () => request<PaymentHistoryResponse>('/students/me/payments/'),
+
   changeStatus: (id: string, toStatus: string, reason: string) =>
     request<StatusChangeResult>(`/students/${id}/status/`, {
       method: 'POST',
@@ -142,7 +147,31 @@ export const studentApi = {
       method: 'PATCH',
       body: JSON.stringify(body),
     }),
+
+  // GET/PATCH /students/{id}/accommodation/ — its own module (`residential`,
+  // not `students`/`student_profile`), see StudentAccommodationViewSet's
+  // docstring. A Student/Parent can only ever call accommodation(); the
+  // PATCH 403s for them server-side (no residential:edit grant at all).
+  accommodation: (id: string) => request<StudentAccommodation>(`/students/${id}/accommodation/`),
+
+  updateAccommodation: (id: string, body: StudentAccommodationInput) =>
+    request<StudentAccommodation>(`/students/${id}/accommodation/`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
 }
 
 export type StudentProfile = components['schemas']['StudentProfile']
 export type StudentProfileInput = components['schemas']['StudentProfileWrite']
+export type StudentAccommodation = components['schemas']['StudentAccommodation']
+export type StudentAccommodationInput = components['schemas']['PatchedStudentAccommodationWrite']
+
+// Reference data for the accommodation-assignment form's building picker —
+// each feature owns its own master-data fetches (features/batch/api/
+// batch.ts's masterApi does the same for age-categories/venues/coaches)
+// rather than cross-importing another feature's hooks.
+export type Building = components['schemas']['Building']
+
+export const masterApi = {
+  buildings: () => request<ListResponse<Building>>('/master/buildings/'),
+}

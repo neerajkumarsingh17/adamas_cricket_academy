@@ -1,6 +1,7 @@
 """Small date-window helpers shared by seed_demo and the dashboards service,
 so "this weekend" means the same two dates in both places."""
 
+import calendar
 import datetime
 
 
@@ -22,3 +23,22 @@ def week_start(today: datetime.date) -> datetime.date:
 
 def month_start(today: datetime.date) -> datetime.date:
     return today.replace(day=1)
+
+
+def month_end(today: datetime.date) -> datetime.date:
+    return today.replace(day=calendar.monthrange(today.year, today.month)[1])
+
+
+def last_n_months(today: datetime.date, n: int) -> list[datetime.date]:
+    """The 1st of each of the last `n` calendar months, including the
+    current one, oldest first — e.g. n=6 in April returns Nov..Apr.
+    """
+    months = []
+    year, month = today.year, today.month
+    for _ in range(n):
+        months.append(datetime.date(year, month, 1))
+        month -= 1
+        if month == 0:
+            month, year = 12, year - 1
+    months.reverse()
+    return months

@@ -83,6 +83,24 @@ class ParentDocumentUploadView(APIView):
         return Response(DocumentSerializer(document).data, status=201)
 
 
+class ParentChildPaymentsView(APIView):
+    """GET /parents/me/children/{id}/payments/ — the unified payment
+    ledger's portal view (docs: "current month's status shown first,
+    plus a complete month-by-month history"). Object-level authorisation
+    via `_own_children_queryset`, same idiom as `ParentChildDetailView`.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, student_id):
+        if not request.user.has_perm_for("payment", "view"):
+            self.permission_denied(request)
+        student = get_object_or_404(_own_children_queryset(request.user), pk=student_id)
+        from apps.finance.payment.services import payment_history
+
+        return Response(payment_history(student.person))
+
+
 class ParentPortalSettingsView(APIView):
     """Not itself in docs/02-api-spec.md's endpoint table, but M05 Parent
     Management (docs/00-project-structure.md) *is* "portal access +

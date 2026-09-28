@@ -51,6 +51,24 @@ class Venue(AuditedModel):
         return self.name
 
 
+class Building(AuditedModel):
+    """Hostel building master data (docs/00-project-structure.md's
+    operations/residential app, M27) — same shape as Venue, edited only
+    through Django admin like every other master-data model here until a
+    real RBAC-gated write endpoint is needed. `apps.admissions.student.
+    Student.building` FKs here for a residential student's room
+    assignment.
+    """
+
+    code = models.SlugField(max_length=50, unique=True)
+    name = models.CharField(max_length=100)
+    address = models.CharField(max_length=255, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class Season(AuditedModel):
     code = models.SlugField(max_length=50, unique=True)
     name = models.CharField(max_length=100)
@@ -169,6 +187,28 @@ class FeeHead(AuditedModel):
     applies_to = models.CharField(
         max_length=16, choices=FeeApplicability.choices, default=FeeApplicability.BOTH
     )
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["display_order", "code"]
+
+    def __str__(self) -> str:
+        return self.label
+
+
+class PaymentType(AuditedModel):
+    """What a Payment (apps.finance.payment) is for — "Admission Fee",
+    "Monthly Coaching Fee", and any future category (kit, tournament,
+    hostel...). Master data (CLAUDE.md: never hardcode a fee requirement)
+    so a new category is one admin row, never a new table or screen.
+    `is_recurring` gates whether Payment.billing_period is required — see
+    that model's own clean().
+    """
+
+    code = models.SlugField(max_length=50, unique=True)
+    label = models.CharField(max_length=100)
+    is_recurring = models.BooleanField(default=False)
+    display_order = models.PositiveSmallIntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
     class Meta:

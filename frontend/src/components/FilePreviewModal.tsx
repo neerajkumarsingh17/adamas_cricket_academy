@@ -9,11 +9,16 @@ export function FilePreviewModal({
   title,
   src,
   kind,
+  downloadFilename,
   onClose,
 }: {
   title: string
   src: string
   kind: 'pdf' | 'image'
+  // Renders a real "Download" button (an <a download> — triggers a save,
+  // not a navigation) alongside "Open in new tab" when given. Optional:
+  // most existing callers (document previews) only need the view case.
+  downloadFilename?: string
   onClose: () => void
 }) {
   return (
@@ -35,6 +40,15 @@ export function FilePreviewModal({
           >
             Open in new tab
           </a>
+          {downloadFilename && (
+            <a
+              href={src}
+              download={downloadFilename}
+              className="rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+            >
+              Download
+            </a>
+          )}
         </div>
       </div>
     </Modal>

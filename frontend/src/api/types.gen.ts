@@ -520,6 +520,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/attendance/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description List/retrieve + the correction-request action. Marking itself
+         *     happens via apps.academics.batch's sessions/{id}/attendance/ bulk
+         *     endpoint (SessionAttendanceViewSet below), not a direct POST here.
+         */
+        get: operations["v1_attendance_list"];
+        put?: never;
+        /**
+         * @description List/retrieve + the correction-request action. Marking itself
+         *     happens via apps.academics.batch's sessions/{id}/attendance/ bulk
+         *     endpoint (SessionAttendanceViewSet below), not a direct POST here.
+         */
+        post: operations["v1_attendance_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attendance/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description List/retrieve + the correction-request action. Marking itself
+         *     happens via apps.academics.batch's sessions/{id}/attendance/ bulk
+         *     endpoint (SessionAttendanceViewSet below), not a direct POST here.
+         */
+        get: operations["v1_attendance_retrieve"];
+        /**
+         * @description List/retrieve + the correction-request action. Marking itself
+         *     happens via apps.academics.batch's sessions/{id}/attendance/ bulk
+         *     endpoint (SessionAttendanceViewSet below), not a direct POST here.
+         */
+        put: operations["v1_attendance_update"];
+        post?: never;
+        /**
+         * @description List/retrieve + the correction-request action. Marking itself
+         *     happens via apps.academics.batch's sessions/{id}/attendance/ bulk
+         *     endpoint (SessionAttendanceViewSet below), not a direct POST here.
+         */
+        delete: operations["v1_attendance_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description List/retrieve + the correction-request action. Marking itself
+         *     happens via apps.academics.batch's sessions/{id}/attendance/ bulk
+         *     endpoint (SessionAttendanceViewSet below), not a direct POST here.
+         */
+        patch: operations["v1_attendance_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/attendance/{id}/corrections/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description List/retrieve + the correction-request action. Marking itself
+         *     happens via apps.academics.batch's sessions/{id}/attendance/ bulk
+         *     endpoint (SessionAttendanceViewSet below), not a direct POST here.
+         */
+        post: operations["v1_attendance_corrections_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/audit/logs/": {
         parameters: {
             query?: never;
@@ -692,6 +775,423 @@ export interface paths {
          *     token if the refresh token is valid.
          */
         post: operations["v1_auth_refresh_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/batches/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /batches/ — "list with seats used vs capacity", annotated on
+         *     the queryset rather than computed per-row in the serializer, so it's
+         *     one query, not N+1.
+         *
+         *     Unlike BatchEnrollmentViewSet/TrainingSessionViewSet, this ViewSet's
+         *     create/update/partial_update/destroy are real — gated on the
+         *     `batch_admin` module (narrower than `batch`'s own broad
+         *     view/enrol/transfer roles) via action_modules, per
+         *     apps.core.management.commands.seed_roles.py's MATRIX comment.
+         */
+        get: operations["v1_batches_list"];
+        put?: never;
+        /**
+         * @description GET /batches/ — "list with seats used vs capacity", annotated on
+         *     the queryset rather than computed per-row in the serializer, so it's
+         *     one query, not N+1.
+         *
+         *     Unlike BatchEnrollmentViewSet/TrainingSessionViewSet, this ViewSet's
+         *     create/update/partial_update/destroy are real — gated on the
+         *     `batch_admin` module (narrower than `batch`'s own broad
+         *     view/enrol/transfer roles) via action_modules, per
+         *     apps.core.management.commands.seed_roles.py's MATRIX comment.
+         */
+        post: operations["v1_batches_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/batches/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /batches/ — "list with seats used vs capacity", annotated on
+         *     the queryset rather than computed per-row in the serializer, so it's
+         *     one query, not N+1.
+         *
+         *     Unlike BatchEnrollmentViewSet/TrainingSessionViewSet, this ViewSet's
+         *     create/update/partial_update/destroy are real — gated on the
+         *     `batch_admin` module (narrower than `batch`'s own broad
+         *     view/enrol/transfer roles) via action_modules, per
+         *     apps.core.management.commands.seed_roles.py's MATRIX comment.
+         */
+        get: operations["v1_batches_retrieve"];
+        /**
+         * @description GET /batches/ — "list with seats used vs capacity", annotated on
+         *     the queryset rather than computed per-row in the serializer, so it's
+         *     one query, not N+1.
+         *
+         *     Unlike BatchEnrollmentViewSet/TrainingSessionViewSet, this ViewSet's
+         *     create/update/partial_update/destroy are real — gated on the
+         *     `batch_admin` module (narrower than `batch`'s own broad
+         *     view/enrol/transfer roles) via action_modules, per
+         *     apps.core.management.commands.seed_roles.py's MATRIX comment.
+         */
+        put: operations["v1_batches_update"];
+        post?: never;
+        /**
+         * @description GET /batches/ — "list with seats used vs capacity", annotated on
+         *     the queryset rather than computed per-row in the serializer, so it's
+         *     one query, not N+1.
+         *
+         *     Unlike BatchEnrollmentViewSet/TrainingSessionViewSet, this ViewSet's
+         *     create/update/partial_update/destroy are real — gated on the
+         *     `batch_admin` module (narrower than `batch`'s own broad
+         *     view/enrol/transfer roles) via action_modules, per
+         *     apps.core.management.commands.seed_roles.py's MATRIX comment.
+         */
+        delete: operations["v1_batches_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description GET /batches/ — "list with seats used vs capacity", annotated on
+         *     the queryset rather than computed per-row in the serializer, so it's
+         *     one query, not N+1.
+         *
+         *     Unlike BatchEnrollmentViewSet/TrainingSessionViewSet, this ViewSet's
+         *     create/update/partial_update/destroy are real — gated on the
+         *     `batch_admin` module (narrower than `batch`'s own broad
+         *     view/enrol/transfer roles) via action_modules, per
+         *     apps.core.management.commands.seed_roles.py's MATRIX comment.
+         */
+        patch: operations["v1_batches_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/batches/{id}/attendance-report/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /batches/{id}/attendance-report/?month=YYYY-MM. Operates on
+         *     Batch, not Attendance — registered here rather than in
+         *     apps.academics.batch for the same reason as SessionAttendanceViewSet
+         *     above (needs Attendance data, dependency direction only allows this
+         *     app to import that one). Same explicit-path()+verb= wiring as that
+         *     class, same reasoning.
+         */
+        get: operations["v1_batches_attendance_report_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/batches/{id}/enrol/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description GET /batches/ — "list with seats used vs capacity", annotated on
+         *     the queryset rather than computed per-row in the serializer, so it's
+         *     one query, not N+1.
+         *
+         *     Unlike BatchEnrollmentViewSet/TrainingSessionViewSet, this ViewSet's
+         *     create/update/partial_update/destroy are real — gated on the
+         *     `batch_admin` module (narrower than `batch`'s own broad
+         *     view/enrol/transfer roles) via action_modules, per
+         *     apps.core.management.commands.seed_roles.py's MATRIX comment.
+         */
+        post: operations["v1_batches_enrol_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/coaches/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /coaches/ — populates the Batch create/edit form's coach
+         *     picker; no such listing existed before (Coach was only ever readable
+         *     nested inside a Batch). Read-only and ungated beyond IsAuthenticated,
+         *     same reasoning as apps.core.views.ProgrammeViewSet/AgeCategoryViewSet/
+         *     VenueViewSet: reference data nearly every role needs, and
+         *     CoachSerializer exposes nothing here it doesn't already expose nested
+         *     inside every Batch under the already-broad `batch:view`.
+         *
+         *     Filtered on Staff.is_active (still employed), not Coach.is_available
+         *     (a scheduling flag) — excluding an unavailable coach would make it
+         *     impossible to edit a batch whose assigned coach is just temporarily
+         *     off the roster.
+         */
+        get: operations["v1_coaches_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/coaches/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /coaches/ — populates the Batch create/edit form's coach
+         *     picker; no such listing existed before (Coach was only ever readable
+         *     nested inside a Batch). Read-only and ungated beyond IsAuthenticated,
+         *     same reasoning as apps.core.views.ProgrammeViewSet/AgeCategoryViewSet/
+         *     VenueViewSet: reference data nearly every role needs, and
+         *     CoachSerializer exposes nothing here it doesn't already expose nested
+         *     inside every Batch under the already-broad `batch:view`.
+         *
+         *     Filtered on Staff.is_active (still employed), not Coach.is_available
+         *     (a scheduling flag) — excluding an unavailable coach would make it
+         *     impossible to edit a batch whose assigned coach is just temporarily
+         *     off the roster.
+         */
+        get: operations["v1_coaches_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/corrections/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Base every module ViewSet extends:
+         *
+         *         class EnquiryViewSet(ModuleScopedViewSet):
+         *             module = "enquiry"
+         *
+         *     Maps the HTTP method to a permission verb (GET->view, POST->add,
+         *     PUT/PATCH->edit, DELETE->edit), checks it via request.user.has_perm_for,
+         *     and — for roles whose widest scope on this module+verb is "own" —
+         *     filters the queryset via filter_to_own(), which subclasses must
+         *     implement (docs/03-rbac.md rule 3: enforced at the queryset level).
+         *
+         *     A custom @action declares its own verb explicitly, which DRF's router
+         *     passes through as an init kwarg:
+         *
+         *         @action(detail=True, methods=["post"], verb="approve")
+         *         def approve(self, request, pk=None): ...
+         */
+        get: operations["v1_corrections_list"];
+        put?: never;
+        /**
+         * @description Base every module ViewSet extends:
+         *
+         *         class EnquiryViewSet(ModuleScopedViewSet):
+         *             module = "enquiry"
+         *
+         *     Maps the HTTP method to a permission verb (GET->view, POST->add,
+         *     PUT/PATCH->edit, DELETE->edit), checks it via request.user.has_perm_for,
+         *     and — for roles whose widest scope on this module+verb is "own" —
+         *     filters the queryset via filter_to_own(), which subclasses must
+         *     implement (docs/03-rbac.md rule 3: enforced at the queryset level).
+         *
+         *     A custom @action declares its own verb explicitly, which DRF's router
+         *     passes through as an init kwarg:
+         *
+         *         @action(detail=True, methods=["post"], verb="approve")
+         *         def approve(self, request, pk=None): ...
+         */
+        post: operations["v1_corrections_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/corrections/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Base every module ViewSet extends:
+         *
+         *         class EnquiryViewSet(ModuleScopedViewSet):
+         *             module = "enquiry"
+         *
+         *     Maps the HTTP method to a permission verb (GET->view, POST->add,
+         *     PUT/PATCH->edit, DELETE->edit), checks it via request.user.has_perm_for,
+         *     and — for roles whose widest scope on this module+verb is "own" —
+         *     filters the queryset via filter_to_own(), which subclasses must
+         *     implement (docs/03-rbac.md rule 3: enforced at the queryset level).
+         *
+         *     A custom @action declares its own verb explicitly, which DRF's router
+         *     passes through as an init kwarg:
+         *
+         *         @action(detail=True, methods=["post"], verb="approve")
+         *         def approve(self, request, pk=None): ...
+         */
+        get: operations["v1_corrections_retrieve"];
+        /**
+         * @description Base every module ViewSet extends:
+         *
+         *         class EnquiryViewSet(ModuleScopedViewSet):
+         *             module = "enquiry"
+         *
+         *     Maps the HTTP method to a permission verb (GET->view, POST->add,
+         *     PUT/PATCH->edit, DELETE->edit), checks it via request.user.has_perm_for,
+         *     and — for roles whose widest scope on this module+verb is "own" —
+         *     filters the queryset via filter_to_own(), which subclasses must
+         *     implement (docs/03-rbac.md rule 3: enforced at the queryset level).
+         *
+         *     A custom @action declares its own verb explicitly, which DRF's router
+         *     passes through as an init kwarg:
+         *
+         *         @action(detail=True, methods=["post"], verb="approve")
+         *         def approve(self, request, pk=None): ...
+         */
+        put: operations["v1_corrections_update"];
+        post?: never;
+        /**
+         * @description Base every module ViewSet extends:
+         *
+         *         class EnquiryViewSet(ModuleScopedViewSet):
+         *             module = "enquiry"
+         *
+         *     Maps the HTTP method to a permission verb (GET->view, POST->add,
+         *     PUT/PATCH->edit, DELETE->edit), checks it via request.user.has_perm_for,
+         *     and — for roles whose widest scope on this module+verb is "own" —
+         *     filters the queryset via filter_to_own(), which subclasses must
+         *     implement (docs/03-rbac.md rule 3: enforced at the queryset level).
+         *
+         *     A custom @action declares its own verb explicitly, which DRF's router
+         *     passes through as an init kwarg:
+         *
+         *         @action(detail=True, methods=["post"], verb="approve")
+         *         def approve(self, request, pk=None): ...
+         */
+        delete: operations["v1_corrections_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description Base every module ViewSet extends:
+         *
+         *         class EnquiryViewSet(ModuleScopedViewSet):
+         *             module = "enquiry"
+         *
+         *     Maps the HTTP method to a permission verb (GET->view, POST->add,
+         *     PUT/PATCH->edit, DELETE->edit), checks it via request.user.has_perm_for,
+         *     and — for roles whose widest scope on this module+verb is "own" —
+         *     filters the queryset via filter_to_own(), which subclasses must
+         *     implement (docs/03-rbac.md rule 3: enforced at the queryset level).
+         *
+         *     A custom @action declares its own verb explicitly, which DRF's router
+         *     passes through as an init kwarg:
+         *
+         *         @action(detail=True, methods=["post"], verb="approve")
+         *         def approve(self, request, pk=None): ...
+         */
+        patch: operations["v1_corrections_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/corrections/{id}/approve/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Base every module ViewSet extends:
+         *
+         *         class EnquiryViewSet(ModuleScopedViewSet):
+         *             module = "enquiry"
+         *
+         *     Maps the HTTP method to a permission verb (GET->view, POST->add,
+         *     PUT/PATCH->edit, DELETE->edit), checks it via request.user.has_perm_for,
+         *     and — for roles whose widest scope on this module+verb is "own" —
+         *     filters the queryset via filter_to_own(), which subclasses must
+         *     implement (docs/03-rbac.md rule 3: enforced at the queryset level).
+         *
+         *     A custom @action declares its own verb explicitly, which DRF's router
+         *     passes through as an init kwarg:
+         *
+         *         @action(detail=True, methods=["post"], verb="approve")
+         *         def approve(self, request, pk=None): ...
+         */
+        post: operations["v1_corrections_approve_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/corrections/{id}/reject/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Base every module ViewSet extends:
+         *
+         *         class EnquiryViewSet(ModuleScopedViewSet):
+         *             module = "enquiry"
+         *
+         *     Maps the HTTP method to a permission verb (GET->view, POST->add,
+         *     PUT/PATCH->edit, DELETE->edit), checks it via request.user.has_perm_for,
+         *     and — for roles whose widest scope on this module+verb is "own" —
+         *     filters the queryset via filter_to_own(), which subclasses must
+         *     implement (docs/03-rbac.md rule 3: enforced at the queryset level).
+         *
+         *     A custom @action declares its own verb explicitly, which DRF's router
+         *     passes through as an init kwarg:
+         *
+         *         @action(detail=True, methods=["post"], verb="approve")
+         *         def approve(self, request, pk=None): ...
+         */
+        post: operations["v1_corrections_reject_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1108,6 +1608,96 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/enrollments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description create/update/destroy are disabled — each of these three resources
+         *     is written through its own dedicated action (enrol/transfer), not a
+         *     raw field-level PUT/PATCH/POST, same convention as
+         *     apps.admissions.document.views.DocumentViewSet.
+         */
+        get: operations["v1_enrollments_list"];
+        put?: never;
+        /**
+         * @description create/update/destroy are disabled — each of these three resources
+         *     is written through its own dedicated action (enrol/transfer), not a
+         *     raw field-level PUT/PATCH/POST, same convention as
+         *     apps.admissions.document.views.DocumentViewSet.
+         */
+        post: operations["v1_enrollments_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/enrollments/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description create/update/destroy are disabled — each of these three resources
+         *     is written through its own dedicated action (enrol/transfer), not a
+         *     raw field-level PUT/PATCH/POST, same convention as
+         *     apps.admissions.document.views.DocumentViewSet.
+         */
+        get: operations["v1_enrollments_retrieve"];
+        /**
+         * @description create/update/destroy are disabled — each of these three resources
+         *     is written through its own dedicated action (enrol/transfer), not a
+         *     raw field-level PUT/PATCH/POST, same convention as
+         *     apps.admissions.document.views.DocumentViewSet.
+         */
+        put: operations["v1_enrollments_update"];
+        post?: never;
+        /**
+         * @description create/update/destroy are disabled — each of these three resources
+         *     is written through its own dedicated action (enrol/transfer), not a
+         *     raw field-level PUT/PATCH/POST, same convention as
+         *     apps.admissions.document.views.DocumentViewSet.
+         */
+        delete: operations["v1_enrollments_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description create/update/destroy are disabled — each of these three resources
+         *     is written through its own dedicated action (enrol/transfer), not a
+         *     raw field-level PUT/PATCH/POST, same convention as
+         *     apps.admissions.document.views.DocumentViewSet.
+         */
+        patch: operations["v1_enrollments_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/enrollments/{id}/transfer/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description create/update/destroy are disabled — each of these three resources
+         *     is written through its own dedicated action (enrol/transfer), not a
+         *     raw field-level PUT/PATCH/POST, same convention as
+         *     apps.admissions.document.views.DocumentViewSet.
+         */
+        post: operations["v1_enrollments_transfer_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health/": {
         parameters: {
             query?: never;
@@ -1344,6 +1934,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/master/buildings/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /master/buildings/ — populates the accommodation-assignment
+         *     form's building picker (apps.admissions.student's
+         *     StudentAccommodationViewSet). Read-only and ungated beyond
+         *     IsAuthenticated, same reasoning as VenueViewSet/ProgrammeViewSet
+         *     above: reference data, writable only through Django admin until a
+         *     real RBAC row exists for managing the building list itself (distinct
+         *     from `residential`, which governs *assigning* a student to one).
+         */
+        get: operations["v1_master_buildings_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/master/buildings/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /master/buildings/ — populates the accommodation-assignment
+         *     form's building picker (apps.admissions.student's
+         *     StudentAccommodationViewSet). Read-only and ungated beyond
+         *     IsAuthenticated, same reasoning as VenueViewSet/ProgrammeViewSet
+         *     above: reference data, writable only through Django admin until a
+         *     real RBAC row exists for managing the building list itself (distinct
+         *     from `residential`, which governs *assigning* a student to one).
+         */
+        get: operations["v1_master_buildings_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/master/document-types/": {
         parameters: {
             query?: never;
@@ -1400,6 +2040,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["v1_master_enquiry_sources_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/master/payment-types/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_master_payment_types_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/master/payment-types/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_master_payment_types_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1784,6 +2456,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/parents/me/children/{student_id}/payments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /parents/me/children/{id}/payments/ — the unified payment
+         *     ledger's portal view (docs: "current month's status shown first,
+         *     plus a complete month-by-month history"). Object-level authorisation
+         *     via `_own_children_queryset`, same idiom as `ParentChildDetailView`.
+         */
+        get: operations["v1_parents_me_children_payments_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/parents/me/documents/": {
         parameters: {
             query?: never;
@@ -1836,6 +2530,137 @@ export interface paths {
         patch: operations["v1_parents_me_settings_partial_update"];
         trace?: never;
     };
+    "/api/v1/payments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /payments/ — the staff operational queue (Administration/
+         *     Accounts, who hold ALL-scope on `payment:view`). Deliberately separate
+         *     from the self-service `/students/me/payments/` and
+         *     `/parents/me/children/{id}/payments/` endpoints, which return a
+         *     different, summary-shaped response (current month + history) rather
+         *     than a plain browsable/filterable list.
+         */
+        get: operations["v1_payments_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/{id}/settle/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description POST /payments/{id}/settle/ — mints the invoice_no. `payment:approve`,
+         *     same two roles as the direct-admission wizard's own payment
+         *     verification (docs/03-rbac.md's `payment` row).
+         */
+        post: operations["v1_payments_settle_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/current-fee/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /payments/current-fee/?person=<id> — the amount RecordPayment-
+         *     Form pre-fills for a "monthly coaching fee" payment, computed from
+         *     the person's active Student + active BatchEnrollment: `Batch.
+         *     residential_monthly_fee` if `Student.residential`, else `Batch.
+         *     monthly_fee`. Still just a default — the form field stays editable
+         *     (CurrentFeeSerializer's own docstring).
+         *
+         *     `apps.admissions.student`/`apps.academics.batch` are local imports,
+         *     not top-level ones: docs/00-project-structure.md's dependency chain
+         *     draws `batch` and `fee`/`payment` as siblings off `student`, not
+         *     chained to each other, the same boundary
+         *     apps.academics.batch.serializers.BatchEnrollmentSerializer.
+         *     get_fee_status already crosses the other way (a local import of
+         *     apps.finance.payment.services inside batch) for the identical reason
+         *     — a narrow, one-off read that a top-level app dependency would
+         *     overstate.
+         */
+        get: operations["v1_payments_current_fee_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/record/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description POST /payments/record/ — the real, role-gated path to record a
+         *     monthly coaching fee (or any other PaymentType): `payment:add`, held
+         *     by Administration and Accounts (docs/03-rbac.md's `payment` row) —
+         *     not Django-admin/superuser access, which is a separate system that
+         *     doesn't reflect this app's own Role/RolePermission grants at all.
+         */
+        post: operations["v1_payments_record_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/persons/lookup/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /persons/lookup/?q= — a mobile-or-name substring lookup for
+         *     picking an *existing* Person, e.g. apps.finance.payment's record-
+         *     payment form. Deliberately separate from PersonSearchView above: that
+         *     endpoint's contract (name+DOB required, dedupe-oriented) is wrong for
+         *     "staff types a mobile number to find someone already in the system" —
+         *     changing its behaviour would risk the admission-intake duplicate-
+         *     check flows every intake form already depends on.
+         *
+         *     Gated on `payment:add` rather than `students:view` since this is
+         *     specifically for the payment-recording use case, not a general person
+         *     directory.
+         */
+        get: operations["v1_persons_lookup_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/persons/search/": {
         parameters: {
             query?: never;
@@ -1883,6 +2708,344 @@ export interface paths {
          *     a public submission always starts unowned and `new`.
          */
         post: operations["v1_public_enquiries_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description List/retrieve only here — roster, bulk attendance-marking and
+         *     cancel all need Attendance data, so they're registered from
+         *     apps.academics.attendance instead (see that app's views.py
+         *     SessionAttendanceViewSet for why).
+         */
+        get: operations["v1_sessions_list"];
+        put?: never;
+        /**
+         * @description List/retrieve only here — roster, bulk attendance-marking and
+         *     cancel all need Attendance data, so they're registered from
+         *     apps.academics.attendance instead (see that app's views.py
+         *     SessionAttendanceViewSet for why).
+         */
+        post: operations["v1_sessions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description List/retrieve only here — roster, bulk attendance-marking and
+         *     cancel all need Attendance data, so they're registered from
+         *     apps.academics.attendance instead (see that app's views.py
+         *     SessionAttendanceViewSet for why).
+         */
+        get: operations["v1_sessions_retrieve"];
+        /**
+         * @description List/retrieve only here — roster, bulk attendance-marking and
+         *     cancel all need Attendance data, so they're registered from
+         *     apps.academics.attendance instead (see that app's views.py
+         *     SessionAttendanceViewSet for why).
+         */
+        put: operations["v1_sessions_update"];
+        post?: never;
+        /**
+         * @description List/retrieve only here — roster, bulk attendance-marking and
+         *     cancel all need Attendance data, so they're registered from
+         *     apps.academics.attendance instead (see that app's views.py
+         *     SessionAttendanceViewSet for why).
+         */
+        delete: operations["v1_sessions_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description List/retrieve only here — roster, bulk attendance-marking and
+         *     cancel all need Attendance data, so they're registered from
+         *     apps.academics.attendance instead (see that app's views.py
+         *     SessionAttendanceViewSet for why).
+         */
+        patch: operations["v1_sessions_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/sessions/{id}/attendance/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Operates on TrainingSession (apps.academics.batch), not Attendance
+         *     — registered here rather than in apps.academics.batch because every
+         *     action needs Attendance data/logic, and the dependency direction
+         *     (docs/00-project-structure.md: attendance hangs off batch, never the
+         *     reverse) only allows this app to import that one, not the other way
+         *     around.
+         *
+         *     Wired by explicit path()+as_view() in urls.py, not router.register —
+         *     same mechanism apps.admissions.admission.views.
+         *     AdmissionPaymentVerificationViewSet uses — so these routes sit
+         *     alongside, not in conflict with, apps.academics.batch's own
+         *     router-registered `sessions/` list/detail routes.
+         *
+         *     No @action decorators here: confirmed by direct inspection that a
+         *     ViewSet bound via an explicit `.as_view({...})` call (bypassing the
+         *     router) never reads @action's own `verb=` kwarg — only the router's
+         *     own URL-generation does. `verb` for each action below is instead
+         *     passed directly at the `.as_view({...}, verb="...")` call site in
+         *     urls.py.
+         *
+         *     `serializer_class` is required even though every action below builds
+         *     its own Response by hand — without one, drf-spectacular can't
+         *     introspect this ViewSet at all and silently drops every action from
+         *     the generated OpenAPI schema (confirmed: `npm run generate:api` failed
+         *     with "should either include a serializer_class..." until this was
+         *     added), which would have left the frontend with untyped/missing
+         *     request-response shapes.
+         */
+        post: operations["v1_sessions_attendance_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{id}/cancel/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Operates on TrainingSession (apps.academics.batch), not Attendance
+         *     — registered here rather than in apps.academics.batch because every
+         *     action needs Attendance data/logic, and the dependency direction
+         *     (docs/00-project-structure.md: attendance hangs off batch, never the
+         *     reverse) only allows this app to import that one, not the other way
+         *     around.
+         *
+         *     Wired by explicit path()+as_view() in urls.py, not router.register —
+         *     same mechanism apps.admissions.admission.views.
+         *     AdmissionPaymentVerificationViewSet uses — so these routes sit
+         *     alongside, not in conflict with, apps.academics.batch's own
+         *     router-registered `sessions/` list/detail routes.
+         *
+         *     No @action decorators here: confirmed by direct inspection that a
+         *     ViewSet bound via an explicit `.as_view({...})` call (bypassing the
+         *     router) never reads @action's own `verb=` kwarg — only the router's
+         *     own URL-generation does. `verb` for each action below is instead
+         *     passed directly at the `.as_view({...}, verb="...")` call site in
+         *     urls.py.
+         *
+         *     `serializer_class` is required even though every action below builds
+         *     its own Response by hand — without one, drf-spectacular can't
+         *     introspect this ViewSet at all and silently drops every action from
+         *     the generated OpenAPI schema (confirmed: `npm run generate:api` failed
+         *     with "should either include a serializer_class..." until this was
+         *     added), which would have left the frontend with untyped/missing
+         *     request-response shapes.
+         */
+        post: operations["v1_sessions_cancel_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{id}/delete/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Operates on TrainingSession (apps.academics.batch), not Attendance
+         *     — registered here rather than in apps.academics.batch because every
+         *     action needs Attendance data/logic, and the dependency direction
+         *     (docs/00-project-structure.md: attendance hangs off batch, never the
+         *     reverse) only allows this app to import that one, not the other way
+         *     around.
+         *
+         *     Wired by explicit path()+as_view() in urls.py, not router.register —
+         *     same mechanism apps.admissions.admission.views.
+         *     AdmissionPaymentVerificationViewSet uses — so these routes sit
+         *     alongside, not in conflict with, apps.academics.batch's own
+         *     router-registered `sessions/` list/detail routes.
+         *
+         *     No @action decorators here: confirmed by direct inspection that a
+         *     ViewSet bound via an explicit `.as_view({...})` call (bypassing the
+         *     router) never reads @action's own `verb=` kwarg — only the router's
+         *     own URL-generation does. `verb` for each action below is instead
+         *     passed directly at the `.as_view({...}, verb="...")` call site in
+         *     urls.py.
+         *
+         *     `serializer_class` is required even though every action below builds
+         *     its own Response by hand — without one, drf-spectacular can't
+         *     introspect this ViewSet at all and silently drops every action from
+         *     the generated OpenAPI schema (confirmed: `npm run generate:api` failed
+         *     with "should either include a serializer_class..." until this was
+         *     added), which would have left the frontend with untyped/missing
+         *     request-response shapes.
+         */
+        post: operations["v1_sessions_delete_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{id}/mark-conducted/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Operates on TrainingSession (apps.academics.batch), not Attendance
+         *     — registered here rather than in apps.academics.batch because every
+         *     action needs Attendance data/logic, and the dependency direction
+         *     (docs/00-project-structure.md: attendance hangs off batch, never the
+         *     reverse) only allows this app to import that one, not the other way
+         *     around.
+         *
+         *     Wired by explicit path()+as_view() in urls.py, not router.register —
+         *     same mechanism apps.admissions.admission.views.
+         *     AdmissionPaymentVerificationViewSet uses — so these routes sit
+         *     alongside, not in conflict with, apps.academics.batch's own
+         *     router-registered `sessions/` list/detail routes.
+         *
+         *     No @action decorators here: confirmed by direct inspection that a
+         *     ViewSet bound via an explicit `.as_view({...})` call (bypassing the
+         *     router) never reads @action's own `verb=` kwarg — only the router's
+         *     own URL-generation does. `verb` for each action below is instead
+         *     passed directly at the `.as_view({...}, verb="...")` call site in
+         *     urls.py.
+         *
+         *     `serializer_class` is required even though every action below builds
+         *     its own Response by hand — without one, drf-spectacular can't
+         *     introspect this ViewSet at all and silently drops every action from
+         *     the generated OpenAPI schema (confirmed: `npm run generate:api` failed
+         *     with "should either include a serializer_class..." until this was
+         *     added), which would have left the frontend with untyped/missing
+         *     request-response shapes.
+         */
+        post: operations["v1_sessions_mark_conducted_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{id}/roster/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Operates on TrainingSession (apps.academics.batch), not Attendance
+         *     — registered here rather than in apps.academics.batch because every
+         *     action needs Attendance data/logic, and the dependency direction
+         *     (docs/00-project-structure.md: attendance hangs off batch, never the
+         *     reverse) only allows this app to import that one, not the other way
+         *     around.
+         *
+         *     Wired by explicit path()+as_view() in urls.py, not router.register —
+         *     same mechanism apps.admissions.admission.views.
+         *     AdmissionPaymentVerificationViewSet uses — so these routes sit
+         *     alongside, not in conflict with, apps.academics.batch's own
+         *     router-registered `sessions/` list/detail routes.
+         *
+         *     No @action decorators here: confirmed by direct inspection that a
+         *     ViewSet bound via an explicit `.as_view({...})` call (bypassing the
+         *     router) never reads @action's own `verb=` kwarg — only the router's
+         *     own URL-generation does. `verb` for each action below is instead
+         *     passed directly at the `.as_view({...}, verb="...")` call site in
+         *     urls.py.
+         *
+         *     `serializer_class` is required even though every action below builds
+         *     its own Response by hand — without one, drf-spectacular can't
+         *     introspect this ViewSet at all and silently drops every action from
+         *     the generated OpenAPI schema (confirmed: `npm run generate:api` failed
+         *     with "should either include a serializer_class..." until this was
+         *     added), which would have left the frontend with untyped/missing
+         *     request-response shapes.
+         */
+        get: operations["v1_sessions_roster_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{id}/update-details/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Operates on TrainingSession (apps.academics.batch), not Attendance
+         *     — registered here rather than in apps.academics.batch because every
+         *     action needs Attendance data/logic, and the dependency direction
+         *     (docs/00-project-structure.md: attendance hangs off batch, never the
+         *     reverse) only allows this app to import that one, not the other way
+         *     around.
+         *
+         *     Wired by explicit path()+as_view() in urls.py, not router.register —
+         *     same mechanism apps.admissions.admission.views.
+         *     AdmissionPaymentVerificationViewSet uses — so these routes sit
+         *     alongside, not in conflict with, apps.academics.batch's own
+         *     router-registered `sessions/` list/detail routes.
+         *
+         *     No @action decorators here: confirmed by direct inspection that a
+         *     ViewSet bound via an explicit `.as_view({...})` call (bypassing the
+         *     router) never reads @action's own `verb=` kwarg — only the router's
+         *     own URL-generation does. `verb` for each action below is instead
+         *     passed directly at the `.as_view({...}, verb="...")` call site in
+         *     urls.py.
+         *
+         *     `serializer_class` is required even though every action below builds
+         *     its own Response by hand — without one, drf-spectacular can't
+         *     introspect this ViewSet at all and silently drops every action from
+         *     the generated OpenAPI schema (confirmed: `npm run generate:api` failed
+         *     with "should either include a serializer_class..." until this was
+         *     added), which would have left the frontend with untyped/missing
+         *     request-response shapes.
+         */
+        post: operations["v1_sessions_update_details_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2009,6 +3172,44 @@ export interface paths {
          *         def approve(self, request, pk=None): ...
          */
         patch: operations["v1_students_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/students/{id}/accommodation/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET/PATCH /students/{id}/accommodation/ — a student's hostel
+         *     building/room. Its own module (`residential`, docs/03-rbac.md's
+         *     Residential / Transport row) rather than `students` or
+         *     `student_profile`, for the same "don't leak past this module's own
+         *     RBAC boundary" reason StudentProfileViewSet's docstring gives — but
+         *     the split runs the other way here: Hostel/Admin hold `edit` at *all*
+         *     scope, while Student/Parent hold only own-scope `view` (no `edit` at
+         *     all, enforced by that grant simply not existing — see
+         *     services.update_accommodation for the one extra guard beyond that).
+         */
+        get: operations["v1_students_accommodation_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * @description GET/PATCH /students/{id}/accommodation/ — a student's hostel
+         *     building/room. Its own module (`residential`, docs/03-rbac.md's
+         *     Residential / Transport row) rather than `students` or
+         *     `student_profile`, for the same "don't leak past this module's own
+         *     RBAC boundary" reason StudentProfileViewSet's docstring gives — but
+         *     the split runs the other way here: Hostel/Admin hold `edit` at *all*
+         *     scope, while Student/Parent hold only own-scope `view` (no `edit` at
+         *     all, enforced by that grant simply not existing — see
+         *     services.update_accommodation for the one extra guard beyond that).
+         */
+        patch: operations["v1_students_accommodation_partial_update"];
         trace?: never;
     };
     "/api/v1/students/{id}/guardians/": {
@@ -2241,6 +3442,58 @@ export interface paths {
          *     that an export write its own audit row.
          */
         get: operations["v1_students_export_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/students/lookup/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /students/lookup/?q= — a name-or-code substring lookup for
+         *     picking an existing Student, e.g. apps.academics.batch's enrol form.
+         *     Same shape as apps.people.views.PersonLookupView (built for the
+         *     payment-recording form's person search) — that endpoint looks up
+         *     Person, not Student, so it isn't reusable here directly.
+         *
+         *     Gated on `batch:add` rather than `students:view` since this is
+         *     specifically for the enrol-a-student-into-a-batch use case, not a
+         *     general student directory.
+         */
+        get: operations["v1_students_lookup_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/students/me/payments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /students/me/payments/ — the unified payment ledger's portal
+         *     view for the logged-in student themself (the parent-side equivalent,
+         *     scoped per-child, is
+         *     apps.admissions.parent.views.ParentChildPaymentsView). Scoped to
+         *     `request.user.person` directly rather than a queryset lookup — there
+         *     is nothing to 404 on, since "me" is always exactly one person (or
+         *     none, for a User with no linked Person, e.g. the IT admin account).
+         */
+        get: operations["v1_students_me_payments_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2734,7 +3987,7 @@ export interface components {
             readonly object_id: string;
             /** Format: uuid */
             readonly requested_by: string;
-            readonly status: components["schemas"]["ApprovalRequestStatusEnum"];
+            readonly status: components["schemas"]["CorrectionStatusEnum"];
             /** Format: uuid */
             readonly decided_by: string | null;
             /** Format: date-time */
@@ -2743,13 +3996,6 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
-        /**
-         * @description * `pending` - Pending
-         *     * `approved` - Approved
-         *     * `rejected` - Rejected
-         * @enum {string}
-         */
-        ApprovalRequestStatusEnum: "pending" | "approved" | "rejected";
         AssessmentCriterion: {
             /** Format: uuid */
             readonly id: string;
@@ -2763,6 +4009,62 @@ export interface components {
             /** Format: decimal */
             weight?: string;
             is_active?: boolean;
+        };
+        Attendance: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly session: string;
+            /** Format: uuid */
+            readonly student: string;
+            readonly status: components["schemas"]["ToStatusEnum"];
+            readonly remarks: string;
+            /** Format: uuid */
+            readonly marked_by: string;
+            /** Format: date-time */
+            readonly marked_at: string;
+        };
+        AttendanceCorrection: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly attendance: string;
+            readonly student_name: string;
+            readonly student_code: string;
+            readonly from_status: components["schemas"]["ToStatusEnum"];
+            readonly to_status: components["schemas"]["ToStatusEnum"];
+            readonly reason: string;
+            readonly status: components["schemas"]["CorrectionStatusEnum"];
+            /** Format: uuid */
+            readonly requested_by: string;
+            readonly requested_by_name: string;
+            /** Format: uuid */
+            readonly approved_by: string | null;
+            readonly approved_by_name: string | null;
+            /** Format: date-time */
+            readonly approved_at: string | null;
+        };
+        /**
+         * @description One entry of the POST /sessions/{id}/attendance/ bulk-marking body
+         *     — the request is a JSON array of these.
+         */
+        AttendanceMark: {
+            /** Format: uuid */
+            student: string;
+            status: string;
+            /** @default  */
+            remarks: string;
+        };
+        /**
+         * @description One entry of the POST /sessions/{id}/attendance/ response — schema
+         *     documentation for services.mark_bulk's plain-dict return shape.
+         */
+        AttendanceMarkResult: {
+            /** Format: uuid */
+            student: string;
+            ok: boolean;
+            status?: string;
+            error?: string;
         };
         AuditLog: {
             readonly id: number;
@@ -2783,6 +4085,73 @@ export interface components {
             readonly request_id: string;
             /** Format: date-time */
             readonly created_at: string;
+        };
+        Batch: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly name: string;
+            /** Format: uuid */
+            readonly age_category: string;
+            readonly age_category_name: string;
+            readonly coach: components["schemas"]["Coach"];
+            /** Format: uuid */
+            readonly venue: string;
+            readonly venue_name: string;
+            readonly capacity: number;
+            readonly weekdays: string;
+            /** Format: time */
+            readonly start_time: string;
+            /** Format: time */
+            readonly end_time: string;
+            /** Format: decimal */
+            readonly monthly_fee: string;
+            /** Format: decimal */
+            readonly residential_monthly_fee: string;
+            readonly is_active: boolean;
+            readonly enrolled_count: number;
+            readonly seats_available: number;
+        };
+        BatchEnrollment: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly student: string;
+            readonly student_name: string;
+            readonly student_code: string;
+            /** Format: uuid */
+            readonly batch: string;
+            readonly batch_name: string;
+            /** Format: date */
+            readonly from_date: string;
+            /** Format: date */
+            readonly to_date: string | null;
+            readonly is_active: boolean;
+            readonly fee_status: string;
+        };
+        /**
+         * @description POST /batches/ and PUT/PATCH /batches/{id}/ body — distinct from
+         *     BatchSerializer, which is entirely read_only_fields (nested Coach,
+         *     computed enrolled_count/seats_available) and so can't be reused here.
+         */
+        BatchWrite: {
+            name: string;
+            /** Format: uuid */
+            age_category: string;
+            /** Format: uuid */
+            coach: string;
+            /** Format: uuid */
+            venue: string;
+            capacity: number;
+            weekdays: string;
+            /** Format: time */
+            start_time: string;
+            /** Format: time */
+            end_time: string;
+            /** Format: decimal */
+            monthly_fee: string;
+            /** Format: decimal */
+            residential_monthly_fee: string;
+            is_active?: boolean;
         };
         /**
          * @description * `right_handed` - Right-handed
@@ -2817,6 +4186,17 @@ export interface components {
          * @enum {string}
          */
         BowlingStyleEnum: "right_arm_fast" | "right_arm_medium" | "right_arm_offbreak" | "right_arm_legbreak" | "left_arm_fast" | "left_arm_medium" | "left_arm_orthodox" | "left_arm_chinaman" | "none";
+        Building: {
+            /** Format: uuid */
+            readonly id: string;
+            code: string;
+            name: string;
+            address?: string;
+            is_active?: boolean;
+        };
+        CancelSession: {
+            reason: string;
+        };
         /**
          * @description * `sms` - SMS
          *     * `whatsapp` - WhatsApp
@@ -2826,6 +4206,34 @@ export interface components {
          * @enum {string}
          */
         ChannelEnum: "sms" | "whatsapp" | "email" | "push" | "inapp";
+        Coach: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly person_name: string;
+            readonly specialisation: string;
+            readonly qualification: string;
+            readonly experience_years: number;
+            readonly is_available: boolean;
+        };
+        /**
+         * @description * `pending` - Pending
+         *     * `approved` - Approved
+         *     * `rejected` - Rejected
+         * @enum {string}
+         */
+        CorrectionStatusEnum: "pending" | "approved" | "rejected";
+        /**
+         * @description GET /payments/current-fee/ response — an amount to pre-fill the
+         *     record-payment form with, or null when the selected person isn't an
+         *     active student with an active batch enrolment (a coach's salary, a
+         *     one-off admission fee, a guardian with no billable relationship of
+         *     their own, ...). Never authoritative: the form field it fills stays
+         *     editable, see PaymentsPage.tsx's RecordPaymentForm.
+         */
+        CurrentFee: {
+            /** Format: decimal */
+            amount: string | null;
+        };
         /**
          * @description GET /api/v1/dashboards/me — apps.core.services.dashboards.build_dashboard().
          *
@@ -2990,6 +4398,13 @@ export interface components {
             /** Format: uuid */
             owner?: string | null;
         };
+        /** @description POST /batches/{id}/enrol/ body. */
+        Enrol: {
+            /** Format: uuid */
+            student: string;
+            /** Format: date */
+            from_date: string;
+        };
         /**
          * @description * `upi` - UPI
          *     * `card` - Card
@@ -3084,6 +4499,34 @@ export interface components {
             person: components["schemas"]["Person"] | null;
             roles: components["schemas"]["RoleSummary"][];
             permissions: components["schemas"]["PermissionSummary"][];
+        };
+        /**
+         * @description GET /batches/{id}/attendance-report/ response — schema
+         *     documentation for services.monthly_report's plain-dict return shape.
+         */
+        MonthlyReport: {
+            /** Format: uuid */
+            batch_id: string;
+            batch_name: string;
+            month: string;
+            sessions: components["schemas"]["MonthlyReportSession"][];
+            rows: components["schemas"]["MonthlyReportRow"][];
+        };
+        MonthlyReportRow: {
+            /** Format: uuid */
+            student_id: string;
+            student_code: string;
+            person: components["schemas"]["Person"];
+            marks: {
+                [key: string]: string | null;
+            };
+            /** Format: decimal */
+            percentage: string | null;
+        };
+        MonthlyReportSession: {
+            /** Format: date */
+            date: string;
+            is_conducted: boolean;
         };
         NotificationLog: {
             /** Format: uuid */
@@ -3198,6 +4641,45 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["AssessmentCriterion"][];
         };
+        PaginatedAttendanceCorrectionList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["AttendanceCorrection"][];
+        };
+        PaginatedAttendanceList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["Attendance"][];
+        };
+        PaginatedAttendanceMarkResultList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["AttendanceMarkResult"][];
+        };
         PaginatedAuditLogList: {
             /**
              * Format: uri
@@ -3210,6 +4692,58 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["AuditLog"][];
+        };
+        PaginatedBatchEnrollmentList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["BatchEnrollment"][];
+        };
+        PaginatedBatchList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["Batch"][];
+        };
+        PaginatedBuildingList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["Building"][];
+        };
+        PaginatedCoachList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["Coach"][];
         };
         PaginatedDocumentList: {
             /**
@@ -3302,6 +4836,32 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["NotificationTemplate"][];
         };
+        PaginatedPaymentList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["Payment"][];
+        };
+        PaginatedPaymentTypeList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["PaymentType"][];
+        };
         PaginatedProgrammeList: {
             /**
              * Format: uri
@@ -3353,6 +4913,19 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Student"][];
+        };
+        PaginatedTrainingSessionList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["TrainingSession"][];
         };
         PaginatedTrainingTypeList: {
             /**
@@ -3415,6 +4988,82 @@ export interface components {
          */
         PatchedAdmissionWrite: {
             residential?: boolean;
+        };
+        PatchedAttendance: {
+            /** Format: uuid */
+            readonly id?: string;
+            /** Format: uuid */
+            readonly session?: string;
+            /** Format: uuid */
+            readonly student?: string;
+            readonly status?: components["schemas"]["ToStatusEnum"];
+            readonly remarks?: string;
+            /** Format: uuid */
+            readonly marked_by?: string;
+            /** Format: date-time */
+            readonly marked_at?: string;
+        };
+        PatchedAttendanceCorrection: {
+            /** Format: uuid */
+            readonly id?: string;
+            /** Format: uuid */
+            readonly attendance?: string;
+            readonly student_name?: string;
+            readonly student_code?: string;
+            readonly from_status?: components["schemas"]["ToStatusEnum"];
+            readonly to_status?: components["schemas"]["ToStatusEnum"];
+            readonly reason?: string;
+            readonly status?: components["schemas"]["CorrectionStatusEnum"];
+            /** Format: uuid */
+            readonly requested_by?: string;
+            readonly requested_by_name?: string;
+            /** Format: uuid */
+            readonly approved_by?: string | null;
+            readonly approved_by_name?: string | null;
+            /** Format: date-time */
+            readonly approved_at?: string | null;
+        };
+        PatchedBatchEnrollment: {
+            /** Format: uuid */
+            readonly id?: string;
+            /** Format: uuid */
+            readonly student?: string;
+            readonly student_name?: string;
+            readonly student_code?: string;
+            /** Format: uuid */
+            readonly batch?: string;
+            readonly batch_name?: string;
+            /** Format: date */
+            readonly from_date?: string;
+            /** Format: date */
+            readonly to_date?: string | null;
+            readonly is_active?: boolean;
+            readonly fee_status?: string;
+        };
+        /**
+         * @description POST /batches/ and PUT/PATCH /batches/{id}/ body — distinct from
+         *     BatchSerializer, which is entirely read_only_fields (nested Coach,
+         *     computed enrolled_count/seats_available) and so can't be reused here.
+         */
+        PatchedBatchWrite: {
+            name?: string;
+            /** Format: uuid */
+            age_category?: string;
+            /** Format: uuid */
+            coach?: string;
+            /** Format: uuid */
+            venue?: string;
+            capacity?: number;
+            weekdays?: string;
+            /** Format: time */
+            start_time?: string;
+            /** Format: time */
+            end_time?: string;
+            /** Format: decimal */
+            monthly_fee?: string;
+            /** Format: decimal */
+            residential_monthly_fee?: string;
+            is_active?: boolean;
         };
         PatchedDocument: {
             /** Format: uuid */
@@ -3501,6 +5150,21 @@ export interface components {
             readonly updated_at?: string;
         };
         /**
+         * @description PATCH /students/{id}/accommodation/ body — Hostel/Admin only
+         *     (enforced by the `residential:edit` grant itself, not scope logic:
+         *     Student/Parent hold own-scope `view` only on this module, so they
+         *     never reach this action). Plain Serializer, not a ModelSerializer,
+         *     since `building` needs to resolve from id to instance in the view
+         *     (services.update_accommodation expects a real Building instance or
+         *     None), same convention as apps.academics.attendance.serializers'
+         *     TrainingSessionUpdateSerializer.
+         */
+        PatchedStudentAccommodationWrite: {
+            /** Format: uuid */
+            building?: string | null;
+            room_number?: string;
+        };
+        /**
          * @description PATCH /students/{id}/profile/ — the student/parent-editable subset
          *     only; `blood_group`/`student_email` write through to `Person` in the
          *     view (services.update_profile), not through this ModelSerializer's
@@ -3546,6 +5210,28 @@ export interface components {
             programme?: string | null;
             residential?: boolean;
         };
+        PatchedTrainingSession: {
+            /** Format: uuid */
+            readonly id?: string;
+            /** Format: uuid */
+            readonly batch?: string;
+            readonly batch_name?: string;
+            /** Format: date */
+            readonly date?: string;
+            /** Format: time */
+            readonly start_time?: string;
+            /** Format: time */
+            readonly end_time?: string;
+            /** Format: uuid */
+            readonly coach?: string;
+            /** Format: uuid */
+            readonly training_type?: string | null;
+            readonly training_type_name?: string | null;
+            readonly objective?: string;
+            readonly is_conducted?: boolean;
+            readonly cancel_reason?: string;
+            readonly report?: string;
+        };
         PatchedTrialRegistration: {
             /** Format: uuid */
             readonly id?: string;
@@ -3570,6 +5256,39 @@ export interface components {
              */
             readonly admission_id?: string | null;
         };
+        Payment: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly person: string;
+            readonly person_name: string;
+            /** Format: uuid */
+            readonly payment_type: string;
+            readonly payment_type_label: string;
+            /** Format: date */
+            readonly billing_period: string | null;
+            /** Format: decimal */
+            readonly amount: string;
+            readonly payment_mode: components["schemas"]["PaymentModeEnum"];
+            readonly reference_no: string;
+            /** Format: date */
+            readonly payment_date: string;
+            readonly status: components["schemas"]["PaymentLedgerStatusEnum"];
+            readonly confirmation_no: string;
+            /** Format: date-time */
+            readonly confirmed_at: string;
+            readonly invoice_no: string | null;
+            /** Format: date-time */
+            readonly invoiced_at: string | null;
+            readonly void_reason: string;
+        };
+        /**
+         * @description * `confirmed` - Confirmed
+         *     * `settled` - Settled
+         *     * `void` - Void
+         * @enum {string}
+         */
+        PaymentLedgerStatusEnum: "confirmed" | "settled" | "void";
         /**
          * @description * `upi` - UPI
          *     * `cash` - Cash
@@ -3586,6 +5305,15 @@ export interface components {
          * @enum {string}
          */
         PaymentStatusEnum: "not_applicable" | "pending" | "paid" | "waived";
+        PaymentType: {
+            /** Format: uuid */
+            readonly id: string;
+            code: string;
+            label: string;
+            is_recurring?: boolean;
+            display_order?: number;
+            is_active?: boolean;
+        };
         PermissionSummary: {
             module: string;
             verb: string;
@@ -3636,6 +5364,31 @@ export interface components {
             is_active?: boolean;
         };
         /**
+         * @description POST /payments/record/ — the fields a human actually supplies;
+         *     everything else (confirmation_no, status, recorded_by) is set by
+         *     services.record_payment, not accepted as input.
+         */
+        RecordPayment: {
+            /** Format: uuid */
+            person: string;
+            /** Format: uuid */
+            payment_type: string;
+            /** Format: date */
+            billing_period?: string | null;
+            /** Format: decimal */
+            amount: string;
+            payment_mode: string;
+            /** @default  */
+            reference_no: string;
+            /** Format: date */
+            payment_date: string;
+        };
+        /** @description POST /attendance/{id}/corrections/ body — reason required. */
+        RequestCorrection: {
+            to_status: string;
+            reason: string;
+        };
+        /**
          * @description * `at_admission` - At admission
          *     * `before_first_session` - Before first session
          *     * `profile_completion` - Profile completion
@@ -3653,6 +5406,26 @@ export interface components {
         RoleSummary: {
             code: string;
             name: string;
+        };
+        RosterEntry: {
+            /** Format: uuid */
+            student_id: string;
+            student_code: string;
+            person: components["schemas"]["Person"];
+            mark: components["schemas"]["RosterMark"] | null;
+        };
+        RosterMark: {
+            status: string;
+            remarks: string;
+        };
+        /**
+         * @description GET /sessions/{id}/roster/ response — schema documentation for
+         *     services.roster's plain-dict return shape.
+         */
+        RosterResponse: {
+            /** Format: uuid */
+            session_id: string;
+            students: components["schemas"]["RosterEntry"][];
         };
         Season: {
             /** Format: uuid */
@@ -3728,6 +5501,24 @@ export interface components {
             readonly completed_on: string | null;
             /** Format: date-time */
             readonly created_at: string;
+        };
+        /**
+         * @description GET /students/{id}/accommodation/ — read shape, own module
+         *     (`residential`) from `students`/`student_profile` for the same reason
+         *     StudentProfileViewSet's docstring gives: a Coach holds `students:view`
+         *     but docs/03-rbac.md's Residential / Transport row gives Coach no
+         *     access to this at all, so this can't be folded into StudentSerializer
+         *     (visible to anyone who can see a Student at all) without leaking past
+         *     that boundary.
+         */
+        StudentAccommodation: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly residential: boolean;
+            /** Format: uuid */
+            readonly building: string | null;
+            readonly building_name: string | null;
+            readonly room_number: string;
         };
         /**
          * @description GET /students/{id}/profile/ — read shape. `blood_group`/`email`
@@ -3825,6 +5616,17 @@ export interface components {
             programme?: string | null;
             residential?: boolean;
         };
+        /**
+         * @description * `present` - Present
+         *     * `late` - Late
+         *     * `absent` - Absent
+         *     * `leave` - Leave
+         *     * `medical_leave` - Medical leave
+         *     * `tournament_duty` - Tournament duty
+         *     * `official_duty` - Official duty
+         * @enum {string}
+         */
+        ToStatusEnum: "present" | "late" | "absent" | "leave" | "medical_leave" | "tournament_duty" | "official_duty";
         TokenBlacklist: {
             refresh: string;
         };
@@ -3837,12 +5639,64 @@ export interface components {
             readonly access: string;
             refresh: string;
         };
+        TrainingSession: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly batch: string;
+            readonly batch_name: string;
+            /** Format: date */
+            readonly date: string;
+            /** Format: time */
+            readonly start_time: string;
+            /** Format: time */
+            readonly end_time: string;
+            /** Format: uuid */
+            readonly coach: string;
+            /** Format: uuid */
+            readonly training_type: string | null;
+            readonly training_type_name: string | null;
+            readonly objective: string;
+            readonly is_conducted: boolean;
+            readonly cancel_reason: string;
+            readonly report: string;
+        };
+        /**
+         * @description POST /sessions/{id}/update-details/ body. Every field optional —
+         *     only the ones provided are changed — same plain-Serializer-for-an-
+         *     action-body convention as apps.academics.batch.serializers'
+         *     EnrolSerializer/TransferSerializer, not a ModelSerializer, since
+         *     coach/training_type need to resolve from id to instance in the view
+         *     (services.update_session_details expects real model instances, same
+         *     as every other write path in this app).
+         */
+        TrainingSessionUpdate: {
+            /** Format: date */
+            date?: string;
+            /** Format: time */
+            start_time?: string;
+            /** Format: time */
+            end_time?: string;
+            /** Format: uuid */
+            coach?: string;
+            /** Format: uuid */
+            training_type?: string | null;
+            objective?: string;
+            report?: string;
+        };
         TrainingType: {
             /** Format: uuid */
             readonly id: string;
             code: string;
             name: string;
             is_active?: boolean;
+        };
+        /** @description POST /enrollments/{id}/transfer/ body. */
+        Transfer: {
+            /** Format: uuid */
+            to_batch: string;
+            /** Format: date */
+            effective_date: string;
         };
         TrialAssessment: {
             /** Format: uuid */
@@ -4588,6 +6442,182 @@ export interface operations {
             };
         };
     };
+    v1_attendance_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAttendanceList"];
+                };
+            };
+        };
+    };
+    v1_attendance_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Attendance"];
+                "application/x-www-form-urlencoded": components["schemas"]["Attendance"];
+                "multipart/form-data": components["schemas"]["Attendance"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Attendance"];
+                };
+            };
+        };
+    };
+    v1_attendance_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this attendance. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Attendance"];
+                };
+            };
+        };
+    };
+    v1_attendance_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this attendance. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Attendance"];
+                "application/x-www-form-urlencoded": components["schemas"]["Attendance"];
+                "multipart/form-data": components["schemas"]["Attendance"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Attendance"];
+                };
+            };
+        };
+    };
+    v1_attendance_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this attendance. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_attendance_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this attendance. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAttendance"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedAttendance"];
+                "multipart/form-data": components["schemas"]["PatchedAttendance"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Attendance"];
+                };
+            };
+        };
+    };
+    v1_attendance_corrections_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this attendance. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestCorrection"];
+                "application/x-www-form-urlencoded": components["schemas"]["RequestCorrection"];
+                "multipart/form-data": components["schemas"]["RequestCorrection"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceCorrection"];
+                };
+            };
+        };
+    };
     v1_audit_logs_list: {
         parameters: {
             query?: {
@@ -4807,6 +6837,447 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TokenRefresh"];
+                };
+            };
+        };
+    };
+    v1_batches_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBatchList"];
+                };
+            };
+        };
+    };
+    v1_batches_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["BatchWrite"];
+                "multipart/form-data": components["schemas"]["BatchWrite"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Batch"];
+                };
+            };
+        };
+    };
+    v1_batches_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this batch. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Batch"];
+                };
+            };
+        };
+    };
+    v1_batches_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this batch. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["BatchWrite"];
+                "multipart/form-data": components["schemas"]["BatchWrite"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Batch"];
+                };
+            };
+        };
+    };
+    v1_batches_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this batch. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_batches_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this batch. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedBatchWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedBatchWrite"];
+                "multipart/form-data": components["schemas"]["PatchedBatchWrite"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Batch"];
+                };
+            };
+        };
+    };
+    v1_batches_attendance_report_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthlyReport"];
+                };
+            };
+        };
+    };
+    v1_batches_enrol_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this batch. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Enrol"];
+                "application/x-www-form-urlencoded": components["schemas"]["Enrol"];
+                "multipart/form-data": components["schemas"]["Enrol"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchEnrollment"];
+                };
+            };
+        };
+    };
+    v1_coaches_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCoachList"];
+                };
+            };
+        };
+    };
+    v1_coaches_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this coach. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Coach"];
+                };
+            };
+        };
+    };
+    v1_corrections_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /**
+                 * @description * `pending` - Pending
+                 *     * `approved` - Approved
+                 *     * `rejected` - Rejected
+                 */
+                status?: "approved" | "pending" | "rejected";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAttendanceCorrectionList"];
+                };
+            };
+        };
+    };
+    v1_corrections_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AttendanceCorrection"];
+                "application/x-www-form-urlencoded": components["schemas"]["AttendanceCorrection"];
+                "multipart/form-data": components["schemas"]["AttendanceCorrection"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceCorrection"];
+                };
+            };
+        };
+    };
+    v1_corrections_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this attendance correction. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceCorrection"];
+                };
+            };
+        };
+    };
+    v1_corrections_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this attendance correction. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AttendanceCorrection"];
+                "application/x-www-form-urlencoded": components["schemas"]["AttendanceCorrection"];
+                "multipart/form-data": components["schemas"]["AttendanceCorrection"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceCorrection"];
+                };
+            };
+        };
+    };
+    v1_corrections_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this attendance correction. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_corrections_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this attendance correction. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAttendanceCorrection"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedAttendanceCorrection"];
+                "multipart/form-data": components["schemas"]["PatchedAttendanceCorrection"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceCorrection"];
+                };
+            };
+        };
+    };
+    v1_corrections_approve_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this attendance correction. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceCorrection"];
+                };
+            };
+        };
+    };
+    v1_corrections_reject_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this attendance correction. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceCorrection"];
                 };
             };
         };
@@ -5296,6 +7767,184 @@ export interface operations {
             };
         };
     };
+    v1_enrollments_list: {
+        parameters: {
+            query?: {
+                batch?: string;
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                is_active?: boolean;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBatchEnrollmentList"];
+                };
+            };
+        };
+    };
+    v1_enrollments_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["BatchEnrollment"];
+                "application/x-www-form-urlencoded": components["schemas"]["BatchEnrollment"];
+                "multipart/form-data": components["schemas"]["BatchEnrollment"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchEnrollment"];
+                };
+            };
+        };
+    };
+    v1_enrollments_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this batch enrollment. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchEnrollment"];
+                };
+            };
+        };
+    };
+    v1_enrollments_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this batch enrollment. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["BatchEnrollment"];
+                "application/x-www-form-urlencoded": components["schemas"]["BatchEnrollment"];
+                "multipart/form-data": components["schemas"]["BatchEnrollment"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchEnrollment"];
+                };
+            };
+        };
+    };
+    v1_enrollments_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this batch enrollment. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_enrollments_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this batch enrollment. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedBatchEnrollment"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedBatchEnrollment"];
+                "multipart/form-data": components["schemas"]["PatchedBatchEnrollment"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchEnrollment"];
+                };
+            };
+        };
+    };
+    v1_enrollments_transfer_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this batch enrollment. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Transfer"];
+                "application/x-www-form-urlencoded": components["schemas"]["Transfer"];
+                "multipart/form-data": components["schemas"]["Transfer"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchEnrollment"];
+                };
+            };
+        };
+    };
     v1_health_retrieve: {
         parameters: {
             query?: never;
@@ -5540,6 +8189,52 @@ export interface operations {
             };
         };
     };
+    v1_master_buildings_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBuildingList"];
+                };
+            };
+        };
+    };
+    v1_master_buildings_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this building. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Building"];
+                };
+            };
+        };
+    };
     v1_master_document_types_list: {
         parameters: {
             query?: {
@@ -5628,6 +8323,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EnquirySource"];
+                };
+            };
+        };
+    };
+    v1_master_payment_types_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPaymentTypeList"];
+                };
+            };
+        };
+    };
+    v1_master_payment_types_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this payment type. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentType"];
                 };
             };
         };
@@ -6017,6 +8758,26 @@ export interface operations {
             };
         };
     };
+    v1_parents_me_children_payments_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     v1_parents_me_documents_create: {
         parameters: {
             query?: never;
@@ -6071,6 +8832,121 @@ export interface operations {
             };
         };
     };
+    v1_payments_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                payment_type?: string;
+                /**
+                 * @description * `confirmed` - Confirmed
+                 *     * `settled` - Settled
+                 *     * `void` - Void
+                 */
+                status?: "confirmed" | "settled" | "void";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPaymentList"];
+                };
+            };
+        };
+    };
+    v1_payments_settle_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Payment"];
+                };
+            };
+        };
+    };
+    v1_payments_current_fee_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentFee"];
+                };
+            };
+        };
+    };
+    v1_payments_record_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordPayment"];
+                "application/x-www-form-urlencoded": components["schemas"]["RecordPayment"];
+                "multipart/form-data": components["schemas"]["RecordPayment"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Payment"];
+                };
+            };
+        };
+    };
+    v1_persons_lookup_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Person"][];
+                };
+            };
+        };
+    };
     v1_persons_search_retrieve: {
         parameters: {
             query?: never;
@@ -6104,6 +8980,304 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    v1_sessions_list: {
+        parameters: {
+            query?: {
+                batch?: string;
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                date?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedTrainingSessionList"];
+                };
+            };
+        };
+    };
+    v1_sessions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TrainingSession"];
+                "application/x-www-form-urlencoded": components["schemas"]["TrainingSession"];
+                "multipart/form-data": components["schemas"]["TrainingSession"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingSession"];
+                };
+            };
+        };
+    };
+    v1_sessions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this training session. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingSession"];
+                };
+            };
+        };
+    };
+    v1_sessions_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this training session. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TrainingSession"];
+                "application/x-www-form-urlencoded": components["schemas"]["TrainingSession"];
+                "multipart/form-data": components["schemas"]["TrainingSession"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingSession"];
+                };
+            };
+        };
+    };
+    v1_sessions_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this training session. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_sessions_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this training session. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedTrainingSession"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedTrainingSession"];
+                "multipart/form-data": components["schemas"]["PatchedTrainingSession"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingSession"];
+                };
+            };
+        };
+    };
+    v1_sessions_attendance_create: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceMark"][];
+                "application/x-www-form-urlencoded": components["schemas"]["AttendanceMark"][];
+                "multipart/form-data": components["schemas"]["AttendanceMark"][];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAttendanceMarkResultList"];
+                };
+            };
+        };
+    };
+    v1_sessions_cancel_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelSession"];
+                "application/x-www-form-urlencoded": components["schemas"]["CancelSession"];
+                "multipart/form-data": components["schemas"]["CancelSession"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingSession"];
+                };
+            };
+        };
+    };
+    v1_sessions_delete_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_sessions_mark_conducted_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingSession"];
+                };
+            };
+        };
+    };
+    v1_sessions_roster_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RosterResponse"];
+                };
+            };
+        };
+    };
+    v1_sessions_update_details_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TrainingSessionUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["TrainingSessionUpdate"];
+                "multipart/form-data": components["schemas"]["TrainingSessionUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingSession"];
+                };
             };
         };
     };
@@ -6239,6 +9413,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StudentWrite"];
+                };
+            };
+        };
+    };
+    v1_students_accommodation_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentAccommodation"];
+                };
+            };
+        };
+    };
+    v1_students_accommodation_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedStudentAccommodationWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedStudentAccommodationWrite"];
+                "multipart/form-data": components["schemas"]["PatchedStudentAccommodationWrite"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentAccommodation"];
                 };
             };
         };
@@ -6477,6 +9699,43 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Student"];
                 };
+            };
+        };
+    };
+    v1_students_lookup_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Student"][];
+                };
+            };
+        };
+    };
+    v1_students_me_payments_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

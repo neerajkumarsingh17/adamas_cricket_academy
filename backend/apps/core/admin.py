@@ -5,10 +5,12 @@ from .models import (
     ApprovalRequest,
     ApprovalRule,
     AssessmentCriterion,
+    Building,
     ConsentType,
     DocumentType,
     EnquirySource,
     FeeHead,
+    PaymentType,
     Programme,
     Season,
     TrainingType,
@@ -32,6 +34,13 @@ class AgeCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Venue)
 class VenueAdmin(admin.ModelAdmin):
+    list_display = ["name", "code", "address", "is_active"]
+    list_filter = ["is_active"]
+    search_fields = ["code", "name", "address"]
+
+
+@admin.register(Building)
+class BuildingAdmin(admin.ModelAdmin):
     list_display = ["name", "code", "address", "is_active"]
     list_filter = ["is_active"]
     search_fields = ["code", "name", "address"]
@@ -76,6 +85,13 @@ class FeeHeadAdmin(admin.ModelAdmin):
 class ConsentTypeAdmin(admin.ModelAdmin):
     list_display = ["label", "code", "version", "is_mandatory", "is_active"]
     list_filter = ["is_mandatory", "is_active"]
+    search_fields = ["code", "label"]
+
+
+@admin.register(PaymentType)
+class PaymentTypeAdmin(admin.ModelAdmin):
+    list_display = ["label", "code", "is_recurring", "display_order", "is_active"]
+    list_filter = ["is_recurring", "is_active"]
     search_fields = ["code", "label"]
 
 

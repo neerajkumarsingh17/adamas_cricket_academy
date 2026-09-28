@@ -1,9 +1,19 @@
 import { useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 // A shared overlay dialog shell — StatusChangeDialog's ad-hoc
 // `fixed inset-0 ... bg-black/30` pattern, generalised: consistent
 // backdrop, escape-to-close, click-outside-to-close, and a title bar with
 // a close button, so every modal in the app looks and behaves the same.
+//
+// Rendered through a portal into document.body rather than inline: a
+// caller that opens a Modal from inside a <li> or <table> (e.g.
+// BatchRosterPage's SessionRow, itself a <li>, opening SessionDetailModal
+// — whose content includes its own <ul><li> roster list) would otherwise
+// nest that markup inside the triggering <li>, which is invalid HTML
+// (confirmed via React's own validateDOMNesting warning) regardless of
+// `fixed` positioning lifting it visually. A portal sidesteps that
+// entirely, for every Modal caller, not just that one.
 export function Modal({
   title,
   onClose,
@@ -25,7 +35,7 @@ export function Modal({
 
   const widthClass = { md: 'max-w-md', lg: 'max-w-2xl', xl: 'max-w-4xl' }[size]
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]"
       onClick={onClose}
@@ -49,6 +59,7 @@ export function Modal({
         </div>
         <div className="flex-1 overflow-auto">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

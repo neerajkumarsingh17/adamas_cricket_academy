@@ -4,10 +4,12 @@ from .models import (
     AgeCategory,
     ApprovalRequest,
     AssessmentCriterion,
+    Building,
     ConsentType,
     DocumentType,
     EnquirySource,
     FeeHead,
+    PaymentType,
     Programme,
     Season,
     TrainingType,
@@ -100,6 +102,12 @@ class VenueSerializer(serializers.ModelSerializer):
         fields = ["id", "code", "name", "address", "is_active"]
 
 
+class BuildingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Building
+        fields = ["id", "code", "name", "address", "is_active"]
+
+
 class SeasonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Season
@@ -136,6 +144,12 @@ class FeeHeadSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeeHead
         fields = ["id", "code", "label", "is_mandatory", "display_order", "applies_to", "is_active"]
+
+
+class PaymentTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentType
+        fields = ["id", "code", "label", "is_recurring", "display_order", "is_active"]
 
 
 class ConsentTypeSerializer(serializers.ModelSerializer):

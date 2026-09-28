@@ -13,13 +13,21 @@ documents (passport photograph, previous cricket records) get new codes.
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from apps.core.models import ConsentType, DocumentType, FeeHead
+from apps.core.models import ConsentType, DocumentType, FeeHead, PaymentType
 
 FEE_HEADS = [
     # (code, label, is_mandatory, display_order)
     ("registration", "Registration Fee", True, 1),
     ("coaching", "Coaching Fee", True, 2),
     ("other", "Other", False, 3),
+]
+
+# (code, label, is_recurring, display_order) — the unified Payment ledger's
+# type master. Every other category (kit, tournament, hostel...) is added
+# from admin only, never here.
+PAYMENT_TYPES = [
+    ("admission_fee", "Admission Fee", False, 1),
+    ("monthly_coaching_fee", "Monthly Coaching Fee", True, 2),
 ]
 
 CONSENT_TYPES = [
@@ -105,6 +113,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         counts = {
             "fee heads": 0,
+            "payment types": 0,
             "consent types": 0,
             "document types updated": 0,
             "document types added": 0,
@@ -120,6 +129,17 @@ class Command(BaseCommand):
                 },
             )
             counts["fee heads"] += 1
+
+        for code, label, is_recurring, display_order in PAYMENT_TYPES:
+            PaymentType.objects.update_or_create(
+                code=code,
+                defaults={
+                    "label": label,
+                    "is_recurring": is_recurring,
+                    "display_order": display_order,
+                },
+            )
+            counts["payment types"] += 1
 
         for code, label, body_text, version, is_mandatory in CONSENT_TYPES:
             ConsentType.objects.update_or_create(

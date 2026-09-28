@@ -5,10 +5,67 @@ import { Button } from '../../../components/Button'
 import { Can } from '../../../components/Can'
 import { Card } from '../../../components/Card'
 import { Pill } from '../../../components/Pill'
+import { AccommodationDialog } from '../components/AccommodationDialog'
 import { GrantLoginDialog } from '../components/GrantLoginDialog'
 import { LinkGuardianDialog } from '../components/LinkGuardianDialog'
 import { StatusChangeDialog } from '../components/StatusChangeDialog'
-import { useStatusHistory, useStudentProfile, useUnlinkGuardian } from '../hooks/useStudents'
+import {
+  useAccommodation,
+  useStatusHistory,
+  useStudentProfile,
+  useUnlinkGuardian,
+} from '../hooks/useStudents'
+
+// Its own module (`residential`) from the rest of this page's `students`-
+// gated actions — see StudentAccommodationViewSet's docstring for why a
+// Coach (who holds students:view) must not see this via composite_profile,
+// and why the query itself (not just the "Assign" button) only ever runs
+// for a role <Can> actually renders for.
+function AccommodationCard({ studentId }: { studentId: string }) {
+  const { data, isPending, isError, error, refetch } = useAccommodation(studentId)
+  const [editing, setEditing] = useState(false)
+
+  return (
+    <Card>
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-gray-700">Accommodation</h3>
+        <Can module="residential" verb="edit">
+          {data && (
+            <Button variant="secondary" onClick={() => setEditing(true)}>
+              {data.building ? 'Change' : 'Assign'}
+            </Button>
+          )}
+        </Can>
+      </div>
+      <AsyncBoundary
+        isPending={isPending}
+        isError={isError}
+        error={error}
+        data={data}
+        onRetry={() => void refetch()}
+        skeleton={<RowSkeleton rows={1} />}
+      >
+        {(accommodation) =>
+          accommodation.building ? (
+            <p className="text-sm text-gray-900">
+              {accommodation.building_name}
+              {accommodation.room_number && ` · Room ${accommodation.room_number}`}
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500">Not assigned yet.</p>
+          )
+        }
+      </AsyncBoundary>
+      {editing && data && (
+        <AccommodationDialog
+          studentId={studentId}
+          accommodation={data}
+          onClose={() => setEditing(false)}
+        />
+      )}
+    </Card>
+  )
+}
 
 type Tab = 'personal' | 'parent' | 'cricket' | 'academy'
 
@@ -189,6 +246,11 @@ export function StudentProfilePage() {
                       </div>
                     </dl>
                   </Card>
+                  {p.academy.residential && (
+                    <Can module="residential" verb="view">
+                      <AccommodationCard studentId={id as string} />
+                    </Can>
+                  )}
                   <Card>
                     <h3 className="mb-3 text-sm font-semibold text-gray-700">Status history</h3>
                     <StatusHistoryPanel studentId={id as string} />

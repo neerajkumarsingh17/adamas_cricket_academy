@@ -7,6 +7,7 @@ router = SimpleRouter()
 router.register("master/programmes", views.ProgrammeViewSet, basename="master-programmes")
 router.register("master/age-categories", views.AgeCategoryViewSet, basename="master-age-categories")
 router.register("master/venues", views.VenueViewSet, basename="master-venues")
+router.register("master/buildings", views.BuildingViewSet, basename="master-buildings")
 router.register("master/seasons", views.SeasonViewSet, basename="master-seasons")
 router.register(
     "master/enquiry-sources", views.EnquirySourceViewSet, basename="master-enquiry-sources"
@@ -21,6 +22,9 @@ router.register(
     "master/assessment-criteria",
     views.AssessmentCriterionViewSet,
     basename="master-assessment-criteria",
+)
+router.register(
+    "master/payment-types", views.PaymentTypeViewSet, basename="master-payment-types"
 )
 
 urlpatterns = [

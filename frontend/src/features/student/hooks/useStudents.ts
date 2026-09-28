@@ -1,5 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { studentApi, type LinkGuardianInput, type StudentProfileInput } from '../api/student'
+import {
+  masterApi,
+  studentApi,
+  type LinkGuardianInput,
+  type StudentAccommodationInput,
+  type StudentProfileInput,
+} from '../api/student'
 
 export function useStudents(status?: string) {
   return useQuery({
@@ -14,6 +20,14 @@ export function useStudentProfile(id: string | undefined) {
     queryKey: ['students', id, 'profile'],
     queryFn: () => studentApi.profile(id as string),
     enabled: !!id,
+  })
+}
+
+export function useMyPayments() {
+  return useQuery({
+    queryKey: ['students', 'me', 'payments'],
+    queryFn: studentApi.myPayments,
+    staleTime: 15_000,
   })
 }
 
@@ -84,5 +98,33 @@ export function useUpdateProfileCompletion(id: string) {
     onSuccess: (data) => {
       queryClient.setQueryData(['students', id, 'profile-completion'], data)
     },
+  })
+}
+
+// Own module (`residential`) from useStudentProfile()/useProfileCompletion()
+// above — see studentApi.accommodation's own comment.
+export function useAccommodation(id: string | undefined) {
+  return useQuery({
+    queryKey: ['students', id, 'accommodation'],
+    queryFn: () => studentApi.accommodation(id as string),
+    enabled: !!id,
+  })
+}
+
+export function useUpdateAccommodation(id: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: StudentAccommodationInput) => studentApi.updateAccommodation(id, body),
+    onSuccess: (data) => {
+      queryClient.setQueryData(['students', id, 'accommodation'], data)
+    },
+  })
+}
+
+export function useBuildings() {
+  return useQuery({
+    queryKey: ['master', 'buildings'],
+    queryFn: masterApi.buildings,
+    staleTime: 5 * 60_000,
   })
 }

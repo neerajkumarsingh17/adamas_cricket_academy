@@ -2,6 +2,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -47,6 +48,8 @@ LOCAL_APPS = [
     "apps.admissions.parent",
     "apps.admissions.document",
     "apps.admissions.idcard",
+    "apps.academics.batch",
+    "apps.academics.attendance",
     "apps.finance.fee",
     "apps.finance.payment",
     "apps.engagement.communication",
@@ -113,6 +116,17 @@ CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TIMEZONE = TIME_ZONE
+
+# The first periodic task in this codebase — keeps TrainingSession rows
+# generated ~4 weeks ahead of every active batch's weekly schedule
+# (apps.academics.batch.services.generate_sessions) without anyone having
+# to remember to run the management command by hand.
+CELERY_BEAT_SCHEDULE = {
+    "generate-training-sessions-weekly": {
+        "task": "batch.generate_sessions",
+        "schedule": crontab(day_of_week=0, hour=2, minute=0),
+    },
+}
 
 # docs/07-storage.md: AWS_S3_ENDPOINT_URL points at local MinIO in dev only and is
 # unset in staging/production, so boto3 talks to real S3. No code branches on it.
@@ -186,4 +200,21 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Adamas Cricket Academy Operations & Athlete Management System",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": True,
+    # drf-spectacular names an enum from the field's owning model+field
+    # name, not the Python choices-class name — apps.finance.payment.
+    # Payment.status and apps.admissions.trial.TrialRegistration.
+    # payment_status both auto-name to "PaymentStatusEnum" despite having
+    # completely different values (confirmed/settled/void vs
+    # not_applicable/pending/paid/waived), silently mismapping one of them
+    # in the generated frontend types. Keyed by a hash of the actual
+    # choice values, not the name, so this only affects this one enum.
+    "ENUM_NAME_OVERRIDES": {
+        "PaymentLedgerStatusEnum": "apps.finance.payment.models.PaymentLedgerStatus",
+        # Same problem: AttendanceCorrection.status auto-names to a
+        # collision hash ("StatusE94Enum") because three other models also
+        # have a `status` field. The values were correct, but a hash suffix
+        # changes whenever another status enum is added anywhere, breaking
+        # every frontend reference to it — a stable name doesn't.
+        "CorrectionStatusEnum": "apps.academics.attendance.models.CorrectionStatus",
+    },
 }
