@@ -27,11 +27,23 @@ const schema = z.object({
   capacity: z.string().min(1, 'Required'),
   start_time: z.string().min(1, 'Required'),
   end_time: z.string().min(1, 'Required'),
-  monthly_fee: z.string().min(1, 'Required'),
-  residential_monthly_fee: z.string().min(1, 'Required'),
+  monthly_fee: z
+    .string()
+    .min(1, 'Required')
+    .refine((v) => Number(v) > 0, 'Must be greater than zero'),
+  residential_monthly_fee: z
+    .string()
+    .min(1, 'Required')
+    .refine((v) => Number(v) > 0, 'Must be greater than zero'),
 })
 
 type FormValues = z.infer<typeof schema>
+
+// Backend field_errors keys line up with BatchWriteSerializer's field
+// names, which match these form field names 1:1 — checked against this
+// set before calling RHF's setError, since a name outside it (e.g.
+// "weekdays", not a react-hook-form-registered field here) would throw.
+const FORM_FIELD_NAMES = new Set(Object.keys(schema.shape))
 
 // mirrors apps.academics.batch.serializers.BatchWriteSerializer — shared
 // by both the "Create batch" flow (BatchListPage) and "Edit batch"
@@ -51,6 +63,7 @@ export function BatchFormModal({ batch, onClose }: { batch: Batch | null; onClos
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -102,8 +115,18 @@ export function BatchFormModal({ batch, onClose }: { batch: Batch | null; onClos
     try {
       await mutation.mutateAsync(body)
       onClose()
-    } catch {
-      // Surfaced below via mutation.error
+    } catch (err) {
+      // Top-level message surfaced below via mutation.error; field-level
+      // messages (e.g. "Must be greater than zero." on monthly_fee from
+      // the backend's MinValueValidator) go under their own input too,
+      // same convention as DirectAdmission's fieldErrors handling.
+      if (err instanceof ApiError) {
+        for (const [field, messages] of Object.entries(err.fieldErrors)) {
+          if (FORM_FIELD_NAMES.has(field) && messages[0]) {
+            setError(field as keyof FormValues, { message: messages[0] })
+          }
+        }
+      }
     }
   }
 
@@ -184,7 +207,13 @@ export function BatchFormModal({ batch, onClose }: { batch: Batch | null; onClos
             <input type="number" min="1" className={inputClass} {...register('capacity')} />
           </Field>
           <Field label="Monthly fee (₹)" error={errors.monthly_fee?.message}>
-            <input type="number" step="0.01" className={inputClass} {...register('monthly_fee')} />
+            <input
+              type="number"
+              step="0.01"
+              min="0.01"
+              className={inputClass}
+              {...register('monthly_fee')}
+            />
           </Field>
         </div>
 
@@ -195,6 +224,7 @@ export function BatchFormModal({ batch, onClose }: { batch: Batch | null; onClos
           <input
             type="number"
             step="0.01"
+            min="0.01"
             className={`${inputClass} sm:max-w-[200px]`}
             {...register('residential_monthly_fee')}
           />
@@ -207,7 +237,9 @@ export function BatchFormModal({ batch, onClose }: { batch: Batch | null; onClos
         {mutation.isError && (
           <p className="text-sm text-red-600">
             {mutation.error instanceof ApiError
-              ? mutation.error.message
+              ? Object.keys(mutation.error.fieldErrors ?? {}).some((f) => FORM_FIELD_NAMES.has(f))
+                ? `${mutation.error.message} Check the highlighted field(s) below.`
+                : mutation.error.message
               : 'Could not save this batch.'}
           </p>
         )}

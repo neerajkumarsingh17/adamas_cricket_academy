@@ -5,6 +5,8 @@
 // so the extra API surface IndexedDB needs buys nothing; the queue
 // contract (persist, replay in order, drop on success) is what actually
 // matters and localStorage gives that with far less code.
+import { randomId } from './id'
+
 const STORAGE_KEY = 'aca_oms_offline_queue'
 
 export interface QueuedRequest {
@@ -29,7 +31,7 @@ function writeQueue(queue: QueuedRequest[]) {
 
 export function enqueue(path: string, body: unknown): QueuedRequest {
   const item: QueuedRequest = {
-    id: crypto.randomUUID(),
+    id: randomId(),
     path,
     body,
     createdAt: new Date().toISOString(),

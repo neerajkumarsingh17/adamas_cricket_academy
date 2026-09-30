@@ -37,8 +37,12 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-700 via-brand-600 to-brand-900 px-4 py-8">
       <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl sm:p-8">
-        <div className="mb-6 flex items-center gap-2">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-brand-600" aria-hidden="true" />
+        <div className="mb-6 flex items-center gap-3">
+          <img
+            src="/aca-logo.png"
+            alt="Adamas Cricket Academy"
+            className="h-12 w-12 shrink-0 sm:h-14 sm:w-14"
+          />
           <div>
             <h1 className="text-lg font-bold tracking-tight text-gray-900 sm:text-xl">
               Adamas Cricket Academy

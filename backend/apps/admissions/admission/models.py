@@ -280,6 +280,26 @@ class AdmissionIntake(AuditedModel):
             if self.local_guardian_name or self.local_guardian_mobile:
                 errors["local_guardian_name"] = "Not applicable — this seat is non-residential."
 
+        # Format-validated here, not just left to normalize_mobile_e164()
+        # at approve_admission() time — that's much too late to give the
+        # guardian a chance to fix a typo, and previously surfaced as an
+        # unhandled 500 (a raw ValueError, not a DRF-recognised exception)
+        # instead of a field error on this form.
+        from apps.people.services import normalize_mobile_e164
+
+        for field_name, value in (
+            ("guardian_mobile", self.guardian_mobile),
+            ("student_mobile", self.student_mobile),
+            ("local_guardian_mobile", self.local_guardian_mobile),
+            ("emergency_contact", self.emergency_contact),
+        ):
+            if not value:
+                continue
+            try:
+                normalize_mobile_e164(value)
+            except ValueError:
+                errors[field_name] = "Not a valid mobile number."
+
         if self.guardian_mobile and self.emergency_contact == self.guardian_mobile:
             errors["emergency_contact"] = (
                 "Must be someone other than the guardian above."

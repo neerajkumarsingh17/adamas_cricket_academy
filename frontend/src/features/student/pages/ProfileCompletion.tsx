@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useRef, useState } from 'react'
+import { ApiError } from '../../../api/client'
 import { AsyncBoundary, RowSkeleton } from '../../../components/AsyncBoundary'
 import { Card } from '../../../components/Card'
 import { Field, inputClass } from '../../../components/Field'
@@ -121,10 +122,11 @@ function DocumentRow({
       {isVerified ? (
         <span className="text-xs font-medium text-emerald-700">Verified — locked</span>
       ) : (
-        <>
+        <div className="flex flex-col items-end gap-1">
           <input
             ref={inputRef}
             type="file"
+            accept="application/pdf,image/jpeg,image/png,image/webp"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0]
@@ -147,7 +149,13 @@ function DocumentRow({
           >
             {upload.isPending ? 'Uploading…' : existing ? 'Replace' : 'Upload'}
           </button>
-        </>
+          {upload.isError && (
+            <span className="text-xs text-red-600">
+              {upload.error instanceof ApiError ? upload.error.message : 'Upload failed.'} Only
+              PDF, JPG, PNG or WEBP files are accepted.
+            </span>
+          )}
+        </div>
       )}
     </div>
   )

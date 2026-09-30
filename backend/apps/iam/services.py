@@ -16,6 +16,8 @@ from django.conf import settings
 from django.utils import timezone
 from rest_framework.exceptions import Throttled, ValidationError
 
+from apps.people.services import normalize_mobile_e164
+
 logger = logging.getLogger(__name__)
 
 OTP_LENGTH = 6
@@ -40,6 +42,28 @@ def _hash_otp(otp: str) -> str:
     return hashlib.sha256(otp.encode()).hexdigest()
 
 
+def _test_otp(mobile: str) -> str | None:
+    """settings.OTP_TEST_NUMBERS ("mobile:code,mobile:code", .env-configured,
+    blank by default): a fixed code for specific test numbers only — every
+    other number still gets a random one, in every environment including
+    staging/prod. `mobile` is already E.164-normalised (this module's own
+    contract); test numbers are normalised the same way here so `.env` can
+    list them in whatever raw form is convenient.
+    """
+    raw = getattr(settings, "OTP_TEST_NUMBERS", "") or ""
+    for pair in raw.split(","):
+        pair = pair.strip()
+        if not pair or ":" not in pair:
+            continue
+        raw_mobile, _, code = pair.partition(":")
+        try:
+            if normalize_mobile_e164(raw_mobile.strip()) == mobile:
+                return code.strip()
+        except ValueError:
+            continue
+    return None
+
+
 def generate_and_store_otp(mobile: str) -> str:
     """Rate-limited to OTP_RATE_LIMIT requests per OTP_RATE_WINDOW_SECONDS
     per mobile — raises rest_framework.exceptions.Throttled past that.
@@ -56,14 +80,20 @@ def generate_and_store_otp(mobile: str) -> str:
         wait = client.ttl(rate_key)
         raise Throttled(wait=wait if wait and wait > 0 else OTP_RATE_WINDOW_SECONDS)
 
-    # Dev/demo convenience (config/settings/dev.py's DEV_STATIC_OTP,
-    # unset in staging.py/prod.py): every mobile number gets the same
-    # fixed code instead of a random one, so testing several accounts
-    # (admin/parent/student) doesn't mean fishing the real code out of the
-    # console log each time. Still stored and rate-limited exactly like a
-    # random code — only where the code itself comes from changes.
+    # Two fixed-code overrides, checked before falling back to random:
+    #  1. OTP_TEST_NUMBERS (base.py) — specific numbers only, every
+    #     environment including staging/prod. Logged below since it's a
+    #     deliberate exception on a real deployment.
+    #  2. DEV_STATIC_OTP (dev.py only, unset in staging.py/prod.py) — every
+    #     number, so testing several demo accounts locally doesn't mean
+    #     fishing the real code out of the console log each time.
+    # Either way the code is still stored and rate-limited exactly like a
+    # random one — only where the code itself comes from changes.
+    test_otp = _test_otp(mobile)
+    if test_otp:
+        logger.warning("TEST OTP override used for %s (fixed code, not random).", mobile)
     static_otp = getattr(settings, "DEV_STATIC_OTP", None)
-    otp = static_otp or f"{secrets.randbelow(10**OTP_LENGTH):0{OTP_LENGTH}d}"
+    otp = test_otp or static_otp or f"{secrets.randbelow(10**OTP_LENGTH):0{OTP_LENGTH}d}"
     client.set(_otp_key(mobile), _hash_otp(otp), ex=OTP_TTL_SECONDS)
     return otp
 

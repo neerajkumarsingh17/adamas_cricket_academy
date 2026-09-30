@@ -6,7 +6,16 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-950 text-white">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
-        <span className="text-lg font-semibold tracking-tight">Adamas Cricket Academy</span>
+        <span className="flex items-center gap-2.5">
+          <img
+            src="/aca-logo.png"
+            alt="Adamas Cricket Academy"
+            className="h-9 w-9 shrink-0 sm:h-10 sm:w-10"
+          />
+          <span className="text-base font-semibold tracking-tight sm:text-lg">
+            Adamas Cricket Academy
+          </span>
+        </span>
         <Link
           to="/login"
           className="rounded-md border border-white/30 px-4 py-1.5 text-sm font-medium transition hover:bg-white/10"

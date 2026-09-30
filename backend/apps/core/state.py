@@ -88,15 +88,24 @@ class StateMachine:
         they'd say, not on the object's own state. A `False` here means
         "the underlying condition isn't met yet"; `apply()` is still the
         one that enforces role/reason and raises specific errors.
+
+        A guard raising (its "more specific than the generic 409" option,
+        per `Transition.guard`'s docstring) means the same thing here as a
+        plain `False` — this is a reachability check for things like
+        `next_actions_for()`, not an attempt, so the specific error is
+        swallowed rather than propagated out of what's normally a GET.
         """
         transition = self.transition_for(to)
         if transition is None:
             return False
-        if transition.guard is not None and not transition.guard(
-            self.instance, user=None, reason="", **guard_context
-        ):
+        if transition.guard is None:
+            return True
+        try:
+            return bool(
+                transition.guard(self.instance, user=None, reason="", **guard_context)
+            )
+        except APIException:
             return False
-        return True
 
     def transition_for(self, to: str) -> Transition | None:
         """The declared `Transition` that would fire for `to` from the

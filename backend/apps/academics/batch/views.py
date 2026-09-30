@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.admissions.student.models import Student
+from apps.core.pagination import DefaultCursorPagination
 from apps.core.views import ModuleScopedViewSet
 
 from . import services
@@ -138,6 +139,18 @@ class BatchEnrollmentViewSet(_NoDirectWriteMixin, ModuleScopedViewSet):
         return Response(BatchEnrollmentSerializer(new_enrollment).data, status=201)
 
 
+class UpcomingSessionPagination(DefaultCursorPagination):
+    """Soonest session first, not "most recently created" — the default
+    `-created_at` ordering would put whatever generate_sessions() (or a
+    manual create) happened to insert last at the top, which for a
+    schedule listing is the wrong axis entirely. `id` breaks ties between
+    sessions sharing the same date/start_time (distinct batches), which
+    CursorPagination requires for a stable cursor.
+    """
+
+    ordering = ["date", "start_time", "id"]
+
+
 class TrainingSessionViewSet(_NoDirectWriteMixin, ModuleScopedViewSet):
     """List/retrieve only here — roster, bulk attendance-marking and
     cancel all need Attendance data, so they're registered from
@@ -147,6 +160,7 @@ class TrainingSessionViewSet(_NoDirectWriteMixin, ModuleScopedViewSet):
 
     module = "batch"
     serializer_class = TrainingSessionSerializer
+    pagination_class = UpcomingSessionPagination
     queryset = TrainingSession.objects.select_related(
         "batch", "coach__staff__person", "training_type"
     ).all()

@@ -241,9 +241,17 @@ class AdvanceSerializer(serializers.Serializer):
 
 
 class RecordPaymentSerializer(serializers.Serializer):
+    """The Phase 1 fee stub (services.record_payment's own docstring) —
+    Admission.fee_amount itself carries no MinValueValidator (it's a Phase
+    3 rebuild away from a real fee engine), so unlike every other money
+    field in this codebase a negative value here isn't even caught by a
+    model full_clean() downstream — it would just save silently. Guarded
+    here instead, same floor as apps.finance.payment's amount fields.
+    """
+
     reference = serializers.CharField(required=False, allow_blank=True, default="")
     amount = serializers.DecimalField(
-        max_digits=12, decimal_places=2, required=False, allow_null=True
+        max_digits=12, decimal_places=2, required=False, allow_null=True, min_value=0
     )
     payment_method = serializers.ChoiceField(
         choices=list(Admission._meta.get_field("fee_payment_method").choices or []),

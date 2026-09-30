@@ -106,6 +106,17 @@ export function DirectAdmission() {
 
       if (step === 2) {
         if (!admissionId) return
+        const missingConsents = (bootstrap.data?.consent_types ?? []).filter(
+          (c) => c.is_mandatory && !consentDecisions[c.id],
+        )
+        if (missingConsents.length > 0) {
+          setError(
+            `Confirm all required consents before recording payment: ${missingConsents
+              .map((c) => c.label)
+              .join(', ')}.`,
+          )
+          return
+        }
         const lines = Object.entries(feeAmounts)
           .filter(([, amount]) => amount)
           .map(([fee_head, amount]) => ({ fee_head, amount }))

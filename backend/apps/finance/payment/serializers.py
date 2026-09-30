@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from rest_framework import serializers
 
 from .models import AdmissionPayment, Payment
@@ -40,7 +41,17 @@ class RecordPaymentSerializer(serializers.Serializer):
     person = serializers.UUIDField()
     payment_type = serializers.UUIDField()
     billing_period = serializers.DateField(required=False, allow_null=True, default=None)
-    amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    # Mirrors Payment.amount's own MinValueValidator(0) (models.py) —
+    # this is a plain Serializer, not a ModelSerializer, so that
+    # validator isn't inherited automatically the way BatchWriteSerializer
+    # picks up Batch's field validators. Without it, a negative amount
+    # only ever got caught later by services.record_payment's
+    # payment.full_clean() — after an Idempotency-Key check and a
+    # confirmation_no already minted from the PCF sequence, which a
+    # rejected payment has no business consuming.
+    amount = serializers.DecimalField(
+        max_digits=10, decimal_places=2, validators=[MinValueValidator(0)]
+    )
     payment_mode = serializers.CharField()
     reference_no = serializers.CharField(required=False, allow_blank=True, default="")
     payment_date = serializers.DateField()

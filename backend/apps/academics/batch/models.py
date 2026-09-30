@@ -4,6 +4,9 @@ deliberate fold of the doc's original three-app sketch (batch/, training/,
 coach/) into this one app, per the actual build instruction.
 """
 
+from decimal import Decimal
+
+from django.core.validators import MinValueValidator
 from django.db import models
 
 from apps.admissions.student.models import Student
@@ -38,14 +41,18 @@ class Batch(AuditedModel):
     weekdays = models.CharField(max_length=20)
     start_time = models.TimeField()
     end_time = models.TimeField()
-    monthly_fee = models.DecimalField(max_digits=10, decimal_places=2)
+    monthly_fee = models.DecimalField(
+        max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))]
+    )
     # A residential (boarding) student on this batch pays this instead of
     # monthly_fee — apps.admissions.student.Student.residential decides
     # which of the two a given student's payment defaults to (see
     # apps.finance.payment's record-payment auto-fill). Always set,
     # same as monthly_fee — not null=True, so "residential enrolment
     # exists but nobody priced it" can't happen silently.
-    residential_monthly_fee = models.DecimalField(max_digits=10, decimal_places=2)
+    residential_monthly_fee = models.DecimalField(
+        max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))]
+    )
     is_active = models.BooleanField(default=True)
 
     def __str__(self) -> str:

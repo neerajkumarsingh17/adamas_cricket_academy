@@ -106,9 +106,19 @@ def resolve_person(data: PersonResolveInput) -> PersonMatch:
     Returns exact matches on dedupe_key, plus fuzzy candidates scoring on
     (name similarity >= 0.85) AND (DOB exact OR guardian mobile exact).
     """
+    from rest_framework.exceptions import ValidationError
+
     from .models import Person
 
-    mobile = normalize_mobile_e164(data["guardian_mobile"])
+    try:
+        mobile = normalize_mobile_e164(data["guardian_mobile"])
+    except ValueError:
+        # A bare ValueError isn't a DRF-recognised exception — reaching a
+        # caller through here (a view, or approve_admission() re-checking
+        # already-saved intake data) would otherwise surface as an
+        # unhandled 500 instead of a clean 400, for data saved before
+        # AdmissionIntake.clean()'s own format check existed.
+        raise ValidationError({"guardian_mobile": "Not a valid mobile number."}) from None
     dedupe_key = compute_dedupe_key(
         first_name=data["first_name"],
         last_name=data["last_name"],

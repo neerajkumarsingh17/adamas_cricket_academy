@@ -1,5 +1,6 @@
 import { DerivedValue } from '../../../../components/DerivedValue'
 import { Field, inputClass } from '../../../../components/Field'
+import { isValidMobileLike } from '../../../../lib/mobile'
 import type { AdmissionIntakeInput, DirectAdmissionBootstrap } from '../../api/admission'
 import { Segmented } from './Segmented'
 
@@ -62,6 +63,11 @@ export function StepStudentSeat({
     !!intake.student_mobile &&
     !!intake.guardian_mobile &&
     intake.student_mobile === intake.guardian_mobile
+
+  const studentMobileInvalid = !isValidMobileLike(intake.student_mobile ?? '')
+  const guardianMobileInvalid = !isValidMobileLike(intake.guardian_mobile ?? '')
+  const emergencyContactInvalid = !isValidMobileLike(intake.emergency_contact ?? '')
+  const localGuardianMobileInvalid = !isValidMobileLike(intake.local_guardian_mobile ?? '')
 
   return (
     <div className="space-y-8">
@@ -222,6 +228,9 @@ export function StepStudentSeat({
             onChange={(e) => onField('student_mobile', e.target.value)}
           />
           <span className="mt-1 block text-xs text-[var(--ink-3)]">Leave blank for a minor</span>
+          {studentMobileInvalid && (
+            <span className="mt-1 block text-xs text-red-600">Not a valid mobile number.</span>
+          )}
           {studentMatchesGuardian && (
             <span className="mt-1 block text-xs text-red-600">
               Must be different from the guardian's mobile.
@@ -262,6 +271,9 @@ export function StepStudentSeat({
           <span className="mt-1 block text-xs text-[var(--ink-3)]">
             Becomes the parent portal login
           </span>
+          {guardianMobileInvalid && (
+            <span className="mt-1 block text-xs text-red-600">Not a valid mobile number.</span>
+          )}
         </Field>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field
@@ -305,6 +317,9 @@ export function StepStudentSeat({
           <span className="mt-1 block text-xs text-[var(--ink-3)]">
             Someone other than the guardian above
           </span>
+          {emergencyContactInvalid && (
+            <span className="mt-1 block text-xs text-red-600">Not a valid mobile number.</span>
+          )}
           {emergencyMatchesGuardian && (
             <span className="mt-1 block text-xs text-red-600">
               Must be someone other than the guardian above.
@@ -332,6 +347,9 @@ export function StepStudentSeat({
               value={intake.local_guardian_mobile ?? ''}
               onChange={(e) => onField('local_guardian_mobile', e.target.value)}
             />
+            {localGuardianMobileInvalid && (
+              <span className="mt-1 block text-xs text-red-600">Not a valid mobile number.</span>
+            )}
           </Field>
         </fieldset>
       )}

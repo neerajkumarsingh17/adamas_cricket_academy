@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { ApiError } from '../../../../api/client'
 import { Button } from '../../../../components/Button'
 import { DocumentRow } from '../../../../components/DocumentRow'
 import { Pill } from '../../../../components/Pill'
@@ -25,10 +26,11 @@ function UploadButton({
   const inputRef = useRef<HTMLInputElement>(null)
 
   return (
-    <>
+    <div className="flex flex-col items-start gap-1">
       <input
         ref={inputRef}
         type="file"
+        accept="application/pdf,image/jpeg,image/png,image/webp"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0]
@@ -46,7 +48,15 @@ function UploadButton({
       >
         {upload.isPending ? 'Uploading…' : 'Upload'}
       </button>
-    </>
+      {upload.isError && (
+        <span className="text-xs text-red-600">
+          {upload.error instanceof ApiError
+            ? upload.error.message
+            : 'Upload failed.'}{' '}
+          Only PDF, JPG, PNG or WEBP files are accepted.
+        </span>
+      )}
+    </div>
   )
 }
 

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
 import type { AdmissionIntakeInput } from '../api/admission'
 import { directAdmissionApi } from '../api/admission'
+import { randomId } from '../../../lib/id'
 
 export function useDirectAdmissionBootstrap() {
   return useQuery({
@@ -97,7 +98,7 @@ export function useSetConsents(id: string) {
 
 export function useRecordDirectPayment(id: string) {
   const queryClient = useQueryClient()
-  const idempotencyKey = useRef(crypto.randomUUID())
+  const idempotencyKey = useRef(randomId())
   return useMutation({
     mutationFn: (body: {
       payment_mode: 'upi' | 'cash' | 'cheque' | 'online_transfer'

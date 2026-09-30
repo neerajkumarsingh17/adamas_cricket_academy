@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ApiError } from '../../../api/client'
 import { useAuth } from '../../../auth/useAuth'
@@ -7,10 +7,12 @@ import { Button } from '../../../components/Button'
 import { Can } from '../../../components/Can'
 import { Card } from '../../../components/Card'
 import { Field, inputClass } from '../../../components/Field'
+import { Modal } from '../../../components/Modal'
 import { Pill } from '../../../components/Pill'
 import type { ChecklistItem } from '../api/admission'
 import { DIRECT_ADMISSION_STEP_LABEL } from '../api/admission'
 import { useUploadDocument } from '../../document/hooks/useDocuments'
+import { isValidMobileLike } from '../../../lib/mobile'
 import { hasPerm, hasRole } from '../../../lib/permissions'
 import type { Admission } from '../api/admission'
 import {
@@ -25,6 +27,7 @@ import { StepDocuments } from '../components/direct/StepDocuments'
 import {
   useCancelDirectAdmission,
   useDirectAdmissionBootstrap,
+  usePatchDirectAdmission,
   useSubmitDocuments,
   useVerifyDirectPayment,
   useVerifyDocuments,
@@ -144,7 +147,16 @@ function StepAction({ admission }: { admission: Admission }) {
 
   const mutationError =
     advance.error ?? recordPayment.error ?? approve.error ?? reject.error ?? enablePortal.error
-  const errorMessage = mutationError instanceof ApiError ? mutationError.message : null
+  // A field-keyed error's top-level `.message` is always the generic
+  // "Validation failed." (apps/core/exceptions.py's envelope) — show the
+  // actual reason from field_errors instead whenever there is one, same
+  // as this page's other errorMessage below (e.g. a negative Amount
+  // rejected by RecordPaymentSerializer's min_value=0 otherwise just
+  // said "Validation failed." with no hint which field or why).
+  const errorMessage =
+    mutationError instanceof ApiError
+      ? Object.values(mutationError.fieldErrors).flat()[0] ?? mutationError.message
+      : null
 
   const action = (() => {
     switch (admission.step) {
@@ -336,6 +348,7 @@ function StepAction({ admission }: { admission: Admission }) {
 // switch here too, not `a.step` or `a.trial_registration`.
 function DirectAdmissionSummary({ admission }: { admission: Admission }) {
   const intake = admission.intake
+  const [editingContact, setEditingContact] = useState(false)
   return (
     <Card className="mb-4">
       <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
@@ -361,10 +374,116 @@ function DirectAdmissionSummary({ admission }: { admission: Admission }) {
               : 'Not recorded yet'}
           </dd>
         </div>
+        <div>
+          <dt className="text-gray-500">Guardian contact</dt>
+          <dd className="text-gray-900">{intake?.guardian_mobile || '—'}</dd>
+        </div>
       </dl>
+      {intake && (
+        <div className="mt-3 border-t border-gray-100 pt-3">
+          <Button variant="secondary" onClick={() => setEditingContact(true)}>
+            Edit contact details
+          </Button>
+        </div>
+      )}
+      {editingContact && (
+        <EditContactModal admission={admission} onClose={() => setEditingContact(false)} />
+      )}
     </Card>
   )
 }
+
+// Fixes a wrong guardian_mobile/student_mobile/emergency_contact/
+// local_guardian_mobile on an admission that's already past Step 1 — the
+// direct-admission wizard (DirectAdmission.tsx) only ever creates a new
+// admission, it has no "resume an existing one" path, so this is
+// deliberately its own small PATCH-only form rather than reusing that
+// wizard: reusing it would risk re-running Step 2's setFeeLines/
+// setConsents calls with blank local state and wiping already-recorded
+// fee lines or consents, for a fix that only ever needs to touch these
+// four contact fields.
+function EditContactModal({ admission, onClose }: { admission: Admission; onClose: () => void }) {
+  const intake = admission.intake
+  const patch = usePatchDirectAdmission(admission.id)
+  const isResidential = intake?.admission_category === 'residential'
+  const [values, setValues] = useState({
+    guardian_mobile: intake?.guardian_mobile ?? '',
+    student_mobile: intake?.student_mobile ?? '',
+    emergency_contact: intake?.emergency_contact ?? '',
+    local_guardian_mobile: intake?.local_guardian_mobile ?? '',
+  })
+
+  function field(name: keyof typeof values) {
+    return {
+      value: values[name],
+      onChange: (e: ChangeEvent<HTMLInputElement>) =>
+        setValues((prev) => ({ ...prev, [name]: e.target.value })),
+      invalid: !isValidMobileLike(values[name]),
+    }
+  }
+
+  async function handleSave() {
+    try {
+      await patch.mutateAsync(values)
+      onClose()
+    } catch {
+      // Surfaced below via patch.error
+    }
+  }
+
+  return (
+    <Modal title="Edit contact details" onClose={onClose}>
+      <div className="space-y-4 p-5">
+        <Field label="Guardian mobile">
+          <input type="tel" className={inputClass} {...field('guardian_mobile')} />
+          {field('guardian_mobile').invalid && (
+            <span className="mt-1 block text-xs text-red-600">Not a valid mobile number.</span>
+          )}
+        </Field>
+        <Field label="Student mobile (optional)">
+          <input type="tel" className={inputClass} {...field('student_mobile')} />
+          {values.student_mobile && field('student_mobile').invalid && (
+            <span className="mt-1 block text-xs text-red-600">Not a valid mobile number.</span>
+          )}
+        </Field>
+        <Field label="Emergency contact">
+          <input type="tel" className={inputClass} {...field('emergency_contact')} />
+          {field('emergency_contact').invalid && (
+            <span className="mt-1 block text-xs text-red-600">Not a valid mobile number.</span>
+          )}
+        </Field>
+        {isResidential && (
+          <Field label="Local guardian contact">
+            <input type="tel" className={inputClass} {...field('local_guardian_mobile')} />
+            {field('local_guardian_mobile').invalid && (
+              <span className="mt-1 block text-xs text-red-600">Not a valid mobile number.</span>
+            )}
+          </Field>
+        )}
+        {patch.isError && (
+          <p className="text-sm text-red-600">
+            {patch.error instanceof ApiError ? patch.error.message : 'Could not save.'}
+          </p>
+        )}
+        <div className="flex justify-end gap-2 border-t border-gray-100 pt-4">
+          <Button variant="ghost" type="button" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={() => void handleSave()} disabled={patch.isPending}>
+            {patch.isPending ? 'Saving…' : 'Save'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+const CONTACT_FIELD_NAMES = [
+  'guardian_mobile',
+  'student_mobile',
+  'emergency_contact',
+  'local_guardian_mobile',
+]
 
 function DirectAdmissionActions({ admission }: { admission: Admission }) {
   const navigate = useNavigate()
@@ -373,10 +492,27 @@ function DirectAdmissionActions({ admission }: { admission: Admission }) {
   const approve = useApproveAdmission(admission.id)
   const cancel = useCancelDirectAdmission(admission.id)
   const [cancelReason, setCancelReason] = useState('')
+  const [editingContact, setEditingContact] = useState(false)
 
   const actions = admission.next_actions ?? []
   const mutationError = submitDocuments.error ?? verifyDocuments.error ?? approve.error ?? cancel.error
-  const errorMessage = mutationError instanceof ApiError ? mutationError.message : null
+  // approve_admission() re-resolves the guardian's identity from the
+  // intake's contact fields — a bad one only ever surfaces here, on
+  // Approve, not on the earlier document-upload steps, so this is the
+  // one place that error can actually happen. The fix lives one card up
+  // (DirectAdmissionSummary's "Edit contact details"), which is easy to
+  // miss from way down here — so it's offered again right at the error.
+  const isContactError =
+    mutationError instanceof ApiError &&
+    CONTACT_FIELD_NAMES.some((f) => f in mutationError.fieldErrors)
+  // A field-keyed error's top-level `.message` is always the generic
+  // "Validation failed." (apps/core/exceptions.py's envelope) — the
+  // actual reason only lives in `field_errors`, so show that instead
+  // whenever there is one rather than the useless generic line.
+  const errorMessage =
+    mutationError instanceof ApiError
+      ? Object.values(mutationError.fieldErrors).flat()[0] ?? mutationError.message
+      : null
 
   const nothingToDo = actions.length === 0
   const terminalMessage =
@@ -428,7 +564,19 @@ function DirectAdmissionActions({ admission }: { admission: Admission }) {
         </div>
       )}
       {nothingToDo && <p className="text-sm text-gray-500">{terminalMessage}</p>}
-      {errorMessage && <p className="mt-2 text-sm text-red-600">{errorMessage}</p>}
+      {errorMessage && (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <p className="text-sm text-red-600">{errorMessage}</p>
+          {isContactError && (
+            <Button variant="secondary" onClick={() => setEditingContact(true)}>
+              Edit contact details
+            </Button>
+          )}
+        </div>
+      )}
+      {editingContact && (
+        <EditContactModal admission={admission} onClose={() => setEditingContact(false)} />
+      )}
     </Card>
   )
 }

@@ -120,6 +120,22 @@ def test_creating_a_batch_without_a_residential_fee_is_refused(api_client, seede
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("field", ["monthly_fee", "residential_monthly_fee"])
+@pytest.mark.parametrize("value", ["-100.00", "0.00", "0"])
+def test_creating_a_batch_with_a_non_positive_fee_is_refused(
+    api_client, seeded_roles, field, value
+):
+    user = _user_with_role("administration")
+    api_client.force_authenticate(user)
+    payload = _create_payload(**{field: value})
+
+    response = api_client.post("/api/v1/batches/", payload, format="json")
+
+    assert response.status_code == 400
+    assert field in response.data["field_errors"]
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize("role_code", ["sports_ops", "coach"])
 def test_other_roles_cannot_create_a_batch(api_client, seeded_roles, role_code):
     user = _user_with_role(role_code)
@@ -222,3 +238,28 @@ def test_concurrent_enrolments_at_capacity_only_one_succeeds(seeded_roles):
     assert outcomes.count("ok") == 1
     assert outcomes.count("full") == 1
     assert batch.enrollments.filter(is_active=True).count() == 1
+
+
+@pytest.mark.django_db
+def test_session_list_orders_soonest_session_first(api_client, seeded_roles):
+    """UpcomingSessionPagination overrides the `-created_at` cursor
+    default — without it this list comes back in creation order, not
+    schedule order, which is the wrong axis for a training calendar.
+    """
+    user = _user_with_role("administration")
+    today = timezone.localdate()
+    # Created out of date order, on purpose, so a pass here can't be
+    # explained by creation order happening to already match.
+    middle = TrainingSessionFactory(date=today + datetime.timedelta(days=7))
+    soonest = TrainingSessionFactory(date=today + datetime.timedelta(days=1))
+    latest = TrainingSessionFactory(date=today + datetime.timedelta(days=14))
+    api_client.force_authenticate(user)
+
+    response = api_client.get("/api/v1/sessions/")
+
+    assert response.status_code == 200
+    assert [r["id"] for r in response.data["results"]] == [
+        str(soonest.id),
+        str(middle.id),
+        str(latest.id),
+    ]

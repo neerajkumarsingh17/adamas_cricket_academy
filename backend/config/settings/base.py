@@ -121,6 +121,16 @@ CELERY_TIMEZONE = TIME_ZONE
 # generated ~4 weeks ahead of every active batch's weekly schedule
 # (apps.academics.batch.services.generate_sessions) without anyone having
 # to remember to run the management command by hand.
+
+# Fixed OTP codes for specific test mobile numbers only — "mobile:code,..."
+# (any format normalize_mobile_e164 accepts). Every other number still gets
+# a random code; blank by default so this is inert unless deliberately
+# configured. Unlike DEV_STATIC_OTP (dev.py only, applies to every number),
+# this is read in every environment, staging/prod included, but is scoped
+# to numbers named here on purpose — SOP data is real users' PII, and a
+# fixed code for *every* number would be a live OTP-login bypass.
+OTP_TEST_NUMBERS = env("OTP_TEST_NUMBERS", default="")
+
 CELERY_BEAT_SCHEDULE = {
     "generate-training-sessions-weekly": {
         "task": "batch.generate_sessions",

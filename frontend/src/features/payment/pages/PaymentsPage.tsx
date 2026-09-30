@@ -8,6 +8,7 @@ import { Button } from '../../../components/Button'
 import { Can } from '../../../components/Can'
 import { Card } from '../../../components/Card'
 import { Field, inputClass } from '../../../components/Field'
+import { randomId } from '../../../lib/id'
 import { Pill } from '../../../components/Pill'
 import { paymentApi } from '../api/payment'
 import type { Payment, Person } from '../api/payment'
@@ -22,13 +23,25 @@ import { usePaymentTypes, usePayments, useRecordPayment, useSettlePayment } from
 const schema = z.object({
   payment_type: z.string().min(1, 'Required'),
   billing_period: z.string().optional().or(z.literal('')),
-  amount: z.string().min(1, 'Required'),
+  // Mirrors Payment.amount's own MinValueValidator(0) (apps.finance.
+  // payment.models) — zero is allowed there (an adjustment/waiver line),
+  // negative is not.
+  amount: z
+    .string()
+    .min(1, 'Required')
+    .refine((v) => Number(v) >= 0, 'Cannot be negative'),
   payment_mode: z.enum(['upi', 'cash', 'cheque', 'online_transfer']),
   reference_no: z.string().optional().or(z.literal('')),
   payment_date: z.string().min(1, 'Required'),
 })
 
 type FormValues = z.infer<typeof schema>
+
+// Backend field_errors keys line up with RecordPaymentSerializer's field
+// names, which match these form field names 1:1 (aside from "person",
+// handled by PersonSearchField's own state, not RHF) — checked before
+// calling setError, since a name outside it would throw.
+const FORM_FIELD_NAMES = new Set(Object.keys(schema.shape))
 
 function RecordPaymentForm() {
   const { data: paymentTypes } = usePaymentTypes()
@@ -39,7 +52,7 @@ function RecordPaymentForm() {
   // (features/admission/hooks/useDirectAdmission.ts's exact pattern) —
   // CLAUDE.md rule 7: idempotency keys on any endpoint minting a numbered
   // record.
-  const idempotencyKey = useRef(crypto.randomUUID())
+  const idempotencyKey = useRef(randomId())
 
   const {
     register,
@@ -47,6 +60,7 @@ function RecordPaymentForm() {
     watch,
     reset,
     setValue,
+    setError,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -106,9 +120,19 @@ function RecordPaymentForm() {
       })
       reset()
       setPerson(null)
-      idempotencyKey.current = crypto.randomUUID()
-    } catch {
-      // Surfaced below via recordPayment.error
+      idempotencyKey.current = randomId()
+    } catch (err) {
+      // Top-level message surfaced below via recordPayment.error;
+      // field-level messages (e.g. a negative amount rejected by
+      // Payment.full_clean()'s MinValueValidator) go under their own
+      // input too, same convention as BatchFormModal.
+      if (err instanceof ApiError) {
+        for (const [field, messages] of Object.entries(err.fieldErrors)) {
+          if (FORM_FIELD_NAMES.has(field) && messages[0]) {
+            setError(field as keyof FormValues, { message: messages[0] })
+          }
+        }
+      }
     }
   }
 
@@ -143,7 +167,13 @@ function RecordPaymentForm() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Amount" error={errors.amount?.message}>
-            <input type="number" step="0.01" className={inputClass} {...register('amount')} />
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              className={inputClass}
+              {...register('amount')}
+            />
           </Field>
           <Field label="Payment mode">
             <select className={inputClass} {...register('payment_mode')}>
@@ -170,7 +200,11 @@ function RecordPaymentForm() {
         {recordPayment.isError && (
           <p className="text-sm text-red-600">
             {recordPayment.error instanceof ApiError
-              ? recordPayment.error.message
+              ? Object.keys(recordPayment.error.fieldErrors ?? {}).some((f) =>
+                  FORM_FIELD_NAMES.has(f),
+                )
+                ? `${recordPayment.error.message} Check the highlighted field(s) below.`
+                : recordPayment.error.message
               : 'Could not record this payment.'}
           </p>
         )}

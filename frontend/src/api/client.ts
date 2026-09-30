@@ -63,7 +63,19 @@ export async function request<T>(path: string, init?: RequestInit, isRetry = fal
     const body = (await response.json().catch(() => null)) as ErrorEnvelope | null
     throw new ApiError(
       response.status,
-      body ?? { code: 'error', message: response.statusText, field_errors: {}, request_id: '' },
+      body ?? {
+        code: 'error',
+        // The server's error envelope is JSON (docs/02-api-spec.md); a body
+        // that fails to parse means this response never reached our
+        // exception_handler at all — an unhandled 500 (Django's own error
+        // page, not our envelope), a proxy's 502/503/504, or a network-level
+        // failure. response.statusText in that case is a raw HTTP reason
+        // phrase ("Internal Server Error"), not user-safe copy — never
+        // surface it directly.
+        message: 'Something went wrong on our end. Please try again in a moment.',
+        field_errors: {},
+        request_id: '',
+      },
     )
   }
   if (response.status === 204) return undefined as T
@@ -86,12 +98,16 @@ export async function requestBlob(path: string, init?: RequestInit, isRetry = fa
   }
 
   if (!response.ok) {
-    throw new ApiError(response.status, {
-      code: 'error',
-      message: response.statusText,
-      field_errors: {},
-      request_id: '',
-    })
+    const body = (await response.json().catch(() => null)) as ErrorEnvelope | null
+    throw new ApiError(
+      response.status,
+      body ?? {
+        code: 'error',
+        message: 'Something went wrong on our end. Please try again in a moment.',
+        field_errors: {},
+        request_id: '',
+      },
+    )
   }
   return response.blob()
 }

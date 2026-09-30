@@ -233,27 +233,55 @@ def _guard_ready_for_payment(admission: Admission, **_) -> bool:
     """draft -> payment_recorded, via services.record_direct_payment():
     the intake is complete and valid, every mandatory consent is granted,
     and at least the mandatory fee heads are present among the fee lines.
+
+    Raises a field-level ValidationError naming exactly what's missing
+    instead of returning False — StateMachine.apply()'s generic "conditions
+    ... are not met" fallback (apps/core/state.py) gave no clue which of
+    these three unrelated things was the actual problem.
     """
     intake = getattr(admission, "intake", None)
     if intake is None:
-        return False
+        raise ValidationError({"detail": "Intake details haven't been saved yet."})
     try:
         intake.clean()
-    except DjangoValidationError:
-        return False
+    except DjangoValidationError as exc:
+        raise ValidationError({"intake": exc.messages}) from exc
 
     from . import services
 
     if not services.mandatory_consents_granted(admission):
-        return False
+        from .models import ConsentType
+
+        granted_ids = set(admission.consent_records.filter(granted=True).values_list(
+            "consent_type_id", flat=True
+        ))
+        missing = ConsentType.objects.filter(is_mandatory=True, is_active=True).exclude(
+            id__in=granted_ids
+        )
+        raise ValidationError(
+            {
+                "consents": (
+                    "Missing required consent(s): "
+                    + ", ".join(c.label for c in missing)
+                )
+            }
+        )
 
     from apps.core.models import FeeHead
 
-    mandatory_head_ids = set(
-        FeeHead.objects.filter(is_mandatory=True, is_active=True).values_list("id", flat=True)
-    )
+    mandatory_heads = FeeHead.objects.filter(is_mandatory=True, is_active=True)
     present_head_ids = set(admission.fee_lines.values_list("fee_head_id", flat=True))
-    return mandatory_head_ids <= present_head_ids
+    missing_heads = mandatory_heads.exclude(id__in=present_head_ids)
+    if missing_heads.exists():
+        raise ValidationError(
+            {
+                "fee_lines": (
+                    "Missing required fee line(s): "
+                    + ", ".join(h.label for h in missing_heads)
+                )
+            }
+        )
+    return True
 
 
 def _guard_payment_verified(admission: Admission, **_) -> bool:
