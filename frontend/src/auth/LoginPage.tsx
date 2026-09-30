@@ -35,48 +35,66 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-700 via-brand-600 to-brand-900 px-4 py-8">
-      <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl sm:p-8">
-        <div className="mb-6 flex items-center gap-3">
-          <img
-            src="/aca-logo.png"
-            alt="Adamas Cricket Academy"
-            className="h-12 w-12 shrink-0 sm:h-14 sm:w-14"
-          />
-          <div>
-            <h1 className="text-lg font-bold tracking-tight text-gray-900 sm:text-xl">
-              Adamas Cricket Academy
-            </h1>
-            <p className="text-xs text-gray-500 sm:text-sm">Operations &amp; Athlete Management System</p>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 px-4 py-8">
+      {/* Same orange/navy visual language as the public landing page —
+          soft blurred glows instead of the flat brand-indigo gradient
+          this page used before, so sign-in doesn't look like a different
+          product from the marketing site a visitor just came from. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-orange-500/20 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl"
+      />
+
+      <div className="relative w-full max-w-sm overflow-hidden rounded-xl bg-white shadow-2xl">
+        <div className="h-1.5 w-full bg-gradient-to-r from-orange-500 via-orange-400 to-blue-900" />
+        <div className="p-6 sm:p-8">
+          <div className="mb-6 flex items-center gap-3">
+            <img
+              src="/aca-logo.png"
+              alt="Adamas Cricket Academy"
+              className="h-12 w-12 shrink-0 sm:h-14 sm:w-14"
+            />
+            <div>
+              <h1 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
+                Adamas Cricket Academy
+              </h1>
+              <p className="text-xs text-slate-500 sm:text-sm">
+                Operations &amp; Athlete Management System
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="mb-6 flex rounded-md bg-gray-100 p-1 text-sm">
-          <button
-            type="button"
-            onClick={() => setMode('password')}
-            className={`flex-1 rounded px-3 py-1.5 font-medium transition ${
-              mode === 'password' ? 'bg-white text-brand-700 shadow-sm' : 'text-gray-500'
-            }`}
-          >
-            Password
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('otp')}
-            className={`flex-1 rounded px-3 py-1.5 font-medium transition ${
-              mode === 'otp' ? 'bg-white text-brand-700 shadow-sm' : 'text-gray-500'
-            }`}
-          >
-            Mobile OTP
-          </button>
-        </div>
+          <div className="mb-6 flex rounded-md bg-slate-100 p-1 text-sm">
+            <button
+              type="button"
+              onClick={() => setMode('password')}
+              className={`flex-1 rounded px-3 py-1.5 font-medium transition ${
+                mode === 'password' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500'
+              }`}
+            >
+              Password
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('otp')}
+              className={`flex-1 rounded px-3 py-1.5 font-medium transition ${
+                mode === 'otp' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500'
+              }`}
+            >
+              Mobile OTP
+            </button>
+          </div>
 
-        {mode === 'password' ? (
-          <PasswordLoginForm login={login} />
-        ) : (
-          <OtpLoginForm loginWithOtp={loginWithOtp} />
-        )}
+          {mode === 'password' ? (
+            <PasswordLoginForm login={login} />
+          ) : (
+            <OtpLoginForm loginWithOtp={loginWithOtp} />
+          )}
+        </div>
       </div>
     </div>
   )
@@ -116,26 +134,26 @@ function PasswordLoginForm({
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <ErrorBanner message={serverError} />
 
-      <label htmlFor="loginId" className="mb-1 block text-sm font-medium text-gray-700">
+      <label htmlFor="loginId" className="mb-1 block text-sm font-medium text-slate-700">
         Mobile number or email
       </label>
       <input
         id="loginId"
         type="text"
         autoComplete="username"
-        className="mb-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+        className="mb-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
         {...register('loginId')}
       />
       {errors.loginId && <p className="mb-3 text-xs text-red-600">{errors.loginId.message}</p>}
 
-      <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700">
+      <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
         Password
       </label>
       <input
         id="password"
         type="password"
         autoComplete="current-password"
-        className="mb-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+        className="mb-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
         {...register('password')}
       />
       {errors.password && <p className="mb-3 text-xs text-red-600">{errors.password.message}</p>}
@@ -143,7 +161,7 @@ function PasswordLoginForm({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="mt-4 w-full rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
+        className="mt-4 w-full rounded-md bg-gradient-to-r from-orange-500 to-orange-600 px-3 py-2 text-sm font-medium text-white shadow-sm shadow-orange-200 transition hover:from-orange-600 hover:to-orange-700 disabled:opacity-50"
       >
         {isSubmitting ? 'Signing in…' : 'Sign in'}
       </button>
@@ -189,7 +207,7 @@ function OtpLoginForm({
     return (
       <form onSubmit={mobileForm.handleSubmit(onRequestOtp)} noValidate>
         <ErrorBanner message={serverError} />
-        <label htmlFor="mobile" className="mb-1 block text-sm font-medium text-gray-700">
+        <label htmlFor="mobile" className="mb-1 block text-sm font-medium text-slate-700">
           Mobile number
         </label>
         <input
@@ -197,7 +215,7 @@ function OtpLoginForm({
           type="tel"
           autoComplete="tel"
           placeholder="98765 43210"
-          className="mb-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+          className="mb-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
           {...mobileForm.register('mobile')}
         />
         {mobileForm.formState.errors.mobile && (
@@ -208,7 +226,7 @@ function OtpLoginForm({
         <button
           type="submit"
           disabled={mobileForm.formState.isSubmitting}
-          className="mt-4 w-full rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
+          className="mt-4 w-full rounded-md bg-gradient-to-r from-orange-500 to-orange-600 px-3 py-2 text-sm font-medium text-white shadow-sm shadow-orange-200 transition hover:from-orange-600 hover:to-orange-700 disabled:opacity-50"
         >
           {mobileForm.formState.isSubmitting ? 'Sending…' : 'Send code'}
         </button>
@@ -219,8 +237,8 @@ function OtpLoginForm({
   return (
     <form onSubmit={otpForm.handleSubmit(onVerifyOtp)} noValidate>
       <ErrorBanner message={serverError} />
-      {infoMessage && <p className="mb-4 text-sm text-gray-500">{infoMessage}</p>}
-      <label htmlFor="otp" className="mb-1 block text-sm font-medium text-gray-700">
+      {infoMessage && <p className="mb-4 text-sm text-slate-500">{infoMessage}</p>}
+      <label htmlFor="otp" className="mb-1 block text-sm font-medium text-slate-700">
         6-digit code sent to {mobile}
       </label>
       <input
@@ -229,7 +247,7 @@ function OtpLoginForm({
         inputMode="numeric"
         autoComplete="one-time-code"
         maxLength={6}
-        className="mb-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm tracking-widest focus:border-brand-500 focus:outline-none"
+        className="mb-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm tracking-widest focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
         {...otpForm.register('otp')}
       />
       {otpForm.formState.errors.otp && (
@@ -238,14 +256,14 @@ function OtpLoginForm({
       <button
         type="submit"
         disabled={otpForm.formState.isSubmitting}
-        className="mt-4 w-full rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
+        className="mt-4 w-full rounded-md bg-gradient-to-r from-orange-500 to-orange-600 px-3 py-2 text-sm font-medium text-white shadow-sm shadow-orange-200 transition hover:from-orange-600 hover:to-orange-700 disabled:opacity-50"
       >
         {otpForm.formState.isSubmitting ? 'Verifying…' : 'Verify and sign in'}
       </button>
       <button
         type="button"
         onClick={() => setStep('mobile')}
-        className="mt-2 w-full text-center text-xs text-gray-500 hover:text-gray-700"
+        className="mt-2 w-full text-center text-xs text-slate-500 hover:text-slate-700"
       >
         Use a different number
       </button>

@@ -4,6 +4,7 @@ import { AsyncBoundary, DefaultEmptyState, RowSkeleton } from '../../../componen
 import { Button } from '../../../components/Button'
 import { Can } from '../../../components/Can'
 import { inputClass } from '../../../components/Field'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import type { Document } from '../api/document'
 import { DocumentPreviewLink } from '../components/DocumentUploader'
@@ -81,7 +82,7 @@ export function DocumentVerificationQueuePage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-3xl">
-        <h1 className="mb-6 text-xl font-semibold text-gray-900">Document verification</h1>
+        <PageHeader title="Document verification" motif="ball" />
 
         <AsyncBoundary
           isPending={isPending}

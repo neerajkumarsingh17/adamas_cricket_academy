@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { AsyncBoundary, DefaultEmptyState, RowSkeleton } from '../../../components/AsyncBoundary'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { useStudents } from '../hooks/useStudents'
 
@@ -9,7 +10,7 @@ export function StudentListPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-4xl">
-        <h1 className="mb-6 text-xl font-semibold text-gray-900">Students</h1>
+        <PageHeader title="Students" motif="fielding" />
 
         <AsyncBoundary
           isPending={isPending}

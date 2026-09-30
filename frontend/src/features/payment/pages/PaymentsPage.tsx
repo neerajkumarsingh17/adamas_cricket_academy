@@ -9,9 +9,10 @@ import { Can } from '../../../components/Can'
 import { Card } from '../../../components/Card'
 import { Field, inputClass } from '../../../components/Field'
 import { randomId } from '../../../lib/id'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { paymentApi } from '../api/payment'
-import type { Payment, Person } from '../api/payment'
+import type { Payment, PersonLookupResult } from '../api/payment'
 import { PaymentDocumentActions } from '../components/PaymentDocumentActions'
 import { PersonSearchField } from '../components/PersonSearchField'
 import { usePaymentTypes, usePayments, useRecordPayment, useSettlePayment } from '../hooks/usePayments'
@@ -46,7 +47,7 @@ const FORM_FIELD_NAMES = new Set(Object.keys(schema.shape))
 function RecordPaymentForm() {
   const { data: paymentTypes } = usePaymentTypes()
   const recordPayment = useRecordPayment()
-  const [person, setPerson] = useState<Person | null>(null)
+  const [person, setPerson] = useState<PersonLookupResult | null>(null)
   const [personError, setPersonError] = useState(false)
   // One key per form mount, reused across retries of the same submission
   // (features/admission/hooks/useDirectAdmission.ts's exact pattern) —
@@ -263,7 +264,7 @@ export function PaymentsPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-5xl">
-        <h1 className="mb-6 text-xl font-semibold text-gray-900">Payments</h1>
+        <PageHeader title="Payments" motif="ground" />
 
         <Can module="payment" verb="add">
           <RecordPaymentForm />

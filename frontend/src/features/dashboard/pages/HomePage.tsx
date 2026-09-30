@@ -137,15 +137,15 @@ export function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-5xl">
-        <div className="relative mb-6 overflow-hidden rounded-xl bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-900 px-6 py-8 shadow-sm sm:px-10 sm:py-10">
-          <CricketMotif className="pointer-events-none absolute -right-4 -top-6 h-40 w-40 text-white/10 sm:h-52 sm:w-52" />
-          <CricketMotif className="pointer-events-none absolute -bottom-16 left-1/4 hidden h-40 w-40 -rotate-12 text-white/5 sm:block" />
+        <div className="relative mb-6 overflow-hidden rounded-xl bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 px-6 py-8 shadow-sm sm:px-10 sm:py-10">
+          <CricketMotif className="pointer-events-none absolute -right-4 -top-6 h-40 w-40 text-orange-400/20 sm:h-52 sm:w-52" />
+          <CricketMotif className="pointer-events-none absolute -bottom-16 left-1/4 hidden h-40 w-40 -rotate-12 text-orange-400/10 sm:block" />
           <div className="relative">
-            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-200">
+            <p className="text-xs font-semibold uppercase tracking-widest text-orange-400">
               Adamas Cricket Academy
             </p>
             <h1 className="mt-1 text-2xl font-bold text-white sm:text-3xl">Welcome, {displayName}</h1>
-            <p className="mt-1 text-sm text-emerald-100">
+            <p className="mt-1 text-sm text-blue-200">
               {roleCode ? (ROLE_LABELS[roleCode] ?? roleCode) : me?.login_id}
             </p>
           </div>

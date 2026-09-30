@@ -7,6 +7,7 @@ import { ApiError } from '../../../api/client'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
 import { Field, inputClass } from '../../../components/Field'
+import { PageHeader } from '../../../components/PageHeader'
 import { enquiryApi, type DuplicateCandidates } from '../api/enquiry'
 import { useCreateEnquiry, useEnquirySources } from '../hooks/useEnquiries'
 
@@ -79,7 +80,7 @@ export function EnquiryFormPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-2xl">
-        <h1 className="mb-6 text-xl font-semibold text-gray-900">New enquiry</h1>
+        <PageHeader title="New enquiry" motif="ball" />
 
         {hasDuplicates && (
           <Card className="mb-4 border-amber-300 bg-amber-50">

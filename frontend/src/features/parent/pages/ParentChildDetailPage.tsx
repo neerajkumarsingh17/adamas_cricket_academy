@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { AsyncBoundary, DefaultEmptyState, RowSkeleton } from '../../../components/AsyncBoundary'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { DocumentPreviewLink, DocumentUploader } from '../../document/components/DocumentUploader'
 import { useOwnerDocuments } from '../../document/hooks/useDocuments'
@@ -83,20 +84,19 @@ export function ParentChildDetailPage() {
         >
           {(p) => (
             <>
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <h1 className="text-xl font-semibold text-gray-900">
-                    {p.personal.first_name} {p.personal.last_name}
-                  </h1>
-                  <p className="text-sm text-gray-500">{p.academy.student_code}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Pill label={p.academy.status} />
-                  <Link to={`/students/${id}/profile-completion`}>
-                    <Button variant="secondary">Complete profile</Button>
-                  </Link>
-                </div>
-              </div>
+              <PageHeader
+                title={`${p.personal.first_name} ${p.personal.last_name}`}
+                subtitle={p.academy.student_code}
+                motif="batting"
+                actions={
+                  <>
+                    <Pill label={p.academy.status} />
+                    <Link to={`/students/${id}/profile-completion`}>
+                      <Button variant="secondary">Complete profile</Button>
+                    </Link>
+                  </>
+                }
+              />
 
               <Card className="mb-4">
                 <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">

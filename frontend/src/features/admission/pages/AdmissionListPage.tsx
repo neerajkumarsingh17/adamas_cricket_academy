@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { AsyncBoundary, DefaultEmptyState, RowSkeleton } from '../../../components/AsyncBoundary'
 import { Button } from '../../../components/Button'
 import { Can } from '../../../components/Can'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { ADMISSION_STEPS } from '../api/admission'
 import { useAdmissions } from '../hooks/useAdmissions'
@@ -12,14 +13,17 @@ export function AdmissionListPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-gray-900">Admissions</h1>
-          <Can module="admission" verb="add">
-            <Link to="/admissions/new-direct">
-              <Button>New direct admission</Button>
-            </Link>
-          </Can>
-        </div>
+        <PageHeader
+          title="Admissions"
+          motif="batting"
+          actions={
+            <Can module="admission" verb="add">
+              <Link to="/admissions/new-direct">
+                <Button>New direct admission</Button>
+              </Link>
+            </Can>
+          }
+        />
 
         <AsyncBoundary
           isPending={isPending}

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { AsyncBoundary, DefaultEmptyState, RowSkeleton } from '../../../components/AsyncBoundary'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { useMyChildren } from '../hooks/useParent'
 
@@ -9,7 +10,7 @@ export function ParentChildrenPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-2xl">
-        <h1 className="mb-6 text-xl font-semibold text-gray-900">My children</h1>
+        <PageHeader title="My children" motif="batting" />
 
         <AsyncBoundary
           isPending={isPending}

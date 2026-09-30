@@ -8,8 +8,9 @@ import { Can } from '../../../components/Can'
 import { Card } from '../../../components/Card'
 import { Field, inputClass } from '../../../components/Field'
 import { Modal } from '../../../components/Modal'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
-import type { ChecklistItem } from '../api/admission'
+import type { AdmissionIntakeInput, ChecklistItem } from '../api/admission'
 import { DIRECT_ADMISSION_STEP_LABEL } from '../api/admission'
 import { useUploadDocument } from '../../document/hooks/useDocuments'
 import { isValidMobileLike } from '../../../lib/mobile'
@@ -24,10 +25,15 @@ import {
   useRejectAdmission,
 } from '../hooks/useAdmissions'
 import { StepDocuments } from '../components/direct/StepDocuments'
+import { StepFeeConsent } from '../components/direct/StepFeeConsent'
+import { StepStudentSeat } from '../components/direct/StepStudentSeat'
 import {
   useCancelDirectAdmission,
   useDirectAdmissionBootstrap,
   usePatchDirectAdmission,
+  useRecordDirectPayment,
+  useSetConsents,
+  useSetFeeLines,
   useSubmitDocuments,
   useVerifyDirectPayment,
   useVerifyDocuments,
@@ -349,6 +355,16 @@ function StepAction({ admission }: { admission: Admission }) {
 function DirectAdmissionSummary({ admission }: { admission: Admission }) {
   const intake = admission.intake
   const [editingContact, setEditingContact] = useState(false)
+  const [editingIntake, setEditingIntake] = useState(false)
+  // No payment recorded yet means no fee amount has been committed against
+  // this admission's category/days-per-week, so the whole intake — not
+  // just the four contact fields — is still safe to edit. Once a payment
+  // exists, changing admission_category or days_per_week here would leave
+  // the already-collected fee_total inconsistent with what those fields
+  // now say, so full editing is withdrawn back to contact-only at that
+  // point (backend itself never restricts by step — this is purely a
+  // frontend guardrail against that particular mismatch).
+  const canEditFullIntake = !admission.direct_payment
   return (
     <Card className="mb-4">
       <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
@@ -380,16 +396,107 @@ function DirectAdmissionSummary({ admission }: { admission: Admission }) {
         </div>
       </dl>
       {intake && (
-        <div className="mt-3 border-t border-gray-100 pt-3">
-          <Button variant="secondary" onClick={() => setEditingContact(true)}>
-            Edit contact details
-          </Button>
+        <div className="mt-3 flex flex-wrap gap-2 border-t border-gray-100 pt-3">
+          {canEditFullIntake ? (
+            <Button variant="secondary" onClick={() => setEditingIntake(true)}>
+              Edit admission details
+            </Button>
+          ) : (
+            <Button variant="secondary" onClick={() => setEditingContact(true)}>
+              Edit contact details
+            </Button>
+          )}
         </div>
       )}
       {editingContact && (
         <EditContactModal admission={admission} onClose={() => setEditingContact(false)} />
       )}
+      {editingIntake && (
+        <EditIntakeModal admission={admission} onClose={() => setEditingIntake(false)} />
+      )}
     </Card>
+  )
+}
+
+// Lets the desk go back and correct anything captured at Step 1 — name,
+// DOB, category, address, guardian details — for as long as no payment
+// has been recorded yet (see canEditFullIntake above). Reuses the same
+// StepStudentSeat form the wizard's own step 1 renders, so this edit path
+// can never drift from what "create" already validates and displays.
+function EditIntakeModal({ admission, onClose }: { admission: Admission; onClose: () => void }) {
+  const intake = admission.intake
+  const bootstrap = useDirectAdmissionBootstrap()
+  const patch = usePatchDirectAdmission(admission.id)
+  const [values, setValues] = useState<AdmissionIntakeInput>({
+    season: intake?.season,
+    admission_category: intake?.admission_category,
+    days_per_week: intake?.days_per_week ?? null,
+    preferred_slot: intake?.preferred_slot ?? '',
+    full_name: intake?.full_name ?? '',
+    date_of_birth: intake?.date_of_birth ?? '',
+    gender: intake?.gender ?? 'M',
+    playing_role: intake?.playing_role ?? '',
+    present_address: intake?.present_address ?? '',
+    city: intake?.city ?? '',
+    state: intake?.state ?? '',
+    pin_code: intake?.pin_code ?? '',
+    student_mobile: intake?.student_mobile ?? '',
+    guardian_name: intake?.guardian_name ?? '',
+    guardian_relationship: intake?.guardian_relationship,
+    guardian_mobile: intake?.guardian_mobile ?? '',
+    guardian_date_of_birth: intake?.guardian_date_of_birth ?? '',
+    guardian_gender: intake?.guardian_gender,
+    emergency_contact: intake?.emergency_contact ?? '',
+    local_guardian_name: intake?.local_guardian_name ?? '',
+    local_guardian_mobile: intake?.local_guardian_mobile ?? '',
+  })
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
+
+  function onField(field: keyof AdmissionIntakeInput, value: unknown) {
+    setValues((prev) => ({ ...prev, [field]: value }))
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev }
+        delete next[field]
+        return next
+      })
+    }
+  }
+
+  async function handleSave() {
+    try {
+      await patch.mutateAsync(values)
+      onClose()
+    } catch (err) {
+      if (err instanceof ApiError) setFieldErrors(err.fieldErrors ?? {})
+    }
+  }
+
+  return (
+    <Modal title="Edit admission details" onClose={onClose} size="xl">
+      <div className="space-y-4 p-5">
+        <StepStudentSeat
+          intake={values}
+          onField={onField}
+          bootstrap={bootstrap.data}
+          ageCategoryName={intake?.age_category_name ?? null}
+          fieldErrors={fieldErrors}
+        />
+        {patch.isError && Object.keys(fieldErrors).length === 0 && (
+          <p className="text-sm text-red-600">
+            {patch.error instanceof ApiError ? patch.error.message : 'Could not save.'}
+          </p>
+        )}
+        <div className="flex justify-end gap-2 border-t border-gray-100 pt-4">
+          <Button variant="ghost" type="button" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={() => void handleSave()} disabled={patch.isPending}>
+            {patch.isPending ? 'Saving…' : 'Save'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }
 
@@ -581,6 +688,100 @@ function DirectAdmissionActions({ admission }: { admission: Admission }) {
   )
 }
 
+// Step 2.1's fee-first flow, transplanted from the wizard's own step 2
+// (StepFeeConsent) so it's reachable from the standalone detail page too
+// — the wizard (DirectAdmission.tsx) only ever runs this in one browser
+// session while creating a new admission; there was previously no way to
+// come back to a `draft` admission (e.g. after closing the tab mid-wizard)
+// and still collect its fee. Without this, StepDocuments below would be
+// the only thing shown at `draft`, which is exactly the "asked to upload
+// documents before paying, with no way to reach a payment screen"
+// complaint this replaces: fee/consent/payment collection now renders
+// here instead of the documents panel until a payment exists, matching
+// the wizard's own fee-before-documents order.
+function CollectFeePanel({ admission }: { admission: Admission }) {
+  const bootstrap = useDirectAdmissionBootstrap()
+  const setFeeLines = useSetFeeLines(admission.id)
+  const setConsents = useSetConsents(admission.id)
+  const recordPayment = useRecordDirectPayment(admission.id)
+  const [feeAmounts, setFeeAmounts] = useState<Record<string, string>>({})
+  const [consentDecisions, setConsentDecisions] = useState<Record<string, boolean>>({})
+  const [paymentMode, setPaymentMode] = useState('upi')
+  const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [declaredByName, setDeclaredByName] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  const isSaving = setFeeLines.isPending || setConsents.isPending || recordPayment.isPending
+
+  async function handleRecordPayment() {
+    setError(null)
+    const missingConsents = (bootstrap.data?.consent_types ?? []).filter(
+      (c) => c.is_mandatory && !consentDecisions[c.id],
+    )
+    if (missingConsents.length > 0) {
+      setError(
+        `Confirm all required consents before recording payment: ${missingConsents
+          .map((c) => c.label)
+          .join(', ')}.`,
+      )
+      return
+    }
+    try {
+      const lines = Object.entries(feeAmounts)
+        .filter(([, amount]) => amount)
+        .map(([fee_head, amount]) => ({ fee_head, amount }))
+      await setFeeLines.mutateAsync(lines)
+      const decisions = Object.entries(consentDecisions).map(([consent_type, granted]) => ({
+        consent_type,
+        granted,
+      }))
+      await setConsents.mutateAsync({ decisions, declaredByName })
+      await recordPayment.mutateAsync({
+        payment_mode: paymentMode as 'upi' | 'cash' | 'cheque' | 'online_transfer',
+        payment_date: paymentDate,
+      })
+    } catch (err) {
+      if (err instanceof ApiError) {
+        const count = Object.keys(err.fieldErrors ?? {}).length
+        setError(
+          count > 0
+            ? (Object.values(err.fieldErrors).flat()[0] ?? err.message)
+            : err.message,
+        )
+      } else {
+        setError('Something went wrong.')
+      }
+    }
+  }
+
+  return (
+    <Card className="mb-4">
+      <h3 className="mb-3 text-sm font-semibold text-gray-700">Collect fee &amp; consent</h3>
+      <StepFeeConsent
+        bootstrap={bootstrap.data}
+        admission={admission}
+        feeAmounts={feeAmounts}
+        onFeeAmountChange={(id, amount) => setFeeAmounts((prev) => ({ ...prev, [id]: amount }))}
+        consentDecisions={consentDecisions}
+        onConsentChange={(id, granted) => setConsentDecisions((prev) => ({ ...prev, [id]: granted }))}
+        paymentMode={paymentMode}
+        onPaymentModeChange={setPaymentMode}
+        paymentDate={paymentDate}
+        onPaymentDateChange={setPaymentDate}
+        declaredByName={declaredByName}
+        onDeclaredByNameChange={setDeclaredByName}
+        guardianName={admission.intake?.guardian_name ?? ''}
+      />
+      <div className="mt-4 flex items-center gap-3 border-t border-gray-100 pt-4">
+        <Button onClick={() => void handleRecordPayment()} disabled={isSaving}>
+          {isSaving ? 'Saving…' : 'Record payment & clear'}
+        </Button>
+        {error && <span className="text-sm text-red-600">{error}</span>}
+      </div>
+    </Card>
+  )
+}
+
 function DirectAdmissionDetail({ admission }: { admission: Admission }) {
   const bootstrap = useDirectAdmissionBootstrap()
   const verifyPayment = useVerifyDirectPayment(admission.id)
@@ -588,15 +789,19 @@ function DirectAdmissionDetail({ admission }: { admission: Admission }) {
   return (
     <>
       <DirectAdmissionSummary admission={admission} />
-      <Card className="mb-4">
-        <StepDocuments
-          admissionId={admission.id}
-          admission={admission}
-          bootstrap={bootstrap.data}
-          onVerifyPayment={() => void verifyPayment.mutateAsync({ approved: true })}
-          verifyingPayment={verifyPayment.isPending}
-        />
-      </Card>
+      {admission.direct_payment ? (
+        <Card className="mb-4">
+          <StepDocuments
+            admissionId={admission.id}
+            admission={admission}
+            bootstrap={bootstrap.data}
+            onVerifyPayment={() => void verifyPayment.mutateAsync({ approved: true })}
+            verifyingPayment={verifyPayment.isPending}
+          />
+        </Card>
+      ) : (
+        <CollectFeePanel admission={admission} />
+      )}
       <DirectAdmissionActions admission={admission} />
     </>
   )
@@ -623,13 +828,12 @@ export function AdmissionDetailPage() {
               : (a.intake?.full_name ?? 'Unnamed')
             return (
               <>
-                <div className="mb-6 flex items-center justify-between">
-                  <div>
-                    <h1 className="text-xl font-semibold text-gray-900">{name}</h1>
-                    <p className="text-sm text-gray-500">{a.application_no}</p>
-                  </div>
-                  <Pill label={DIRECT_ADMISSION_STEP_LABEL[a.step] ?? a.step} />
-                </div>
+                <PageHeader
+                  title={name}
+                  subtitle={a.application_no}
+                  motif="batting"
+                  actions={<Pill label={DIRECT_ADMISSION_STEP_LABEL[a.step] ?? a.step} />}
+                />
 
                 {a.intake ? (
                   <DirectAdmissionDetail admission={a} />

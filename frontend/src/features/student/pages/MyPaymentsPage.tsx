@@ -1,5 +1,6 @@
 import { AsyncBoundary, RowSkeleton } from '../../../components/AsyncBoundary'
 import { Card } from '../../../components/Card'
+import { PageHeader } from '../../../components/PageHeader'
 import { PaymentHistoryPanel } from '../../payment/components/PaymentHistoryPanel'
 import { useMyPayments } from '../hooks/useStudents'
 
@@ -17,7 +18,7 @@ export function MyPaymentsPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-2xl">
-        <h1 className="mb-6 text-xl font-semibold text-gray-900">My payments</h1>
+        <PageHeader title="My payments" motif="ground" />
         <Card>
           <AsyncBoundary
             isPending={isPending}

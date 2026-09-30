@@ -2554,6 +2554,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/payments/{id}/invoice.pdf/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /payments/{id}/invoice.pdf/ — the Invoice (Payment's own
+         *     docstring: "issued only after the payment is confirmed as settled"),
+         *     so only ever available once status is SETTLED and invoice_no is
+         *     minted. Same object-level check as PaymentReceiptPdfView above.
+         */
+        get: operations["v1_payments_invoice.pdf_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/{id}/receipt.pdf/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /payments/{id}/receipt.pdf/ — the Payment Confirmation Receipt
+         *     (Payment's own docstring: "issued immediately when a payment is
+         *     received"), available from the moment a payment is recorded. Same
+         *     `payment:view` + _scoped_payments_queryset object-level check as
+         *     PaymentListView, so a Student/Parent can only ever fetch their own
+         *     (or their child's) receipt — get_object_or_404 against the scoped
+         *     queryset 404s rather than 403s on someone else's payment, same as
+         *     every other own-scope detail lookup in this codebase (e.g.
+         *     SessionAttendanceViewSet on another coach's session).
+         */
+        get: operations["v1_payments_receipt.pdf_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/payments/{id}/settle/": {
         parameters: {
             query?: never;
@@ -2651,6 +2700,12 @@ export interface paths {
          *     Gated on `payment:add` rather than `students:view` since this is
          *     specifically for the payment-recording use case, not a general person
          *     directory.
+         *
+         *     Returns PersonLookupResultSerializer, not the plain PersonSerializer
+         *     other lookups here use — its student_code is what lets staff tell two
+         *     same-named people apart (see that serializer's own docstring for the
+         *     production incident that motivated it: a coaching fee recorded
+         *     against the wrong one of four duplicate "Neeraj Kumar" Person rows).
          */
         get: operations["v1_persons_lookup_list"];
         put?: never;
@@ -5340,6 +5395,43 @@ export interface components {
             state: string;
             pincode: string;
             blood_group?: components["schemas"]["BloodGroupEnum"] | components["schemas"]["BlankEnum"];
+        };
+        /**
+         * @description GET /persons/lookup/ response — PersonSerializer plus, when the
+         *     person is currently linked to a Student, that student's code.
+         *
+         *     Why: this endpoint's own search (mobile/name substring, no fuzzy
+         *     dedup warning the way PersonSearchView's admission-intake duplicate
+         *     check has) can easily surface several people with the same name — a
+         *     same-named sibling, or SOP §78's "one Person, one profile" broken in
+         *     practice by an accidental duplicate Person row for the same human.
+         *     Name + mobile alone doesn't tell those apart; the student code does,
+         *     and is exactly what stops a coaching fee being recorded against the
+         *     wrong "Neeraj Kumar" (confirmed the hard way against production data).
+         *
+         *     Local import: apps.people sits before apps.admissions.student in
+         *     docs/00-project-structure.md's dependency chain (people imports only
+         *     core) — same narrow, function-scoped exception apps.finance.payment.
+         *     views.CurrentFeeView already uses to read across that same boundary.
+         */
+        PersonLookupResult: {
+            /** Format: uuid */
+            readonly id: string;
+            first_name: string;
+            middle_name?: string;
+            last_name: string;
+            /** Format: date */
+            date_of_birth: string;
+            gender: components["schemas"]["GenderEnum"];
+            mobile: string;
+            email?: string;
+            address_line1: string;
+            address_line2: string;
+            city: string;
+            state: string;
+            pincode: string;
+            blood_group?: components["schemas"]["BloodGroupEnum"] | components["schemas"]["BlankEnum"];
+            readonly student_code: string | null;
         };
         /**
          * @description * `batsman` - Batsman
@@ -8863,6 +8955,48 @@ export interface operations {
             };
         };
     };
+    "v1_payments_invoice.pdf_retrieve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    "v1_payments_receipt.pdf_retrieve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
     v1_payments_settle_create: {
         parameters: {
             query?: never;
@@ -8942,7 +9076,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Person"][];
+                    "application/json": components["schemas"]["PersonLookupResult"][];
                 };
             };
         };

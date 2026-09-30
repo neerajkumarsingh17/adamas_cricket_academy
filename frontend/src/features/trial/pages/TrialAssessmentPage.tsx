@@ -4,6 +4,7 @@ import { ApiError } from '../../../api/client'
 import { AsyncBoundary, RowSkeleton } from '../../../components/AsyncBoundary'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
+import { PageHeader } from '../../../components/PageHeader'
 import { queueAssessment, useOfflineAssessmentSync } from '../hooks/useOfflineAssessments'
 import { useAssessmentCriteria, useSubmitAssessment, useTrialRegistration } from '../hooks/useTrials'
 
@@ -111,10 +112,11 @@ export function TrialAssessmentPage() {
         >
           {(reg) => (
             <>
-              <h1 className="mb-1 text-xl font-semibold text-gray-900">
-                {reg.person.first_name} {reg.person.last_name}
-              </h1>
-              <p className="mb-4 text-sm text-gray-500">{reg.trial_id}</p>
+              <PageHeader
+                title={`${reg.person.first_name} ${reg.person.last_name}`}
+                subtitle={reg.trial_id}
+                motif="bowling"
+              />
 
               <Card>
                 {criteria?.results.map((criterion) => (

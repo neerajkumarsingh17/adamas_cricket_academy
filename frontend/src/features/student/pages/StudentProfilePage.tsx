@@ -4,6 +4,7 @@ import { AsyncBoundary, DefaultEmptyState, RowSkeleton } from '../../../componen
 import { Button } from '../../../components/Button'
 import { Can } from '../../../components/Can'
 import { Card } from '../../../components/Card'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { AccommodationDialog } from '../components/AccommodationDialog'
 import { GrantLoginDialog } from '../components/GrantLoginDialog'
@@ -121,28 +122,27 @@ export function StudentProfilePage() {
         >
           {(p) => (
             <>
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <h1 className="text-xl font-semibold text-gray-900">
-                    {p.personal.first_name} {p.personal.last_name}
-                  </h1>
-                  <p className="text-sm text-gray-500">{p.academy.student_code}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Pill label={p.academy.status} />
-                  <Link to={`/students/${id}/profile-completion`}>
-                    <Button variant="secondary">Complete profile</Button>
-                  </Link>
-                  <Can module="students" verb="edit">
-                    <Button variant="secondary" onClick={() => setShowGrantLoginDialog(true)}>
-                      Enable student login
-                    </Button>
-                    <Button variant="secondary" onClick={() => setShowStatusDialog(true)}>
-                      Change status
-                    </Button>
-                  </Can>
-                </div>
-              </div>
+              <PageHeader
+                title={`${p.personal.first_name} ${p.personal.last_name}`}
+                subtitle={p.academy.student_code}
+                motif="fielding"
+                actions={
+                  <>
+                    <Pill label={p.academy.status} />
+                    <Link to={`/students/${id}/profile-completion`}>
+                      <Button variant="secondary">Complete profile</Button>
+                    </Link>
+                    <Can module="students" verb="edit">
+                      <Button variant="secondary" onClick={() => setShowGrantLoginDialog(true)}>
+                        Enable student login
+                      </Button>
+                      <Button variant="secondary" onClick={() => setShowStatusDialog(true)}>
+                        Change status
+                      </Button>
+                    </Can>
+                  </>
+                }
+              />
 
               <div className="mb-4 flex gap-1 border-b border-gray-200">
                 {(['personal', 'parent', 'cricket', 'academy'] as Tab[]).map((t) => (

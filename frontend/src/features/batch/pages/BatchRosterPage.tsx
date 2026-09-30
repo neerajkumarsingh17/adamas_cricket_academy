@@ -7,6 +7,7 @@ import { Can } from '../../../components/Can'
 import { Card } from '../../../components/Card'
 import { CollapsibleSection } from '../../../components/CollapsibleSection'
 import { Field, inputClass } from '../../../components/Field'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { formatDate, formatTime, formatWeekdays, today } from '../../../lib/dates'
 // SessionDetailModal lives in the attendance feature (it needs the
@@ -373,32 +374,37 @@ export function BatchRosterPage() {
         >
           {(batch) => (
             <>
-              <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h1 className="text-xl font-semibold text-gray-900">{batch.name}</h1>
-                  <p className="text-sm text-gray-500">
-                    {batch.age_category_name} · {batch.coach.person_name} · {batch.venue_name}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {formatWeekdays(batch.weekdays)} · {formatTime(batch.start_time)}–
-                    {formatTime(batch.end_time)} · {batch.enrolled_count}/{batch.capacity} enrolled
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    ₹{batch.monthly_fee}/month · ₹{batch.residential_monthly_fee}/month residential
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-3">
-                  <Can module="attendance" verb="view">
-                    <Link
-                      to={`/batches/${batch.id}/attendance-report`}
-                      className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
-                    >
-                      Attendance report
-                    </Link>
-                  </Can>
-                  <BatchAdminControls batch={batch} />
-                </div>
-              </div>
+              <PageHeader
+                title={batch.name}
+                motif="ground"
+                subtitle={
+                  <>
+                    <p>
+                      {batch.age_category_name} · {batch.coach.person_name} · {batch.venue_name}
+                    </p>
+                    <p>
+                      {formatWeekdays(batch.weekdays)} · {formatTime(batch.start_time)}–
+                      {formatTime(batch.end_time)} · {batch.enrolled_count}/{batch.capacity} enrolled
+                    </p>
+                    <p>
+                      ₹{batch.monthly_fee}/month · ₹{batch.residential_monthly_fee}/month residential
+                    </p>
+                  </>
+                }
+                actions={
+                  <div className="flex flex-col items-end gap-3">
+                    <Can module="attendance" verb="view">
+                      <Link
+                        to={`/batches/${batch.id}/attendance-report`}
+                        className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+                      >
+                        Attendance report
+                      </Link>
+                    </Can>
+                    <BatchAdminControls batch={batch} />
+                  </div>
+                }
+              />
 
               <Can module="batch" verb="add">
                 <EnrolForm batch={batch} />

@@ -4,6 +4,7 @@ import { Button } from '../../../components/Button'
 import { Can } from '../../../components/Can'
 import { Card } from '../../../components/Card'
 import { FilePreviewModal } from '../../../components/FilePreviewModal'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { useStudents } from '../../student/hooks/useStudents'
 import { blobToUrl, idcardApi } from '../api/idcard'
@@ -34,7 +35,7 @@ export function IDCardListPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-3xl">
-        <h1 className="mb-6 text-xl font-semibold text-gray-900">ID cards</h1>
+        <PageHeader title="ID cards" motif="ball" />
 
         <Can module="idcard" verb="add">
           <Card className="mb-4">

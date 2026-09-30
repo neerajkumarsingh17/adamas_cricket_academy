@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { AsyncBoundary, DefaultEmptyState, RowSkeleton } from '../../../components/AsyncBoundary'
 import { Button } from '../../../components/Button'
 import { inputClass } from '../../../components/Field'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import type { ApprovalRequest } from '../api/approvals'
 import { useApproveRequest, useApprovals, useRejectRequest } from '../hooks/useApprovals'
@@ -92,7 +93,7 @@ export function ApprovalsQueuePage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-3xl">
-        <h1 className="mb-6 text-xl font-semibold text-gray-900">Approvals</h1>
+        <PageHeader title="Approvals" motif="bowling" />
 
         <AsyncBoundary
           isPending={isPending}

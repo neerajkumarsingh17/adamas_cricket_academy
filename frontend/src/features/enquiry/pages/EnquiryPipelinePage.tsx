@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { AsyncBoundary, DefaultEmptyState, RowSkeleton } from '../../../components/AsyncBoundary'
 import { Button } from '../../../components/Button'
 import { Can } from '../../../components/Can'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import type { Enquiry } from '../api/enquiry'
 import { useEnquiries } from '../hooks/useEnquiries'
@@ -84,17 +85,18 @@ export function EnquiryPipelinePage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">Enquiry pipeline</h1>
-            <p className="text-sm text-gray-500">Every open enquiry and what it's waiting on.</p>
-          </div>
-          <Can module="enquiry" verb="add">
-            <Link to="/enquiries/new">
-              <Button>New enquiry</Button>
-            </Link>
-          </Can>
-        </div>
+        <PageHeader
+          title="Enquiry pipeline"
+          subtitle="Every open enquiry and what it's waiting on."
+          motif="ball"
+          actions={
+            <Can module="enquiry" verb="add">
+              <Link to="/enquiries/new">
+                <Button>New enquiry</Button>
+              </Link>
+            </Can>
+          }
+        />
 
         <div className="flex gap-4 overflow-x-auto pb-4">
           {COLUMNS.map((col) => (

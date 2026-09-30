@@ -5,6 +5,7 @@ import { Button } from '../../../components/Button'
 import { Can } from '../../../components/Can'
 import { Card } from '../../../components/Card'
 import { Field, inputClass } from '../../../components/Field'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { useTrialSlots } from '../../trial/hooks/useTrials'
 import { useAddFollowUp, useConvertToTrial, useEnquiry } from '../hooks/useEnquiries'
@@ -120,13 +121,12 @@ export function EnquiryDetailPage() {
         >
           {(e) => (
             <>
-              <div className="mb-6 flex items-start justify-between">
-                <div>
-                  <h1 className="text-xl font-semibold text-gray-900">{e.student_name}</h1>
-                  <p className="text-sm text-gray-500">{e.enquiry_no}</p>
-                </div>
-                <Pill label={e.status} />
-              </div>
+              <PageHeader
+                title={e.student_name}
+                subtitle={e.enquiry_no}
+                motif="ball"
+                actions={<Pill label={e.status} />}
+              />
 
               <Card className="mb-4">
                 <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">

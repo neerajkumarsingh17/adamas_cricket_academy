@@ -5,6 +5,7 @@ export type Payment = components['schemas']['Payment']
 export type PaymentType = components['schemas']['PaymentType']
 export type RecordPayment = components['schemas']['RecordPayment']
 export type Person = components['schemas']['Person']
+export type PersonLookupResult = components['schemas']['PersonLookupResult']
 export type CurrentFee = components['schemas']['CurrentFee']
 
 export interface ListResponse<T> {
@@ -48,8 +49,11 @@ export const paymentApi = {
 
   types: () => request<ListResponse<PaymentType>>('/master/payment-types/'),
 
+  // student_code (when the match is a linked student) is what lets staff
+  // tell two same-named people apart — see PersonLookupResultSerializer's
+  // own docstring for the incident this fixes.
   searchPersons: (q: string) =>
-    request<Person[]>(`/persons/lookup/?q=${encodeURIComponent(q)}`),
+    request<PersonLookupResult[]>(`/persons/lookup/?q=${encodeURIComponent(q)}`),
 
   // The record-payment form's amount auto-fill for a recurring monthly
   // coaching fee — null when the person isn't an active student with an

@@ -5,6 +5,7 @@ import { Button } from '../../../components/Button'
 import { Can } from '../../../components/Can'
 import { Card } from '../../../components/Card'
 import { Field, inputClass } from '../../../components/Field'
+import { PageHeader } from '../../../components/PageHeader'
 import { useAgeCategories, useCreateSlot, useTrialSlots, useVenues } from '../hooks/useTrials'
 
 function NewSlotForm({ onDone }: { onDone: () => void }) {
@@ -92,14 +93,17 @@ export function TrialCalendarPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-gray-900">Trial calendar</h1>
-          <Can module="trial" verb="add">
-            <Button variant="secondary" onClick={() => setShowForm((s) => !s)}>
-              {showForm ? 'Close' : 'New slot'}
-            </Button>
-          </Can>
-        </div>
+        <PageHeader
+          title="Trial calendar"
+          motif="bowling"
+          actions={
+            <Can module="trial" verb="add">
+              <Button variant="secondary" onClick={() => setShowForm((s) => !s)}>
+                {showForm ? 'Close' : 'New slot'}
+              </Button>
+            </Can>
+          }
+        />
 
         {showForm && <NewSlotForm onDone={() => setShowForm(false)} />}
 

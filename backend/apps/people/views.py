@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Person
-from .serializers import PersonSerializer
+from .serializers import PersonLookupResultSerializer, PersonSerializer
 from .services import NAME_SIMILARITY_THRESHOLD, resolve_person_by_name
 
 
@@ -80,11 +80,17 @@ class PersonLookupView(APIView):
     Gated on `payment:add` rather than `students:view` since this is
     specifically for the payment-recording use case, not a general person
     directory.
+
+    Returns PersonLookupResultSerializer, not the plain PersonSerializer
+    other lookups here use — its student_code is what lets staff tell two
+    same-named people apart (see that serializer's own docstring for the
+    production incident that motivated it: a coaching fee recorded
+    against the wrong one of four duplicate "Neeraj Kumar" Person rows).
     """
 
     permission_classes = [IsAuthenticated]
 
-    @extend_schema(responses=PersonSerializer(many=True))
+    @extend_schema(responses=PersonLookupResultSerializer(many=True))
     def get(self, request):
         if not request.user.has_perm_for("payment", "add"):
             self.permission_denied(request)
@@ -96,4 +102,4 @@ class PersonLookupView(APIView):
         matches = Person.objects.filter(
             Q(mobile__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q)
         )[:10]
-        return Response(PersonSerializer(matches, many=True).data)
+        return Response(PersonLookupResultSerializer(matches, many=True).data)

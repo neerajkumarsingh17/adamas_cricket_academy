@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { AsyncBoundary, DefaultEmptyState, RowSkeleton } from '../../../components/AsyncBoundary'
 import { Button } from '../../../components/Button'
 import { Can } from '../../../components/Can'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { formatTime, formatWeekdays } from '../../../lib/dates'
 import { BatchFormModal } from '../components/BatchFormModal'
@@ -15,22 +16,25 @@ export function BatchListPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-xl font-semibold text-gray-900">Batches</h1>
-          <div className="flex items-center gap-4">
-            <Can module="attendance" verb="approve">
-              <Link
-                to="/attendance/corrections"
-                className="text-sm font-medium text-brand-600 hover:underline"
-              >
-                Attendance corrections
-              </Link>
-            </Can>
-            <Can module="batch_admin" verb="add">
-              <Button onClick={() => setShowCreate(true)}>Create batch</Button>
-            </Can>
-          </div>
-        </div>
+        <PageHeader
+          title="Batches"
+          motif="ground"
+          actions={
+            <>
+              <Can module="attendance" verb="approve">
+                <Link
+                  to="/attendance/corrections"
+                  className="text-sm font-medium text-brand-600 hover:underline"
+                >
+                  Attendance corrections
+                </Link>
+              </Can>
+              <Can module="batch_admin" verb="add">
+                <Button onClick={() => setShowCreate(true)}>Create batch</Button>
+              </Can>
+            </>
+          }
+        />
 
         {showCreate && <BatchFormModal batch={null} onClose={() => setShowCreate(false)} />}
 

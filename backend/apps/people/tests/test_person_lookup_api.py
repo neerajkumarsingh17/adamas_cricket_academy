@@ -69,3 +69,25 @@ def test_coach_cannot_use_the_payment_lookup(api_client, seeded_roles):
     response = api_client.get("/api/v1/persons/lookup/?q=anything")
 
     assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_lookup_includes_student_code_to_tell_duplicates_apart(api_client, seeded_roles):
+    """Two Person rows with the same name (a duplicate SOP §78 says
+    shouldn't exist, but did — the incident this endpoint's student_code
+    field exists to prevent) must be distinguishable by which one is
+    actually enrolled, not just name + mobile."""
+    from apps.admissions.student.tests.factories import StudentFactory
+
+    duplicate_a = PersonFactory(first_name="Neeraj", last_name="Kumar", mobile="+919800001111")
+    duplicate_b = PersonFactory(first_name="Neeraj", last_name="Kumar", mobile="+919800001116")
+    StudentFactory(person=duplicate_b, student_code="ACA/2627/0008")
+    user = _user_with_role("administration")
+    api_client.force_authenticate(user)
+
+    response = api_client.get("/api/v1/persons/lookup/?q=Neeraj")
+
+    assert response.status_code == 200
+    by_id = {row["id"]: row["student_code"] for row in response.data}
+    assert by_id[str(duplicate_a.id)] is None
+    assert by_id[str(duplicate_b.id)] == "ACA/2627/0008"

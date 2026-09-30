@@ -4,6 +4,7 @@ import { AsyncBoundary, DefaultEmptyState, RowSkeleton } from '../../../componen
 import { Button } from '../../../components/Button'
 import { Can } from '../../../components/Can'
 import { inputClass } from '../../../components/Field'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import type { AttendanceCorrection, CorrectionStatus } from '../api/attendance'
 import { useApproveCorrection, useCorrections, useRejectCorrection } from '../hooks/useAttendance'
@@ -80,21 +81,24 @@ export function CorrectionsQueuePage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-3xl">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-xl font-semibold text-gray-900">Attendance corrections</h1>
-          <select
-            aria-label="Filter by status"
-            className={`${inputClass} w-auto min-h-[44px]`}
-            value={status}
-            onChange={(e) => setStatus(e.target.value as CorrectionStatus | '')}
-          >
-            {STATUS_FILTERS.map((f) => (
-              <option key={f.label} value={f.value}>
-                {f.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <PageHeader
+          title="Attendance corrections"
+          motif="fielding"
+          actions={
+            <select
+              aria-label="Filter by status"
+              className={`${inputClass} w-auto min-h-[44px]`}
+              value={status}
+              onChange={(e) => setStatus(e.target.value as CorrectionStatus | '')}
+            >
+              {STATUS_FILTERS.map((f) => (
+                <option key={f.label} value={f.value}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          }
+        />
 
         <AsyncBoundary
           isPending={isPending}

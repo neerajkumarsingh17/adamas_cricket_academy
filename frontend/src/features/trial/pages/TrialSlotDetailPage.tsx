@@ -4,6 +4,7 @@ import { AsyncBoundary, DefaultEmptyState, RowSkeleton } from '../../../componen
 import { Button } from '../../../components/Button'
 import { Can } from '../../../components/Can'
 import { inputClass } from '../../../components/Field'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { useOpenAdmission, useProgrammes } from '../../admission/hooks/useAdmissions'
 import type { TrialRegistration } from '../api/trial'
@@ -153,7 +154,7 @@ export function TrialSlotDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-4xl">
-        <h1 className="mb-6 text-xl font-semibold text-gray-900">Trial day</h1>
+        <PageHeader title="Trial day" motif="bowling" />
 
         <AsyncBoundary
           isPending={isPending}

@@ -42,10 +42,28 @@ export function PublicEnquiryPage() {
     }
   }
 
+  // Same navy background + orange glow language as LoginPage — this is
+  // the third public-facing page (after landing and login) so it gets
+  // the same treatment, not the emerald it had before that pass.
+  const backdrop = 'relative overflow-hidden bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900'
+  const glows = (
+    <>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-orange-500/20 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl"
+      />
+    </>
+  )
+
   if (submitted) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-emerald-950 px-4">
-        <Card className="max-w-md text-center">
+      <div className={`flex min-h-screen items-center justify-center px-4 ${backdrop}`}>
+        {glows}
+        <Card className="relative max-w-md text-center">
           <h1 className="mb-2 text-lg font-semibold text-gray-900">Thank you!</h1>
           <p className="text-sm text-gray-600">
             Your enquiry (<span className="font-mono">{submitted}</span>) has been received.
@@ -57,14 +75,22 @@ export function PublicEnquiryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-emerald-950 px-4 py-10">
-      <div className="mx-auto max-w-md">
-        <h1 className="mb-1 text-xl font-semibold text-white">Enquire about joining</h1>
-        <p className="mb-6 text-sm text-emerald-200">
-          Adamas Cricket Academy — tell us about your child and we&apos;ll be in touch.
-        </p>
+    <div className={`min-h-screen px-4 py-10 ${backdrop}`}>
+      {glows}
+      <div className="relative mx-auto max-w-md">
+        <div className="mb-6 flex items-center gap-3">
+          <img src="/aca-logo.png" alt="Adamas Cricket Academy" className="h-12 w-12 shrink-0" />
+          <div>
+            <h1 className="text-xl font-semibold text-white">Enquire about joining</h1>
+            <p className="text-sm text-blue-200">
+              Adamas Cricket Academy — tell us about your child and we&apos;ll be in touch.
+            </p>
+          </div>
+        </div>
 
-        <Card>
+        <Card className="overflow-hidden !p-0">
+          <div className="h-1.5 w-full bg-gradient-to-r from-orange-500 via-orange-400 to-blue-900" />
+          <div className="p-4">
           <form className="space-y-4" onSubmit={(e) => void handleSubmit(onSubmit)(e)}>
             <Field label="Candidate name" error={errors.student_name?.message}>
               <input className={inputClass} {...register('student_name')} />
@@ -95,6 +121,7 @@ export function PublicEnquiryPage() {
               Submit enquiry
             </Button>
           </form>
+          </div>
         </Card>
       </div>
     </div>

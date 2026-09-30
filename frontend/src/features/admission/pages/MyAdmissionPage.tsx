@@ -1,5 +1,6 @@
 import { AsyncBoundary, DefaultEmptyState, RowSkeleton } from '../../../components/AsyncBoundary'
 import { Card } from '../../../components/Card'
+import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { DocumentUploader } from '../../document/components/DocumentUploader'
 import { useMyAdmission } from '../hooks/useAdmissions'
@@ -15,7 +16,7 @@ export function MyAdmissionPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-2xl">
-        <h1 className="mb-6 text-xl font-semibold text-gray-900">My admission</h1>
+        <PageHeader title="My admission" motif="batting" />
 
         <AsyncBoundary
           isPending={isPending}

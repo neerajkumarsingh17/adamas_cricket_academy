@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { AsyncBoundary, DefaultEmptyState, RowSkeleton } from '../../../components/AsyncBoundary'
 import { inputClass } from '../../../components/Field'
+import { PageHeader } from '../../../components/PageHeader'
 import { currentMonth } from '../../../lib/dates'
 import { useAttendanceReport } from '../hooks/useAttendance'
 
@@ -31,20 +32,21 @@ export function AttendanceReportPage() {
         <Link to={`/batches/${id}`} className="mb-4 inline-block text-sm text-brand-600 hover:underline">
           ← Batch
         </Link>
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-xl font-semibold text-gray-900">
-            Attendance report{data ? ` · ${data.batch_name}` : ''}
-          </h1>
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            Month
-            <input
-              type="month"
-              className={`${inputClass} w-auto min-h-[44px]`}
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-            />
-          </label>
-        </div>
+        <PageHeader
+          title={`Attendance report${data ? ` · ${data.batch_name}` : ''}`}
+          motif="fielding"
+          actions={
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              Month
+              <input
+                type="month"
+                className={`${inputClass} w-auto min-h-[44px]`}
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+              />
+            </label>
+          }
+        />
 
         <AsyncBoundary
           isPending={isPending}
