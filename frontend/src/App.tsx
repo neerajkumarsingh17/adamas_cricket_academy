@@ -22,6 +22,9 @@ import { EnquiryPipelinePage } from './features/enquiry/pages/EnquiryPipelinePag
 import { PublicEnquiryPage } from './features/enquiry/pages/PublicEnquiryPage'
 import { IDCardListPage } from './features/idcard/pages/IDCardListPage'
 import { LandingPage } from './features/landing/pages/LandingPage'
+import { LEGAL_PAGES, CONTACT_PAGE } from './features/legal/legalPages'
+import { ContactUsPage } from './features/legal/pages/ContactUsPage'
+import { LegalPage } from './features/legal/pages/LegalPage'
 import { ParentChildDetailPage } from './features/parent/pages/ParentChildDetailPage'
 import { ParentChildrenPage } from './features/parent/pages/ParentChildrenPage'
 import { PaymentsPage } from './features/payment/pages/PaymentsPage'
@@ -44,6 +47,10 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/enquire" element={<PublicEnquiryPage />} />
+            {LEGAL_PAGES.map((page) => (
+              <Route key={page.path} path={page.path} element={<LegalPage page={page} />} />
+            ))}
+            <Route path={CONTACT_PAGE.path} element={<ContactUsPage />} />
 
             <Route
               element={

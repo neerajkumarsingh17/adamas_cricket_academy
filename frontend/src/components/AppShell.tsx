@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
+import { FOOTER_LINKS } from '../features/legal/legalPages'
 import { Can } from './Can'
 
 // `selfServiceHidden` keeps a link out of the nav for Student/Parent even
@@ -109,7 +110,7 @@ export function AppShell() {
   const visibleItems = NAV_ITEMS.filter((item) => !(item.selfServiceHidden && isSelfService))
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-gray-50">
       <nav className="relative border-b border-gray-200 bg-white px-4 py-2 shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
           <div className="flex items-center gap-4">
@@ -231,7 +232,21 @@ export function AppShell() {
           </div>
         )}
       </nav>
-      <Outlet />
+      <div className="flex-1">
+        <Outlet />
+      </div>
+      <footer className="border-t border-gray-200 bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 text-xs text-gray-500 md:flex-row md:items-center md:justify-between">
+          <nav aria-label="Policies and help" className="flex flex-wrap gap-x-4 gap-y-2">
+            {FOOTER_LINKS.map((page) => (
+              <Link key={page.path} to={page.path} className="hover:text-brand-700 hover:underline">
+                {page.title}
+              </Link>
+            ))}
+          </nav>
+          <p>© {new Date().getFullYear()} Adamas Cricket Academy</p>
+        </div>
+      </footer>
     </div>
   )
 }

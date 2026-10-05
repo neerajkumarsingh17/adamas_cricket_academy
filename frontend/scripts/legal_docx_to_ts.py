@@ -1,0 +1,145 @@
+"""Convert the academy's policy .docx files into typed content modules
+rendered by src/features/legal. Re-run after a policy document changes:
+
+    python3 scripts/legal_docx_to_ts.py
+
+Standard library only (zipfile + ElementTree) — the documents use plain
+paragraphs, bold runs and two-level bullet lists, nothing more. A fully
+bold paragraph that is numbered ("3. ...") or ALL CAPS is a heading;
+"A. ..." style bold paragraphs are sub-headings; any other bold
+paragraph (e.g. a consent statement) stays an emphasised paragraph; the first two lines (academy name + policy title) are
+dropped because the page header renders them.
+"""
+
+import json
+import re
+import zipfile
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+ROOT = Path(__file__).resolve().parents[2]
+SOURCE_DIR = ROOT / "backend" / "docs_files"
+OUT_DIR = ROOT / "frontend" / "src" / "features" / "legal" / "content"
+
+# (filename fragment, output module, exported const)
+DOCUMENTS = [
+    ("TERMS & CONDITIONS", "terms", "termsContent"),
+    ("PRIVACY POLICY", "privacy", "privacyContent"),
+    ("GRIEVANCE REDRESSAL", "grievance", "grievanceContent"),
+    ("REFUND & CANCELLATION", "refund", "refundContent"),
+    ("PARENTAL CONSENT", "childrensPrivacy", "childrensPrivacyContent"),
+]
+
+
+def find_source(fragment: str) -> Path:
+    # "PRIVACY POLICY" also appears in the children's policy filename.
+    matches = [
+        p
+        for p in SOURCE_DIR.glob("*.docx")
+        if fragment in p.name.upper()
+        and (fragment == "PARENTAL CONSENT" or "PARENTAL CONSENT" not in p.name.upper())
+    ]
+    if len(matches) != 1:
+        raise SystemExit(f"Expected one .docx matching {fragment!r}, found {matches}")
+    return matches[0]
+
+
+def runs(paragraph):
+    """Yield (text, bold) pieces; a <w:br/> becomes a '\n' piece."""
+    for r in paragraph.iter(W + "r"):
+        rpr = r.find(W + "rPr")
+        bold = rpr is not None and rpr.find(W + "b") is not None and (
+            rpr.find(W + "b").get(W + "val") not in ("0", "false")
+        )
+        for child in r:
+            if child.tag == W + "t" and child.text:
+                yield child.text, bold
+            elif child.tag in (W + "br", W + "cr"):
+                yield "\n", False
+
+
+def inline(pieces):
+    """Merge adjacent runs with the same weight into Inline[]."""
+    merged: list[list] = []
+    for text, bold in pieces:
+        if merged and merged[-1][1] == bold and text != "\n" and merged[-1][0] != "\n":
+            merged[-1][0] += text
+        else:
+            merged.append([text, bold])
+    out = []
+    for text, bold in merged:
+        if text == "\n":
+            out.append({"br": True})
+        elif bold:
+            out.append({"b": text})
+        else:
+            out.append(text)
+    return out
+
+
+def convert(path: Path) -> dict:
+    body = ET.fromstring(zipfile.ZipFile(path).read("word/document.xml")).find(W + "body")
+    paragraphs = [p for p in body if p.tag == W + "p"]
+
+    blocks: list[dict] = []
+    effective_date = None
+    preamble_skipped = 0
+
+    for p in paragraphs:
+        pieces = list(runs(p))
+        text = "".join(t for t, _ in pieces).strip()
+        if not text:
+            continue
+        # Academy name + policy title — rendered by the page header.
+        if preamble_skipped < 2:
+            preamble_skipped += 1
+            continue
+
+        ppr = p.find(W + "pPr")
+        num = ppr.find(W + "numPr") if ppr is not None else None
+        all_bold = all(b for t, b in pieces if t.strip())
+
+        if num is not None:
+            ilvl = num.find(W + "ilvl")
+            level = int(ilvl.get(W + "val")) if ilvl is not None else 0
+            content = inline(pieces)
+            last = blocks[-1] if blocks else None
+            if last is None or last["type"] != "list":
+                last = {"type": "list", "items": []}
+                blocks.append(last)
+            if level == 0 or not last["items"]:
+                last["items"].append({"content": content})
+            else:
+                last["items"][-1].setdefault("children", []).append(content)
+        elif all_bold and text.lower().startswith("effective date"):
+            effective_date = text.split(":", 1)[1].strip()
+        elif all_bold and re.match(r"^[A-Z]\.\s", text):
+            blocks.append({"type": "subheading", "text": text})
+        elif all_bold and (re.match(r"^\d+\.\s", text) or text.isupper()):
+            blocks.append({"type": "heading", "text": text})
+        else:
+            blocks.append({"type": "paragraph", "content": inline(pieces)})
+
+    return {"effectiveDate": effective_date, "blocks": blocks}
+
+
+def main() -> None:
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    for fragment, module, const in DOCUMENTS:
+        source = find_source(fragment)
+        doc = convert(source)
+        body = json.dumps(doc, indent=2, ensure_ascii=False)
+        (OUT_DIR / f"{module}.ts").write_text(
+            "// Generated by scripts/legal_docx_to_ts.py from\n"
+            f"// backend/docs_files/{source.name}\n"
+            "// Do not edit by hand — update the .docx and re-run the script.\n"
+            "import type { LegalDocument } from '../types'\n\n"
+            f"export const {const}: LegalDocument = {body}\n",
+            encoding="utf-8",
+        )
+        print(f"{source.name} -> content/{module}.ts ({len(doc['blocks'])} blocks)")
+
+
+if __name__ == "__main__":
+    main()
