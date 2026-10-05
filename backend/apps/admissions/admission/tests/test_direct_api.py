@@ -179,6 +179,24 @@ def test_full_direct_admission_journey_reaches_ready_for_approval(api_client, se
 
 
 @pytest.mark.django_db
+def test_set_fees_rejects_inactive_fee_head(api_client, seeded_roles):
+    season = SeasonFactory(age_cutoff_date=datetime.date(2026, 4, 1))
+    AgeCategoryFactory(code="under14", name="Under-14", min_age=12, max_age=13)
+    retired_head = FeeHeadFactory(is_mandatory=True, is_active=False)
+    desk_user = _user_with_role("administration")
+    api_client.force_authenticate(desk_user)
+    admission_id = api_client.post("/api/v1/admissions/direct/", _intake_payload(season)).data["id"]
+
+    response = api_client.put(
+        f"/api/v1/admissions/{admission_id}/fees/",
+        {"lines": [{"fee_head": str(retired_head.id), "amount": "5000.00"}]},
+        format="json",
+    )
+
+    assert response.status_code == 400, response.data
+
+
+@pytest.mark.django_db
 def test_coach_cannot_verify_payment(api_client, seeded_roles):
     season = SeasonFactory(age_cutoff_date=datetime.date(2026, 4, 1))
     AgeCategoryFactory(code="under14", name="Under-14", min_age=12, max_age=13)

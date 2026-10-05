@@ -16,11 +16,18 @@ from django.db import transaction
 from apps.core.models import ConsentType, DocumentType, FeeHead, PaymentType
 
 FEE_HEADS = [
-    # (code, label, is_mandatory, display_order)
-    ("registration", "Registration Fee", True, 1),
-    ("coaching", "Coaching Fee", True, 2),
+    # (code, label, is_mandatory, display_order). The "registration" code
+    # is kept as-is so existing AdmissionFeeLine rows stay linked; only
+    # the label shown at the desk is "Admission Fee".
+    ("registration", "Admission Fee", True, 1),
     ("other", "Other", False, 3),
 ]
+
+# Codes retired from the admission desk. Deactivated rather than deleted:
+# historical AdmissionFeeLine rows PROTECT-reference them. Coaching is
+# collected monthly through the Payment ledger (PaymentType
+# "monthly_coaching_fee"), not at admission.
+RETIRED_FEE_HEADS = ["coaching"]
 
 # (code, label, is_recurring, display_order) — the unified Payment ledger's
 # type master. Every other category (kit, tournament, hostel...) is added
@@ -113,6 +120,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         counts = {
             "fee heads": 0,
+            "fee heads retired": 0,
             "payment types": 0,
             "consent types": 0,
             "document types updated": 0,
@@ -129,6 +137,12 @@ class Command(BaseCommand):
                 },
             )
             counts["fee heads"] += 1
+
+        # .save() per row (not queryset .update()) so AuditedModel logs it.
+        for fee_head in FeeHead.objects.filter(code__in=RETIRED_FEE_HEADS, is_active=True):
+            fee_head.is_active = False
+            fee_head.save(update_fields=["is_active", "updated_at"])
+            counts["fee heads retired"] += 1
 
         for code, label, is_recurring, display_order in PAYMENT_TYPES:
             PaymentType.objects.update_or_create(

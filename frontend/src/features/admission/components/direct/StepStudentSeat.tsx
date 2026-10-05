@@ -106,6 +106,7 @@ export function StepStudentSeat({
                 options={[
                   { value: '2', label: '2' },
                   { value: '3', label: '3' },
+                  { value: '5', label: '5' },
                 ]}
                 onChange={(v) => onField('days_per_week', Number(v))}
               />

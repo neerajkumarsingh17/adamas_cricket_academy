@@ -463,7 +463,11 @@ def set_fee_lines(admission: Admission, *, lines: list[dict]) -> Admission:
     for line in lines:
         fee_head = line["fee_head"]
         if not isinstance(fee_head, FeeHead):
-            fee_head = FeeHead.objects.get(pk=fee_head)
+            fee_head = FeeHead.objects.filter(pk=fee_head).first()
+        # A retired head (e.g. the old Coaching Fee) must not come back
+        # through a stale form that still lists it.
+        if fee_head is None or not fee_head.is_active:
+            raise ValidationError({"fee_lines": "Unknown or inactive fee head."})
         fee_line = AdmissionFeeLine(admission=admission, fee_head=fee_head, amount=line["amount"])
         fee_line.full_clean()
         fee_line.save()
