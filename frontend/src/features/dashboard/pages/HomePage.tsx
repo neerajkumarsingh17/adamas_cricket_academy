@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ApiError } from '../../../api/client'
 import { useAuth } from '../../../auth/useAuth'
+import { CricketBall } from '../../../components/CricketMotifs'
 import { DashboardCard } from '../components/DashboardCard'
 import { Tile } from '../components/Tile'
 import { useDashboard } from '../hooks/useDashboard'
@@ -118,13 +119,9 @@ function CricketMotif({ className }: { className?: string }) {
       <rect x="124" y="90" width="9" height="82" rx="4" fill="currentColor" />
       <rect x="68" y="82" width="30" height="6" rx="3" fill="currentColor" />
       <rect x="99" y="82" width="30" height="6" rx="3" fill="currentColor" />
-      <circle cx="158" cy="48" r="24" fill="currentColor" fillOpacity="0.35" />
-      <path
-        d="M144 34c6 6 6 22 0 28M172 34c-6 6-6 22 0 28"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+      <svg x="130" y="20" width="56" height="56">
+        <CricketBall fillOpacity={0.35} />
+      </svg>
     </svg>
   )
 }

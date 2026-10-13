@@ -2,6 +2,9 @@
 // PageHeader's corner watermark — kept separate from the one-off motifs
 // already living in HomePage.tsx (stumps) and AsyncBoundary.tsx (seam
 // ball) since those are tuned for their own specific spot, not reuse.
+// CricketBall is the one exception: every ball in the app draws from it.
+
+import { useId } from 'react'
 
 export function PitchMotif({ className }: { className?: string }) {
   return (
@@ -72,18 +75,60 @@ export function FieldingMotif({ className }: { className?: string }) {
   )
 }
 
-export function BallMotif({ className }: { className?: string }) {
+// Seam centreline of the ball below, as a quadratic curve across the
+// face (bowed slightly so the ball reads as a sphere, not a disc).
+const SEAM = { x0: 3, y0: 26, cx: 24, cy: 22, x1: 45, y1: 26 }
+
+function seamPoint(t: number) {
+  const u = 1 - t
+  return {
+    x: u * u * SEAM.x0 + 2 * u * t * SEAM.cx + t * t * SEAM.x1,
+    y: u * u * SEAM.y0 + 2 * u * t * SEAM.cy + t * t * SEAM.y1,
+  }
+}
+
+const seamPath = (offset: number) =>
+  `M${SEAM.x0} ${SEAM.y0 + offset}Q${SEAM.cx} ${SEAM.cy + offset} ${SEAM.x1} ${SEAM.y1 + offset}`
+
+// Stitch rows either side of the seam, like a real leather ball.
+const STITCHES = Array.from({ length: 13 }, (_, i) => seamPoint(0.14 + (i * 0.72) / 12))
+
+// A proper cricket ball — one raised seam round its equator with a row of
+// stitching on each side — not the two-curve tennis/baseball look. Drawn
+// in currentColor in a 48×48 box, tilted so the seam runs corner to
+// corner; reused by every ball in the app so they all look the same.
+export function CricketBall({
+  className,
+  fillOpacity = 0.15,
+}: {
+  className?: string
+  fillOpacity?: number
+}) {
+  const clipId = useId()
   return (
     <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-      <circle cx="24" cy="24" r="18" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M12 11c4 4 6 8.4 6 13s-2 9-6 13M36 11c-4 4-6 8.4-6 13s2 9 6 13"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.25"
-        strokeDasharray="1.5 2"
-        strokeLinecap="round"
-      />
+      <defs>
+        <clipPath id={clipId}>
+          <circle cx="24" cy="24" r="19.25" />
+        </clipPath>
+      </defs>
+      <circle cx="24" cy="24" r="20" fill="currentColor" fillOpacity={fillOpacity} />
+      <g clipPath={`url(#${clipId})`} transform="rotate(-32 24 24)" stroke="currentColor" strokeLinecap="round">
+        <path d={seamPath(-1.4)} strokeWidth="1.4" />
+        <path d={seamPath(1.4)} strokeWidth="1.4" />
+        {STITCHES.map(({ x, y }, i) => (
+          <g key={i} strokeWidth="1" opacity="0.8">
+            <line x1={x - 0.6} y1={y - 3} x2={x + 0.6} y2={y - 4.6} />
+            <line x1={x - 0.6} y1={y + 4.6} x2={x + 0.6} y2={y + 3} />
+          </g>
+        ))}
+      </g>
+      <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M13 13.5a14 14 0 0 1 8-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.45" />
     </svg>
   )
+}
+
+export function BallMotif({ className }: { className?: string }) {
+  return <CricketBall className={className} />
 }

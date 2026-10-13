@@ -143,6 +143,16 @@ def _get_first_bytes(key: str, n: int = 16) -> bytes:
     return response["Body"].read()
 
 
+def read_object(key: str) -> bytes:
+    """The whole object, server-side. Only for the rare case the server
+    itself has to consume a file (the ID card PDF embeds the student's
+    photo) — a browser always gets a presigned URL instead, never bytes
+    relayed through the API.
+    """
+    response = _s3_client().get_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=key)
+    return response["Body"].read()
+
+
 def presign_upload(
     *, document_type, owner_type: str, owner_id, filename: str, mime_type: str
 ) -> dict:

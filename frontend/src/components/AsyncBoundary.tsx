@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { ApiError } from '../api/client'
 import { Button } from './Button'
+import { CricketBall } from './CricketMotifs'
 
 // docs/06-conventions.md: "Every list view: loading skeleton, empty state,
 // error state. All three, every time." Centralised here so a feature page
@@ -55,20 +56,7 @@ export function AsyncBoundary<T>({
 // template. Used only here: one shared empty state, not sprinkled around
 // individual pages.
 function CricketBallIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="mx-auto mb-3 h-8 w-8 text-brand-300" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" fill="currentColor" fillOpacity="0.15" />
-      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M6 5.5c2 2 3 4.2 3 6.5s-1 4.5-3 6.5M18 5.5c-2 2-3 4.2-3 6.5s1 4.5 3 6.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.25"
-        strokeDasharray="1.5 1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
+  return <CricketBall className="mx-auto mb-3 h-8 w-8 text-brand-300" />
 }
 
 export function DefaultEmptyState({ message }: { message: string }) {
