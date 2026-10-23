@@ -35,26 +35,28 @@ class DocumentViewSet(ModuleScopedViewSet):
 
     module = "documents"
     serializer_class = DocumentSerializer
-    queryset = Document.objects.select_related(
-        "document_type", "verified_by", "owner_content_type"
-    ).prefetch_related(
-        # DocumentSerializer.get_owner_label/get_admission_id read
-        # `obj.owner` (a GenericForeignKey, which select_related can't
-        # touch) and, for every owner type but Person, `.person` off of
-        # it too — GenericPrefetch resolves both in one batched query per
-        # possible owner model instead of two queries per row. `intake` is
-        # included for Admission so the pre-approval (person=None)
-        # fallback in get_owner_label doesn't add a query per row either.
-        GenericPrefetch(
-            "owner",
-            [
-                Person.objects.all(),
-                Staff.objects.select_related("person"),
-                Student.objects.select_related("person"),
-                Admission.objects.select_related("person", "intake"),
-            ],
+    queryset = (
+        Document.objects.select_related("document_type", "verified_by", "owner_content_type")
+        .prefetch_related(
+            # DocumentSerializer.get_owner_label/get_admission_id read
+            # `obj.owner` (a GenericForeignKey, which select_related can't
+            # touch) and, for every owner type but Person, `.person` off of
+            # it too — GenericPrefetch resolves both in one batched query per
+            # possible owner model instead of two queries per row. `intake` is
+            # included for Admission so the pre-approval (person=None)
+            # fallback in get_owner_label doesn't add a query per row either.
+            GenericPrefetch(
+                "owner",
+                [
+                    Person.objects.all(),
+                    Staff.objects.select_related("person"),
+                    Student.objects.select_related("person"),
+                    Admission.objects.select_related("person", "intake"),
+                ],
+            )
         )
-    ).all()
+        .all()
+    )
     filterset_class = DocumentFilter
     http_method_names = ["get", "post", "patch", "head", "options"]
 
@@ -209,9 +211,7 @@ def _check_owner_scope(request, owner_type: str, owner_id) -> None:
         # string match across the two id spaces would be a real hole.
         if owner_type == "admission":
             if not Admission.objects.filter(pk=owner_id, person_id=user.person_id).exists():
-                raise PermissionDenied(
-                    "You may only upload documents for your own admission."
-                )
+                raise PermissionDenied("You may only upload documents for your own admission.")
             return
 
         allowed_ids = {str(user.person_id)}

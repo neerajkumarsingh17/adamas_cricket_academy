@@ -29,6 +29,7 @@ ALLOWED_MIME_TYPES = frozenset({"application/pdf", "image/jpeg", "image/png", "i
 MAX_DOCUMENT_SIZE_BYTES = 10 * 1024 * 1024
 MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024
 
+
 # Magic-byte sniffing (docs/07-storage.md: "Sniff the content type from the
 # first bytes, do not trust the declared Content-Type"). No new dependency
 # (python-magic needs the system libmagic library, which isn't guaranteed

@@ -8,14 +8,32 @@ import { Button } from '../../../components/Button'
 import { Can } from '../../../components/Can'
 import { Card } from '../../../components/Card'
 import { Field, inputClass } from '../../../components/Field'
+import { type CollectionMethod, PaymentMethodPicker } from '../../../components/PaymentMethodPicker'
 import { randomId } from '../../../lib/id'
+import { openGatewayCheckout } from '../../../lib/paymentGateways'
 import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { paymentApi } from '../api/payment'
 import type { Payment, PersonLookupResult } from '../api/payment'
 import { PaymentDocumentActions } from '../components/PaymentDocumentActions'
+import { PendingOnlinePayments } from '../components/PendingOnlinePayments'
 import { PersonSearchField } from '../components/PersonSearchField'
-import { usePaymentTypes, usePayments, useRecordPayment, useSettlePayment } from '../hooks/usePayments'
+import {
+  useOnlineCheckout,
+  useOnlineConfirm,
+  useOnlinePaymentSetup,
+  useOnlineSendLink,
+  usePaymentTypes,
+  usePayments,
+  useRecordPayment,
+  useSettlePayment,
+} from '../hooks/usePayments'
+
+const SUBMIT_LABEL: Record<CollectionMethod, [idle: string, busy: string]> = {
+  desk: ['Record payment', 'Recording…'],
+  online: ['Pay online', 'Waiting for payment…'],
+  link: ['Send payment link', 'Sending…'],
+}
 
 // Mirrors apps.finance.payment.serializers.RecordPaymentSerializer — person
 // is handled outside this schema (PersonSearchField's own selection state,
@@ -47,8 +65,15 @@ const FORM_FIELD_NAMES = new Set(Object.keys(schema.shape))
 function RecordPaymentForm() {
   const { data: paymentTypes } = usePaymentTypes()
   const recordPayment = useRecordPayment()
+  const { data: gateway } = useOnlinePaymentSetup()
+  const onlineCheckout = useOnlineCheckout()
+  const onlineConfirm = useOnlineConfirm()
+  const onlineSendLink = useOnlineSendLink()
+  const [method, setMethod] = useState<CollectionMethod>('desk')
   const [person, setPerson] = useState<PersonLookupResult | null>(null)
   const [personError, setPersonError] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [done, setDone] = useState<string | null>(null)
   // One key per form mount, reused across retries of the same submission
   // (features/admission/hooks/useDirectAdmission.ts's exact pattern) —
   // CLAUDE.md rule 7: idempotency keys on any endpoint minting a numbered
@@ -65,7 +90,7 @@ function RecordPaymentForm() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { payment_mode: 'upi', payment_date: new Date().toISOString().slice(0, 10) },
+    defaultValues: { payment_mode: 'cash', payment_date: new Date().toISOString().slice(0, 10) },
   })
 
   const selectedType = paymentTypes?.results.find((t) => t.id === watch('payment_type'))
@@ -100,6 +125,8 @@ function RecordPaymentForm() {
       return
     }
     setPersonError(false)
+    setSubmitError(null)
+    setDone(null)
     try {
       // <input type="month"> yields "YYYY-MM" — the backend's
       // billing_period is a DateField pinned to the 1st of that month
@@ -107,6 +134,34 @@ function RecordPaymentForm() {
       // than asking the user to pick (and possibly get wrong) a full date.
       const billingPeriod =
         needsBillingPeriod && values.billing_period ? `${values.billing_period}-01` : null
+
+      if (method !== 'desk') {
+        const body = {
+          person: person.id,
+          payment_type: values.payment_type,
+          billing_period: billingPeriod,
+          amount: values.amount,
+        }
+        if (method === 'link') {
+          const sent = await onlineSendLink.mutateAsync(body)
+          setDone(`Payment link sent to ${sent.sent_to}. It's recorded automatically once paid.`)
+        } else {
+          const started = await onlineCheckout.mutateAsync(body)
+          const result = await openGatewayCheckout(
+            started.checkout.gateway,
+            started.checkout.options,
+          )
+          await onlineConfirm.mutateAsync({
+            id: started.online_payment.id,
+            payload: result.payload,
+          })
+          setDone(`₹${values.amount} received online and recorded.`)
+        }
+        reset()
+        setPerson(null)
+        return
+      }
+
       await recordPayment.mutateAsync({
         body: {
           person: person.id,
@@ -123,19 +178,36 @@ function RecordPaymentForm() {
       setPerson(null)
       idempotencyKey.current = randomId()
     } catch (err) {
-      // Top-level message surfaced below via recordPayment.error;
-      // field-level messages (e.g. a negative amount rejected by
-      // Payment.full_clean()'s MinValueValidator) go under their own
+      // Top-level message shown below the form; field-level messages
+      // (e.g. a negative amount rejected by Payment.full_clean()'s
+      // MinValueValidator, or a month already paid) go under their own
       // input too, same convention as BatchFormModal.
       if (err instanceof ApiError) {
+        const fieldNames = Object.keys(err.fieldErrors ?? {})
         for (const [field, messages] of Object.entries(err.fieldErrors)) {
           if (FORM_FIELD_NAMES.has(field) && messages[0]) {
             setError(field as keyof FormValues, { message: messages[0] })
           }
         }
+        setSubmitError(
+          fieldNames.some((f) => FORM_FIELD_NAMES.has(f))
+            ? `${err.message} Check the highlighted field(s) below.`
+            : err.message,
+        )
+      } else if (err instanceof Error) {
+        // e.g. the payment window closed without paying.
+        setSubmitError(err.message)
+      } else {
+        setSubmitError('Could not record this payment.')
       }
     }
   }
+
+  const isSubmitting =
+    recordPayment.isPending ||
+    onlineCheckout.isPending ||
+    onlineConfirm.isPending ||
+    onlineSendLink.isPending
 
   return (
     <Card className="mb-6">
@@ -166,6 +238,16 @@ function RecordPaymentForm() {
           )}
         </div>
 
+        <Field label="How is it being paid?">
+          <PaymentMethodPicker
+            value={method}
+            onChange={setMethod}
+            gateway={gateway ?? null}
+            deskDescription="Cash, cheque, UPI or bank transfer, recorded here."
+            payer="the parent (or the person)"
+          />
+        </Field>
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Amount" error={errors.amount?.message}>
             <input
@@ -176,43 +258,46 @@ function RecordPaymentForm() {
               {...register('amount')}
             />
           </Field>
-          <Field label="Payment mode">
-            <select className={inputClass} {...register('payment_mode')}>
-              <option value="upi">UPI</option>
-              <option value="cash">Cash</option>
-              <option value="cheque">Cheque</option>
-              <option value="online_transfer">Online transfer</option>
-            </select>
-          </Field>
-          <Field label="Payment date" error={errors.payment_date?.message}>
-            <input
-              type="date"
-              max={new Date().toISOString().slice(0, 10)}
-              className={inputClass}
-              {...register('payment_date')}
-            />
-          </Field>
+          {method === 'desk' && (
+            <>
+              <Field label="Payment mode">
+                <select className={inputClass} {...register('payment_mode')}>
+                  <option value="cash">Cash</option>
+                  <option value="upi">UPI</option>
+                  <option value="cheque">Cheque</option>
+                  <option value="online_transfer">Bank transfer</option>
+                </select>
+              </Field>
+              <Field label="Payment date" error={errors.payment_date?.message}>
+                <input
+                  type="date"
+                  max={new Date().toISOString().slice(0, 10)}
+                  className={inputClass}
+                  {...register('payment_date')}
+                />
+              </Field>
+            </>
+          )}
         </div>
 
-        <Field label="Reference no. (UTR / cheque no. / transaction id)">
-          <input className={inputClass} {...register('reference_no')} />
-        </Field>
-
-        {recordPayment.isError && (
-          <p className="text-sm text-red-600">
-            {recordPayment.error instanceof ApiError
-              ? Object.keys(recordPayment.error.fieldErrors ?? {}).some((f) =>
-                  FORM_FIELD_NAMES.has(f),
-                )
-                ? `${recordPayment.error.message} Check the highlighted field(s) below.`
-                : recordPayment.error.message
-              : 'Could not record this payment.'}
+        {method === 'desk' && (
+          <Field label="Reference no. (UTR / cheque no. / transaction id)">
+            <input className={inputClass} {...register('reference_no')} />
+          </Field>
+        )}
+        {method === 'link' && (
+          <p className="text-sm text-gray-600">
+            The link goes by SMS to the student's primary guardian (or the person's own mobile),
+            stays valid for 7 days, and shows under "Waiting for online payment" until it's paid.
           </p>
         )}
 
+        {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+        {done && <p className="text-sm text-green-700">{done}</p>}
+
         <div className="flex justify-end">
-          <Button type="submit" disabled={recordPayment.isPending}>
-            {recordPayment.isPending ? 'Recording…' : 'Record payment'}
+          <Button type="submit" disabled={isSubmitting}>
+            {SUBMIT_LABEL[method][isSubmitting ? 1 : 0]}
           </Button>
         </div>
       </form>
@@ -268,6 +353,7 @@ export function PaymentsPage() {
 
         <Can module="payment" verb="add">
           <RecordPaymentForm />
+          <PendingOnlinePayments />
         </Can>
 
         <AsyncBoundary

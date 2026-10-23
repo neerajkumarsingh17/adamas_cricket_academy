@@ -413,9 +413,7 @@ def mandatory_consents_granted(admission: Admission) -> bool:
     this regardless of whether it was granted, refused, or never decided.
     """
     mandatory_type_ids = set(
-        ConsentType.objects.filter(is_mandatory=True, is_active=True).values_list(
-            "id", flat=True
-        )
+        ConsentType.objects.filter(is_mandatory=True, is_active=True).values_list("id", flat=True)
     )
     granted_type_ids = set(
         admission.consent_records.filter(granted=True).values_list("consent_type_id", flat=True)
@@ -483,6 +481,7 @@ def record_direct_payment(
     user,
     receipt_no: str | None = None,
     idempotency_key: str = "",
+    reference_no: str = "",
 ) -> Admission:
     """draft -> payment_recorded. Mints a receipt number from the RCP
     series unless one is already supplied. A replay of the same
@@ -494,9 +493,12 @@ def record_direct_payment(
     """
     from apps.finance.payment.models import AdmissionPayment
 
-    if idempotency_key and AdmissionPayment.objects.filter(
-        admission=admission, idempotency_key=idempotency_key
-    ).exists():
+    if (
+        idempotency_key
+        and AdmissionPayment.objects.filter(
+            admission=admission, idempotency_key=idempotency_key
+        ).exists()
+    ):
         return admission
 
     machine = DirectAdmissionStateMachine(admission)
@@ -510,7 +512,12 @@ def record_direct_payment(
         payment_date=payment_date,
         recorded_by=user,
         idempotency_key=idempotency_key,
+        reference_no=reference_no,
     )
+
+    from .online_payment import close_open_attempts
+
+    close_open_attempts(admission)
     return admission
 
 

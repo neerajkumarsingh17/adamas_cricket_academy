@@ -229,9 +229,7 @@ def test_administration_can_enable_portal_access_after_payment(api_client, seede
     admission_id = str(
         _create_old_style_direct_admission(requested_by=user, mobile="9876500005").id
     )
-    api_client.post(
-        f"/api/v1/admissions/{admission_id}/advance/", {"to_step": "fee_pending"}
-    )
+    api_client.post(f"/api/v1/admissions/{admission_id}/advance/", {"to_step": "fee_pending"})
     api_client.post(
         f"/api/v1/admissions/{admission_id}/record-payment/",
         {"reference": "UPI-REF-PORTAL", "amount": "5000.00", "payment_method": "upi"},

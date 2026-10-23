@@ -86,8 +86,7 @@ def render_direct_admission_form(admission: Admission) -> bytes:
                     ),
                     (
                         "Guardian",
-                        f"{intake.guardian_name} "
-                        f"({intake.get_guardian_relationship_display()})",
+                        f"{intake.guardian_name} ({intake.get_guardian_relationship_display()})",
                     ),
                     ("Guardian mobile", intake.guardian_mobile),
                     ("Emergency contact", intake.emergency_contact),
@@ -127,10 +126,7 @@ def render_direct_admission_form(admission: Admission) -> bytes:
         story.append(Paragraph("Consents", styles["Heading2"]))
         story.append(
             _kv_table(
-                [
-                    (c.consent_type.label, "Granted" if c.granted else "Refused")
-                    for c in consents
-                ]
+                [(c.consent_type.label, "Granted" if c.granted else "Refused") for c in consents]
             )
         )
 

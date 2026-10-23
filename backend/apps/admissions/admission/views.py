@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed, ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -9,6 +10,7 @@ from rest_framework.views import APIView
 from apps.admissions.trial.models import TrialRegistration
 from apps.core.models import Programme
 from apps.core.views import ModuleScopedViewSet
+from apps.finance.payment.serializers import ConfirmCheckoutSerializer
 
 from . import services
 from .filters import AdmissionFilter
@@ -26,10 +28,18 @@ from .serializers import (
     RecordDirectPaymentSerializer,
     RecordPaymentSerializer,
     RejectAdmissionSerializer,
+    StartCheckoutResponseSerializer,
     VerifyPaymentSerializer,
 )
 
 _INTAKE_FIELD_NAMES = set(AdmissionIntakeWriteSerializer().fields)
+
+
+def _online_payment_setup() -> dict | None:
+    from apps.finance.payment.gateways import online_enabled
+
+    gateway = online_enabled()
+    return {"gateway": gateway.name, "label": gateway.label} if gateway else None
 
 
 def _raise_as_drf_validation_error(exc: DjangoValidationError):
@@ -134,9 +144,7 @@ class AdmissionViewSet(ModuleScopedViewSet):
         serializer = AdmissionIntakeWriteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            admission = services.open_direct_admission_intake(
-                intake_data=serializer.validated_data
-            )
+            admission = services.open_direct_admission_intake(intake_data=serializer.validated_data)
         except DjangoValidationError as exc:
             _raise_as_drf_validation_error(exc)
         return Response(
@@ -302,6 +310,9 @@ class AdmissionViewSet(ModuleScopedViewSet):
                     ConsentType.objects.filter(is_active=True), many=True
                 ).data,
                 "document_types_by_stage": by_stage,
+                # Null when no online gateway is set up — the fee step then
+                # offers cash collection only.
+                "online_payment": _online_payment_setup(),
             }
         )
 
@@ -393,9 +404,7 @@ class AdmissionPaymentVerificationViewSet(ModuleScopedViewSet):
         admission = self.get_object()
         serializer = VerifyPaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        services.verify_direct_payment(
-            admission, user=request.user, **serializer.validated_data
-        )
+        services.verify_direct_payment(admission, user=request.user, **serializer.validated_data)
         return Response(AdmissionSerializer(admission, context={"request": request}).data)
 
 
@@ -418,3 +427,79 @@ class AdmissionDocumentVerificationViewSet(ModuleScopedViewSet):
         admission = self.get_object()
         services.verify_direct_documents(admission, user=request.user)
         return Response(AdmissionSerializer(admission, context={"request": request}).data)
+
+
+class AdmissionOnlinePaymentViewSet(ModuleScopedViewSet):
+    """POST /admissions/{id}/online-payment/... — collecting a direct
+    admission's fee through the online gateway (apps.admissions.admission
+    .online_payment). Same `admission`/`add` permission as recording a
+    cash payment: it is the same desk task, just a different way to pay.
+    """
+
+    module = "admission"
+    queryset = Admission.objects.all()
+    serializer_class = AdmissionSerializer
+
+    def filter_to_own(self, queryset):
+        return queryset.none()
+
+    def _admission_response(self, admission):
+        admission.refresh_from_db()
+        return AdmissionSerializer(admission, context={"request": self.request}).data
+
+    @extend_schema(request=None, responses=StartCheckoutResponseSerializer)
+    @action(detail=True, methods=["post"], verb="add")
+    def checkout(self, request, pk=None):
+        from . import online_payment
+
+        admission = self.get_object()
+        checkout = online_payment.start_checkout(admission, user=request.user)
+        return Response({"checkout": checkout, "admission": self._admission_response(admission)})
+
+    @extend_schema(request=ConfirmCheckoutSerializer, responses=AdmissionSerializer)
+    @action(detail=True, methods=["post"], verb="add")
+    def confirm(self, request, pk=None):
+        from . import online_payment
+
+        admission = self.get_object()
+        serializer = ConfirmCheckoutSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        online_payment.confirm_checkout(admission, **serializer.validated_data)
+        return Response(self._admission_response(admission))
+
+    @extend_schema(request=None, responses=AdmissionSerializer)
+    @action(detail=True, methods=["post"], verb="add")
+    def send_link(self, request, pk=None):
+        from . import online_payment
+
+        admission = self.get_object()
+        online_payment.send_link(admission, user=request.user)
+        return Response(self._admission_response(admission))
+
+    @extend_schema(request=None, responses=AdmissionSerializer)
+    @action(detail=True, methods=["post"], verb="add")
+    def resend_link(self, request, pk=None):
+        from . import online_payment
+
+        admission = self.get_object()
+        online_payment.resend_link(admission)
+        return Response(self._admission_response(admission))
+
+    @extend_schema(request=None, responses=AdmissionSerializer)
+    @action(detail=True, methods=["post"], verb="add")
+    def cancel_link(self, request, pk=None):
+        from . import online_payment
+
+        admission = self.get_object()
+        online_payment.cancel_link(admission)
+        return Response(self._admission_response(admission))
+
+    @extend_schema(request=None, responses=AdmissionSerializer)
+    @action(detail=True, methods=["post"], verb="add")
+    def sync(self, request, pk=None):
+        """ "Check payment status" — asks the gateway about open attempts."""
+        from . import online_payment
+
+        admission = self.get_object()
+        online_payment.sync(admission)
+        return Response(self._admission_response(admission))

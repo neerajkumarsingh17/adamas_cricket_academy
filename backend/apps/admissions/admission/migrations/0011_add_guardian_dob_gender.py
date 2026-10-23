@@ -4,20 +4,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('admission', '0010_alter_admission_step'),
+        ("admission", "0010_alter_admission_step"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='admissionintake',
-            name='guardian_date_of_birth',
+            model_name="admissionintake",
+            name="guardian_date_of_birth",
             field=models.DateField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='admissionintake',
-            name='guardian_gender',
-            field=models.CharField(blank=True, choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')], max_length=1),
+            model_name="admissionintake",
+            name="guardian_gender",
+            field=models.CharField(
+                blank=True, choices=[("M", "Male"), ("F", "Female"), ("O", "Other")], max_length=1
+            ),
         ),
     ]

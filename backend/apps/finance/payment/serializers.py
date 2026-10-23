@@ -1,7 +1,7 @@
 from django.core.validators import MinValueValidator
 from rest_framework import serializers
 
-from .models import AdmissionPayment, Payment
+from .models import AdmissionPayment, OnlinePayment, Payment
 
 
 class CurrentFeeSerializer(serializers.Serializer):
@@ -23,6 +23,7 @@ class AdmissionPaymentSerializer(serializers.ModelSerializer):
             "id",
             "payment_mode",
             "receipt_no",
+            "reference_no",
             "payment_date",
             "verified_by",
             "verified_at",
@@ -90,3 +91,78 @@ class PaymentSerializer(serializers.ModelSerializer):
 
     def get_person_name(self, obj) -> str:
         return f"{obj.person.first_name} {obj.person.last_name}".strip()
+
+
+class OnlinePaymentSerializer(serializers.ModelSerializer):
+    """One online collection attempt — a desk checkout or a payment link —
+    for a direct admission's fee or a ledger payment."""
+
+    person_name = serializers.SerializerMethodField()
+    payment_type_label = serializers.CharField(
+        source="payment_type.label", read_only=True, default=None
+    )
+
+    class Meta:
+        model = OnlinePayment
+        fields = [
+            "id",
+            "kind",
+            "gateway",
+            "status",
+            "amount",
+            "person",
+            "person_name",
+            "payment_type",
+            "payment_type_label",
+            "billing_period",
+            "payment",
+            "short_url",
+            "sent_to",
+            "gateway_payment_id",
+            "paid_at",
+            "note",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+    def get_person_name(self, obj: OnlinePayment) -> str | None:
+        return str(obj.person) if obj.person_id else None
+
+
+class OnlineCheckoutSerializer(serializers.Serializer):
+    """The gateway name plus the options its checkout window opens with
+    (apps.finance.payment.gateways — provider-specific, passed through)."""
+
+    gateway = serializers.CharField()
+    options = serializers.DictField()
+
+
+class LedgerOnlinePaymentSerializer(serializers.Serializer):
+    """POST /payments/online/checkout/ and /send-link/ — the same "what is
+    being paid" fields as RecordPaymentSerializer, minus how it was paid."""
+
+    person = serializers.UUIDField()
+    payment_type = serializers.UUIDField()
+    billing_period = serializers.DateField(required=False, allow_null=True, default=None)
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+
+
+class LedgerCheckoutResponseSerializer(serializers.Serializer):
+    checkout = OnlineCheckoutSerializer()
+    online_payment = OnlinePaymentSerializer()
+
+
+class OnlinePaymentPayloadSerializer(serializers.Serializer):
+    """What the gateway's checkout window returned, passed through
+    untouched for the adapter to verify."""
+
+    payload = serializers.DictField(child=serializers.CharField(max_length=512))
+
+
+class ConfirmCheckoutSerializer(serializers.Serializer):
+    """What the browser posts back after the gateway's checkout window
+    reports success. `payload` is the gateway's own response, passed
+    through untouched for the adapter to verify."""
+
+    gateway_id = serializers.CharField(max_length=64)
+    payload = serializers.DictField(child=serializers.CharField(max_length=512))

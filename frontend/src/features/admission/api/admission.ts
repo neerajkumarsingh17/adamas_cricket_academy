@@ -161,7 +161,12 @@ export type AgeCategory = components['schemas']['AgeCategory']
 export type Season = components['schemas']['Season']
 export type DocumentType = components['schemas']['DocumentType']
 
+export type OnlinePayment = components['schemas']['OnlinePayment']
+export type StartCheckoutResponse = components['schemas']['StartCheckoutResponse']
+
 export interface DirectAdmissionBootstrap {
+  /** Null when no online payment gateway is set up — cash only. */
+  online_payment: { gateway: string; label: string } | null
   season: Season | null
   age_categories: AgeCategory[]
   fee_heads: FeeHead[]
@@ -235,6 +240,31 @@ export const directAdmissionApi = {
       body: JSON.stringify(body),
       headers: { 'Idempotency-Key': idempotencyKey },
     }),
+
+  // Online collection through the configured payment gateway. Every call
+  // returns the admission as it now stands (StartCheckoutResponse wraps it).
+  startCheckout: (id: string) =>
+    request<StartCheckoutResponse>(`/admissions/${id}/online-payment/checkout/`, {
+      method: 'POST',
+    }),
+
+  confirmCheckout: (id: string, body: { gateway_id: string; payload: Record<string, string> }) =>
+    request<Admission>(`/admissions/${id}/online-payment/confirm/`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  sendPaymentLink: (id: string) =>
+    request<Admission>(`/admissions/${id}/online-payment/send-link/`, { method: 'POST' }),
+
+  resendPaymentLink: (id: string) =>
+    request<Admission>(`/admissions/${id}/online-payment/resend-link/`, { method: 'POST' }),
+
+  cancelPaymentLink: (id: string) =>
+    request<Admission>(`/admissions/${id}/online-payment/cancel-link/`, { method: 'POST' }),
+
+  syncOnlinePayment: (id: string) =>
+    request<Admission>(`/admissions/${id}/online-payment/sync/`, { method: 'POST' }),
 
   verifyPayment: (id: string, approved: boolean, reason?: string) =>
     request<Admission>(`/admissions/${id}/verify-payment/`, {

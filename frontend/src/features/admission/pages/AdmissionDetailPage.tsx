@@ -24,6 +24,7 @@ import {
   useRecordPayment,
   useRejectAdmission,
 } from '../hooks/useAdmissions'
+import { OnlinePaymentStatus } from '../components/direct/OnlinePaymentStatus'
 import { StepDocuments } from '../components/direct/StepDocuments'
 import { StepFeeConsent } from '../components/direct/StepFeeConsent'
 import { StepStudentSeat } from '../components/direct/StepStudentSeat'
@@ -31,13 +32,11 @@ import {
   useCancelDirectAdmission,
   useDirectAdmissionBootstrap,
   usePatchDirectAdmission,
-  useRecordDirectPayment,
-  useSetConsents,
-  useSetFeeLines,
   useSubmitDocuments,
   useVerifyDirectPayment,
   useVerifyDocuments,
 } from '../hooks/useDirectAdmission'
+import { type CollectionMethod, useCollectFee } from '../hooks/useCollectFee'
 
 // A checklist item can take a fresh upload while it isn't already
 // mid-review or done — submitted/verified go to the document
@@ -386,7 +385,14 @@ function DirectAdmissionSummary({ admission }: { admission: Admission }) {
           <dt className="text-gray-500">Payment</dt>
           <dd className="text-gray-900">
             {admission.direct_payment
-              ? `${admission.direct_payment.receipt_no} · ${admission.direct_payment.payment_mode}`
+              ? [
+                  admission.direct_payment.receipt_no,
+                  PAYMENT_MODE_LABEL[admission.direct_payment.payment_mode] ??
+                    admission.direct_payment.payment_mode,
+                  admission.direct_payment.reference_no,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
               : 'Not recorded yet'}
           </dd>
         </div>
@@ -699,46 +705,36 @@ function DirectAdmissionActions({ admission }: { admission: Admission }) {
 // complaint this replaces: fee/consent/payment collection now renders
 // here instead of the documents panel until a payment exists, matching
 // the wizard's own fee-before-documents order.
+const PAYMENT_MODE_LABEL: Record<string, string> = {
+  cash: 'Cash',
+  upi: 'UPI',
+  cheque: 'Cheque',
+  online_transfer: 'Bank transfer',
+  gateway: 'Paid online',
+}
+
 function CollectFeePanel({ admission }: { admission: Admission }) {
   const bootstrap = useDirectAdmissionBootstrap()
-  const setFeeLines = useSetFeeLines(admission.id)
-  const setConsents = useSetConsents(admission.id)
-  const recordPayment = useRecordDirectPayment(admission.id)
+  const collectFee = useCollectFee(admission.id)
   const [feeAmounts, setFeeAmounts] = useState<Record<string, string>>({})
   const [consentDecisions, setConsentDecisions] = useState<Record<string, boolean>>({})
-  const [paymentMode, setPaymentMode] = useState('upi')
+  const [collectionMethod, setCollectionMethod] = useState<CollectionMethod>('desk')
+  const [paymentMode, setPaymentMode] = useState('cash')
   const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [declaredByName, setDeclaredByName] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const isSaving = setFeeLines.isPending || setConsents.isPending || recordPayment.isPending
-
-  async function handleRecordPayment() {
+  async function handleCollect() {
     setError(null)
-    const missingConsents = (bootstrap.data?.consent_types ?? []).filter(
-      (c) => c.is_mandatory && !consentDecisions[c.id],
-    )
-    if (missingConsents.length > 0) {
-      setError(
-        `Confirm all required consents before recording payment: ${missingConsents
-          .map((c) => c.label)
-          .join(', ')}.`,
-      )
-      return
-    }
     try {
-      const lines = Object.entries(feeAmounts)
-        .filter(([, amount]) => amount)
-        .map(([fee_head, amount]) => ({ fee_head, amount }))
-      await setFeeLines.mutateAsync(lines)
-      const decisions = Object.entries(consentDecisions).map(([consent_type, granted]) => ({
-        consent_type,
-        granted,
-      }))
-      await setConsents.mutateAsync({ decisions, declaredByName })
-      await recordPayment.mutateAsync({
-        payment_mode: paymentMode as 'upi' | 'cash' | 'cheque' | 'online_transfer',
-        payment_date: paymentDate,
+      await collectFee.collect({
+        method: collectionMethod,
+        feeAmounts,
+        consentDecisions,
+        consentTypes: bootstrap.data?.consent_types ?? [],
+        declaredByName,
+        paymentMode,
+        paymentDate,
       })
     } catch (err) {
       if (err instanceof ApiError) {
@@ -748,11 +744,19 @@ function CollectFeePanel({ admission }: { admission: Admission }) {
             ? (Object.values(err.fieldErrors).flat()[0] ?? err.message)
             : err.message,
         )
+      } else if (err instanceof Error) {
+        setError(err.message)
       } else {
         setError('Something went wrong.')
       }
     }
   }
+
+  const actionLabel = {
+    desk: 'Record payment',
+    online: 'Pay online',
+    link: 'Send payment link',
+  }[collectionMethod]
 
   return (
     <Card className="mb-4">
@@ -764,6 +768,8 @@ function CollectFeePanel({ admission }: { admission: Admission }) {
         onFeeAmountChange={(id, amount) => setFeeAmounts((prev) => ({ ...prev, [id]: amount }))}
         consentDecisions={consentDecisions}
         onConsentChange={(id, granted) => setConsentDecisions((prev) => ({ ...prev, [id]: granted }))}
+        collectionMethod={collectionMethod}
+        onCollectionMethodChange={setCollectionMethod}
         paymentMode={paymentMode}
         onPaymentModeChange={setPaymentMode}
         paymentDate={paymentDate}
@@ -771,10 +777,14 @@ function CollectFeePanel({ admission }: { admission: Admission }) {
         declaredByName={declaredByName}
         onDeclaredByNameChange={setDeclaredByName}
         guardianName={admission.intake?.guardian_name ?? ''}
+        guardianMobile={admission.intake?.guardian_mobile ?? ''}
       />
-      <div className="mt-4 flex items-center gap-3 border-t border-gray-100 pt-4">
-        <Button onClick={() => void handleRecordPayment()} disabled={isSaving}>
-          {isSaving ? 'Saving…' : 'Record payment & clear'}
+      <div className="mt-4">
+        <OnlinePaymentStatus admission={admission} />
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
+        <Button onClick={() => void handleCollect()} disabled={collectFee.isPending}>
+          {collectFee.isPending ? 'Saving…' : actionLabel}
         </Button>
         {error && <span className="text-sm text-red-600">{error}</span>}
       </div>

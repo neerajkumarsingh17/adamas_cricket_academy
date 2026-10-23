@@ -163,9 +163,7 @@ def _full_journey_to_ready_for_approval(api_client, seeded_roles):
     assert submit_response.status_code == 200, submit_response.data
     assert submit_response.data["step"] == "documents_pending"
 
-    verify_docs_response = api_client.post(
-        f"/api/v1/admissions/{admission_id}/verify-documents/"
-    )
+    verify_docs_response = api_client.post(f"/api/v1/admissions/{admission_id}/verify-documents/")
     assert verify_docs_response.status_code == 200, verify_docs_response.data
     assert verify_docs_response.data["step"] == "ready_for_approval"
 
@@ -249,12 +247,8 @@ def test_record_payment_idempotency_key_replay_reuses_the_same_receipt(api_clien
 
     body = {"payment_mode": "upi", "payment_date": str(datetime.date.today())}
     headers = {"HTTP_IDEMPOTENCY_KEY": "double-click-guard-123"}
-    first = api_client.post(
-        f"/api/v1/admissions/{admission_id}/record-payment/", body, **headers
-    )
-    second = api_client.post(
-        f"/api/v1/admissions/{admission_id}/record-payment/", body, **headers
-    )
+    first = api_client.post(f"/api/v1/admissions/{admission_id}/record-payment/", body, **headers)
+    second = api_client.post(f"/api/v1/admissions/{admission_id}/record-payment/", body, **headers)
 
     assert first.status_code == 200, first.data
     assert second.status_code == 200, second.data

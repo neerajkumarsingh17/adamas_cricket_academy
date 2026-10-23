@@ -8,32 +8,70 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('admission', '0009_consentrecord'),
+        ("admission", "0009_consentrecord"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AdmissionPayment',
+            name="AdmissionPayment",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('payment_mode', models.CharField(choices=[('upi', 'UPI'), ('cash', 'Cash'), ('cheque', 'Cheque'), ('online_transfer', 'Online transfer')], max_length=20)),
-                ('receipt_no', models.CharField(max_length=20, unique=True)),
-                ('payment_date', models.DateField()),
-                ('verified_at', models.DateTimeField(blank=True, null=True)),
-                ('verification_note', models.TextField(blank=True)),
-                ('admission', models.OneToOneField(on_delete=django.db.models.deletion.PROTECT, related_name='payment', to='admission.admission')),
-                ('recorded_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='+', to=settings.AUTH_USER_MODEL)),
-                ('verified_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "payment_mode",
+                    models.CharField(
+                        choices=[
+                            ("upi", "UPI"),
+                            ("cash", "Cash"),
+                            ("cheque", "Cheque"),
+                            ("online_transfer", "Online transfer"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("receipt_no", models.CharField(max_length=20, unique=True)),
+                ("payment_date", models.DateField()),
+                ("verified_at", models.DateTimeField(blank=True, null=True)),
+                ("verification_note", models.TextField(blank=True)),
+                (
+                    "admission",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="payment",
+                        to="admission.admission",
+                    ),
+                ),
+                (
+                    "recorded_by",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "verified_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]

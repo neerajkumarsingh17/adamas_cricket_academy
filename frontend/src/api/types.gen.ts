@@ -257,6 +257,133 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admissions/{id}/online-payment/cancel-link/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description POST /admissions/{id}/online-payment/... — collecting a direct
+         *     admission's fee through the online gateway (apps.admissions.admission
+         *     .online_payment). Same `admission`/`add` permission as recording a
+         *     cash payment: it is the same desk task, just a different way to pay.
+         */
+        post: operations["v1_admissions_online_payment_cancel_link_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admissions/{id}/online-payment/checkout/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description POST /admissions/{id}/online-payment/... — collecting a direct
+         *     admission's fee through the online gateway (apps.admissions.admission
+         *     .online_payment). Same `admission`/`add` permission as recording a
+         *     cash payment: it is the same desk task, just a different way to pay.
+         */
+        post: operations["v1_admissions_online_payment_checkout_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admissions/{id}/online-payment/confirm/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description POST /admissions/{id}/online-payment/... — collecting a direct
+         *     admission's fee through the online gateway (apps.admissions.admission
+         *     .online_payment). Same `admission`/`add` permission as recording a
+         *     cash payment: it is the same desk task, just a different way to pay.
+         */
+        post: operations["v1_admissions_online_payment_confirm_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admissions/{id}/online-payment/resend-link/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description POST /admissions/{id}/online-payment/... — collecting a direct
+         *     admission's fee through the online gateway (apps.admissions.admission
+         *     .online_payment). Same `admission`/`add` permission as recording a
+         *     cash payment: it is the same desk task, just a different way to pay.
+         */
+        post: operations["v1_admissions_online_payment_resend_link_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admissions/{id}/online-payment/send-link/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description POST /admissions/{id}/online-payment/... — collecting a direct
+         *     admission's fee through the online gateway (apps.admissions.admission
+         *     .online_payment). Same `admission`/`add` permission as recording a
+         *     cash payment: it is the same desk task, just a different way to pay.
+         */
+        post: operations["v1_admissions_online_payment_send_link_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admissions/{id}/online-payment/sync/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description "Check payment status" — asks the gateway about open attempts. */
+        post: operations["v1_admissions_online_payment_sync_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admissions/{id}/print/": {
         parameters: {
             query?: never;
@@ -2658,6 +2785,263 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/payments/gateway/{gateway}/webhook/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description POST /payments/gateway/{gateway}/webhook/ — the gateway telling us a
+         *     checkout or link was paid (admission fees and ledger payments alike).
+         *     Public (the gateway can't log in) and unauthenticated by design; the
+         *     adapter's signature check against the gateway's webhook secret is
+         *     what makes it trustworthy.
+         */
+        post: operations["v1_payments_gateway_webhook_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/online/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description /payments/online/... — collecting a ledger payment (monthly coaching
+         *     fee, ...) through the online gateway, from the Payments page. Same
+         *     `payment` permissions as recording one by hand: `add` to collect,
+         *     `view` to see what's waiting. Admission fees have their own routes
+         *     under /admissions/{id}/online-payment/.
+         *
+         *     The list is the Payments page's "waiting for payment" panel: open
+         *     links and windows, plus paid attempts a person still has to act on
+         *     (`note` set, e.g. a refund for a month that was already paid).
+         */
+        get: operations["v1_payments_online_list"];
+        put?: never;
+        /**
+         * @description /payments/online/... — collecting a ledger payment (monthly coaching
+         *     fee, ...) through the online gateway, from the Payments page. Same
+         *     `payment` permissions as recording one by hand: `add` to collect,
+         *     `view` to see what's waiting. Admission fees have their own routes
+         *     under /admissions/{id}/online-payment/.
+         *
+         *     The list is the Payments page's "waiting for payment" panel: open
+         *     links and windows, plus paid attempts a person still has to act on
+         *     (`note` set, e.g. a refund for a month that was already paid).
+         */
+        post: operations["v1_payments_online_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/online/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description /payments/online/... — collecting a ledger payment (monthly coaching
+         *     fee, ...) through the online gateway, from the Payments page. Same
+         *     `payment` permissions as recording one by hand: `add` to collect,
+         *     `view` to see what's waiting. Admission fees have their own routes
+         *     under /admissions/{id}/online-payment/.
+         *
+         *     The list is the Payments page's "waiting for payment" panel: open
+         *     links and windows, plus paid attempts a person still has to act on
+         *     (`note` set, e.g. a refund for a month that was already paid).
+         */
+        get: operations["v1_payments_online_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/online/{id}/cancel-link/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description /payments/online/... — collecting a ledger payment (monthly coaching
+         *     fee, ...) through the online gateway, from the Payments page. Same
+         *     `payment` permissions as recording one by hand: `add` to collect,
+         *     `view` to see what's waiting. Admission fees have their own routes
+         *     under /admissions/{id}/online-payment/.
+         *
+         *     The list is the Payments page's "waiting for payment" panel: open
+         *     links and windows, plus paid attempts a person still has to act on
+         *     (`note` set, e.g. a refund for a month that was already paid).
+         */
+        post: operations["v1_payments_online_cancel_link_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/online/{id}/confirm/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description /payments/online/... — collecting a ledger payment (monthly coaching
+         *     fee, ...) through the online gateway, from the Payments page. Same
+         *     `payment` permissions as recording one by hand: `add` to collect,
+         *     `view` to see what's waiting. Admission fees have their own routes
+         *     under /admissions/{id}/online-payment/.
+         *
+         *     The list is the Payments page's "waiting for payment" panel: open
+         *     links and windows, plus paid attempts a person still has to act on
+         *     (`note` set, e.g. a refund for a month that was already paid).
+         */
+        post: operations["v1_payments_online_confirm_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/online/{id}/resend-link/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description /payments/online/... — collecting a ledger payment (monthly coaching
+         *     fee, ...) through the online gateway, from the Payments page. Same
+         *     `payment` permissions as recording one by hand: `add` to collect,
+         *     `view` to see what's waiting. Admission fees have their own routes
+         *     under /admissions/{id}/online-payment/.
+         *
+         *     The list is the Payments page's "waiting for payment" panel: open
+         *     links and windows, plus paid attempts a person still has to act on
+         *     (`note` set, e.g. a refund for a month that was already paid).
+         */
+        post: operations["v1_payments_online_resend_link_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/online/{id}/sync/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description "Check payment status" — asks the gateway about this attempt. */
+        post: operations["v1_payments_online_sync_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/online/checkout/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description /payments/online/... — collecting a ledger payment (monthly coaching
+         *     fee, ...) through the online gateway, from the Payments page. Same
+         *     `payment` permissions as recording one by hand: `add` to collect,
+         *     `view` to see what's waiting. Admission fees have their own routes
+         *     under /admissions/{id}/online-payment/.
+         *
+         *     The list is the Payments page's "waiting for payment" panel: open
+         *     links and windows, plus paid attempts a person still has to act on
+         *     (`note` set, e.g. a refund for a month that was already paid).
+         */
+        post: operations["v1_payments_online_checkout_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/online/send-link/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description /payments/online/... — collecting a ledger payment (monthly coaching
+         *     fee, ...) through the online gateway, from the Payments page. Same
+         *     `payment` permissions as recording one by hand: `add` to collect,
+         *     `view` to see what's waiting. Admission fees have their own routes
+         *     under /admissions/{id}/online-payment/.
+         *
+         *     The list is the Payments page's "waiting for payment" panel: open
+         *     links and windows, plus paid attempts a person still has to act on
+         *     (`note` set, e.g. a refund for a month that was already paid).
+         */
+        post: operations["v1_payments_online_send_link_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/online/setup/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Which gateway is on — null means record-by-hand only. */
+        get: operations["v1_payments_online_setup_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/payments/record/": {
         parameters: {
             query?: never;
@@ -3924,6 +4308,7 @@ export interface components {
             readonly portal_enabled: boolean;
             readonly intake: components["schemas"]["AdmissionIntake"] | null;
             readonly direct_payment: components["schemas"]["AdmissionPayment"] | null;
+            readonly online_payment: components["schemas"]["OnlinePayment"] | null;
             readonly next_actions: string[];
             /** Format: date-time */
             readonly created_at: string;
@@ -3993,6 +4378,7 @@ export interface components {
             readonly id: string;
             readonly payment_mode: components["schemas"]["PaymentModeEnum"];
             readonly receipt_no: string;
+            readonly reference_no: string;
             /** Format: date */
             readonly payment_date: string;
             /** Format: uuid */
@@ -4271,6 +4657,17 @@ export interface components {
             readonly is_available: boolean;
         };
         /**
+         * @description What the browser posts back after the gateway's checkout window
+         *     reports success. `payload` is the gateway's own response, passed
+         *     through untouched for the adapter to verify.
+         */
+        ConfirmCheckout: {
+            gateway_id: string;
+            payload: {
+                [key: string]: string;
+            };
+        };
+        /**
          * @description * `pending` - Pending
          *     * `approved` - Approved
          *     * `rejected` - Rejected
@@ -4536,6 +4933,30 @@ export interface components {
          */
         IDCardStatusEnum: "active" | "replaced" | "expired" | "lost";
         /**
+         * @description * `checkout` - Paid at the desk
+         *     * `link` - Payment link
+         * @enum {string}
+         */
+        KindEnum: "checkout" | "link";
+        LedgerCheckoutResponse: {
+            checkout: components["schemas"]["OnlineCheckout"];
+            online_payment: components["schemas"]["OnlinePayment"];
+        };
+        /**
+         * @description POST /payments/online/checkout/ and /send-link/ — the same "what is
+         *     being paid" fields as RecordPaymentSerializer, minus how it was paid.
+         */
+        LedgerOnlinePayment: {
+            /** Format: uuid */
+            person: string;
+            /** Format: uuid */
+            payment_type: string;
+            /** Format: date */
+            billing_period?: string | null;
+            /** Format: decimal */
+            amount: string;
+        };
+        /**
          * @description POST /auth/login — {login_id, password} -> access + refresh.
          *
          *     TokenObtainPairSerializer already keys the username field off
@@ -4635,6 +5056,69 @@ export interface components {
             mobile: string;
             otp: string;
         };
+        /**
+         * @description The gateway name plus the options its checkout window opens with
+         *     (apps.finance.payment.gateways — provider-specific, passed through).
+         */
+        OnlineCheckout: {
+            gateway: string;
+            options: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * @description One online collection attempt — a desk checkout or a payment link —
+         *     for a direct admission's fee or a ledger payment.
+         */
+        OnlinePayment: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly kind: components["schemas"]["KindEnum"];
+            readonly gateway: string;
+            readonly status: components["schemas"]["OnlinePaymentStatusEnum"];
+            /** Format: decimal */
+            readonly amount: string;
+            /** Format: uuid */
+            readonly person: string | null;
+            readonly person_name: string | null;
+            /** Format: uuid */
+            readonly payment_type: string | null;
+            readonly payment_type_label: string;
+            /** Format: date */
+            readonly billing_period: string | null;
+            /** Format: uuid */
+            readonly payment: string | null;
+            /** Format: uri */
+            readonly short_url: string;
+            readonly sent_to: string;
+            readonly gateway_payment_id: string;
+            /** Format: date-time */
+            readonly paid_at: string | null;
+            readonly note: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description What the gateway's checkout window returned, passed through
+         *     untouched for the adapter to verify.
+         */
+        OnlinePaymentPayload: {
+            payload: {
+                [key: string]: string;
+            };
+        };
+        OnlinePaymentSetup: {
+            gateway: string;
+            label: string;
+        };
+        /**
+         * @description * `created` - Awaiting payment
+         *     * `paid` - Paid
+         *     * `cancelled` - Cancelled
+         *     * `expired` - Expired
+         * @enum {string}
+         */
+        OnlinePaymentStatusEnum: "created" | "paid" | "cancelled" | "expired";
         /**
          * @description * `selected` - Selected
          *     * `shortlisted` - Shortlisted
@@ -4890,6 +5374,19 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["NotificationTemplate"][];
+        };
+        PaginatedOnlinePaymentList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["OnlinePayment"][];
         };
         PaginatedPaymentList: {
             /**
@@ -5349,9 +5846,10 @@ export interface components {
          *     * `cash` - Cash
          *     * `cheque` - Cheque
          *     * `online_transfer` - Online transfer
+         *     * `gateway` - Online (payment gateway)
          * @enum {string}
          */
-        PaymentModeEnum: "upi" | "cash" | "cheque" | "online_transfer";
+        PaymentModeEnum: "upi" | "cash" | "cheque" | "online_transfer" | "gateway";
         /**
          * @description * `not_applicable` - Not applicable
          *     * `pending` - Pending
@@ -5538,6 +6036,14 @@ export interface components {
          * @enum {string}
          */
         SourceEnum: "enquiry" | "direct";
+        /**
+         * @description `checkout` is null when the fee turned out to be paid already (an
+         *     earlier window or link) — `admission` has moved on instead.
+         */
+        StartCheckoutResponse: {
+            checkout: components["schemas"]["OnlineCheckout"] | null;
+            admission: components["schemas"]["Admission"];
+        };
         /**
          * @description * `pending` - Pending
          *     * `submitted` - Submitted
@@ -6244,6 +6750,138 @@ export interface operations {
                 "multipart/form-data": components["schemas"]["Admission"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Admission"];
+                };
+            };
+        };
+    };
+    v1_admissions_online_payment_cancel_link_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Admission"];
+                };
+            };
+        };
+    };
+    v1_admissions_online_payment_checkout_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartCheckoutResponse"];
+                };
+            };
+        };
+    };
+    v1_admissions_online_payment_confirm_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmCheckout"];
+                "application/x-www-form-urlencoded": components["schemas"]["ConfirmCheckout"];
+                "multipart/form-data": components["schemas"]["ConfirmCheckout"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Admission"];
+                };
+            };
+        };
+    };
+    v1_admissions_online_payment_resend_link_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Admission"];
+                };
+            };
+        };
+    };
+    v1_admissions_online_payment_send_link_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Admission"];
+                };
+            };
+        };
+    };
+    v1_admissions_online_payment_sync_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -9033,6 +9671,260 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CurrentFee"];
+                };
+            };
+        };
+    };
+    v1_payments_gateway_webhook_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gateway: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_payments_online_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOnlinePaymentList"];
+                };
+            };
+        };
+    };
+    v1_payments_online_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["OnlinePayment"];
+                "application/x-www-form-urlencoded": components["schemas"]["OnlinePayment"];
+                "multipart/form-data": components["schemas"]["OnlinePayment"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlinePayment"];
+                };
+            };
+        };
+    };
+    v1_payments_online_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this online payment. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlinePayment"];
+                };
+            };
+        };
+    };
+    v1_payments_online_cancel_link_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this online payment. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlinePayment"];
+                };
+            };
+        };
+    };
+    v1_payments_online_confirm_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this online payment. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OnlinePaymentPayload"];
+                "application/x-www-form-urlencoded": components["schemas"]["OnlinePaymentPayload"];
+                "multipart/form-data": components["schemas"]["OnlinePaymentPayload"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlinePayment"];
+                };
+            };
+        };
+    };
+    v1_payments_online_resend_link_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this online payment. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlinePayment"];
+                };
+            };
+        };
+    };
+    v1_payments_online_sync_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this online payment. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlinePayment"];
+                };
+            };
+        };
+    };
+    v1_payments_online_checkout_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LedgerOnlinePayment"];
+                "application/x-www-form-urlencoded": components["schemas"]["LedgerOnlinePayment"];
+                "multipart/form-data": components["schemas"]["LedgerOnlinePayment"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerCheckoutResponse"];
+                };
+            };
+        };
+    };
+    v1_payments_online_send_link_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LedgerOnlinePayment"];
+                "application/x-www-form-urlencoded": components["schemas"]["LedgerOnlinePayment"];
+                "multipart/form-data": components["schemas"]["LedgerOnlinePayment"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlinePayment"];
+                };
+            };
+        };
+    };
+    v1_payments_online_setup_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlinePaymentSetup"];
                 };
             };
         };

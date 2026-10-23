@@ -14,6 +14,10 @@ class PaymentMode(models.TextChoices):
     CASH = "cash", "Cash"
     CHEQUE = "cheque", "Cheque"
     ONLINE_TRANSFER = "online_transfer", "Online transfer"
+    # Collected through the configured online payment gateway (desk
+    # checkout or a payment link) — see apps.finance.payment.gateways.
+    # The gateway's own payment id goes in reference_no.
+    GATEWAY = "gateway", "Online (payment gateway)"
 
 
 class AdmissionPayment(AuditedModel):
@@ -37,6 +41,8 @@ class AdmissionPayment(AuditedModel):
     # request (same key) can return this same row instead of minting a
     # second receipt_no — see services.record_direct_payment.
     idempotency_key = models.CharField(max_length=255, blank=True, db_index=True)
+    # The gateway's payment id for an online payment; blank for cash.
+    reference_no = models.CharField(max_length=100, blank=True)
 
     def clean(self):
         if self.payment_date and self.payment_date > datetime.date.today():
@@ -44,6 +50,100 @@ class AdmissionPayment(AuditedModel):
 
     def __str__(self) -> str:
         return self.receipt_no
+
+
+class OnlinePaymentKind(models.TextChoices):
+    CHECKOUT = "checkout", "Paid at the desk"
+    LINK = "link", "Payment link"
+
+
+class OnlinePaymentStatus(models.TextChoices):
+    CREATED = "created", "Awaiting payment"
+    PAID = "paid", "Paid"
+    CANCELLED = "cancelled", "Cancelled"
+    EXPIRED = "expired", "Expired"
+
+
+class OnlinePayment(AuditedModel):
+    """One attempt to collect a payment through the online payment gateway
+    (settings.PAYMENT_GATEWAY) — a checkout opened at the desk, or a
+    payment link sent to the payer. It is for exactly one of:
+
+    - a direct admission's fee (`admission`) — once paid, the
+      AdmissionPayment row above is created and verified;
+    - a ledger payment (`person` + `payment_type` [+ `billing_period`]),
+      e.g. a monthly coaching fee — once paid, a Payment row below is
+      created and linked as `payment`.
+
+    Several attempts can exist for the same thing (a closed window, a
+    resent link); at most one is ever recorded. The gateway is the source
+    of truth for whether money moved: `status` here is only ever advanced
+    from what the gateway reports (signed checkout response, webhook, or a
+    status fetch), never set by a user.
+    """
+
+    admission = models.ForeignKey(
+        Admission,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="online_payments",
+    )
+    # Ledger payments: the Payment row to create once paid.
+    person = models.ForeignKey(
+        Person, on_delete=models.PROTECT, null=True, blank=True, related_name="online_payments"
+    )
+    payment_type = models.ForeignKey(
+        PaymentType, on_delete=models.PROTECT, null=True, blank=True, related_name="+"
+    )
+    billing_period = models.DateField(null=True, blank=True)
+    payment = models.ForeignKey(
+        "Payment", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    kind = models.CharField(max_length=10, choices=OnlinePaymentKind.choices)
+    # Which gateway this attempt went through ("razorpay", ...) — kept per
+    # row so switching settings.PAYMENT_GATEWAY later never orphans an
+    # attempt that is still open on the old one.
+    gateway = models.CharField(max_length=20)
+    # The gateway's own id for the checkout/link (e.g. order_... / plink_...).
+    gateway_id = models.CharField(max_length=64)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(
+        max_length=10,
+        choices=OnlinePaymentStatus.choices,
+        default=OnlinePaymentStatus.CREATED,
+        db_index=True,
+    )
+    short_url = models.URLField(blank=True)
+    sent_to = models.CharField(max_length=16, blank=True)
+    gateway_payment_id = models.CharField(max_length=64, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    # Something a person has to look at — e.g. the parent paid online
+    # after the desk had already recorded a cash payment.
+    note = models.TextField(blank=True)
+    created_by = models.ForeignKey("iam.User", on_delete=models.PROTECT, related_name="+")
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["gateway", "gateway_id"], name="unique_online_payment_gateway_id"
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(admission__isnull=False, person__isnull=True)
+                    | models.Q(
+                        admission__isnull=True,
+                        person__isnull=False,
+                        payment_type__isnull=False,
+                    )
+                ),
+                name="online_payment_for_admission_or_ledger",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.gateway}:{self.gateway_id}"
 
 
 class PaymentLedgerStatus(models.TextChoices):

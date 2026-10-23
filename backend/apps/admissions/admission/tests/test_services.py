@@ -214,8 +214,11 @@ def test_open_direct_admission_reuses_an_exact_person_match(seeded_roles):
 
     admission = services.open_direct_admission(
         **_direct_admission_kwargs(
-            first_name="Asha", last_name="Rao", date_of_birth=datetime.date(2011, 3, 4),
-            gender="F", mobile="9876500002",
+            first_name="Asha",
+            last_name="Rao",
+            date_of_birth=datetime.date(2011, 3, 4),
+            gender="F",
+            mobile="9876500002",
         )
     )
 
@@ -450,6 +453,4 @@ def test_record_payment_reaching_fee_cleared_raises_the_approval_request(
 
     admission.refresh_from_db()
     assert admission.step == AdmissionStep.FEE_CLEARED
-    assert ApprovalRequest.objects.filter(
-        rule__module="admission", rule__action="approve"
-    ).exists()
+    assert ApprovalRequest.objects.filter(rule__module="admission", rule__action="approve").exists()

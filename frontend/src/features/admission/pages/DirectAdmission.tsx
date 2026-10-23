@@ -3,33 +3,37 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '../../../components/Button'
 import { ApiError } from '../../../api/client'
 import type { AdmissionIntakeInput } from '../api/admission'
+import { OnlinePaymentStatus } from '../components/direct/OnlinePaymentStatus'
 import { Rail } from '../components/direct/Rail'
 import { StepDocuments } from '../components/direct/StepDocuments'
 import { StepFeeConsent } from '../components/direct/StepFeeConsent'
 import { StepStudentSeat } from '../components/direct/StepStudentSeat'
 import { Stepper } from '../components/direct/Stepper'
 import { useAdmission } from '../hooks/useAdmissions'
+import { type CollectionMethod, useCollectFee } from '../hooks/useCollectFee'
 import {
   useAutosavePatch,
   useCreateDirectAdmission,
   useDirectAdmissionBootstrap,
-  useRecordDirectPayment,
-  useSetConsents,
-  useSetFeeLines,
   useSubmitDocuments,
   useVerifyDirectPayment,
 } from '../hooks/useDirectAdmission'
 
-const ACTION_LABEL: Record<1 | 2 | 3, string> = {
+const ACTION_LABEL: Record<1 | 3, string> = {
   1: 'Continue to fee & consent',
-  2: 'Continue to documents',
   3: 'Submit for verification',
 }
 
-const ACTION_NOTE: Record<1 | 2 | 3, string> = {
+const ACTION_NOTE: Record<1 | 3, string> = {
   1: 'Saved as a draft on every step.',
-  2: 'Records the payment — Accounts still has to verify it.',
   3: 'This submits for verification — it does not create the student yet.',
+}
+
+// Step 2's button depends on how the fee is being paid.
+const PAY_ACTION: Record<CollectionMethod, { label: string; note: string }> = {
+  desk: { label: 'Record payment', note: 'Accounts still has to verify a desk payment.' },
+  online: { label: 'Pay online', note: 'Opens the payment window; verified automatically.' },
+  link: { label: 'Send payment link', note: 'Texts the parent a link; verified automatically.' },
 }
 
 export function DirectAdmission() {
@@ -45,7 +49,8 @@ export function DirectAdmission() {
   })
   const [feeAmounts, setFeeAmounts] = useState<Record<string, string>>({})
   const [consentDecisions, setConsentDecisions] = useState<Record<string, boolean>>({})
-  const [paymentMode, setPaymentMode] = useState('upi')
+  const [collectionMethod, setCollectionMethod] = useState<CollectionMethod>('desk')
+  const [paymentMode, setPaymentMode] = useState('cash')
   const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [declaredByName, setDeclaredByName] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -54,9 +59,7 @@ export function DirectAdmission() {
   const admission = useAdmission(admissionId ?? undefined)
   const create = useCreateDirectAdmission()
   const autosave = useAutosavePatch(admissionId ?? '')
-  const setFeeLines = useSetFeeLines(admissionId ?? '')
-  const setConsents = useSetConsents(admissionId ?? '')
-  const recordPayment = useRecordDirectPayment(admissionId ?? '')
+  const collectFee = useCollectFee(admissionId ?? '')
   const verifyPayment = useVerifyDirectPayment(admissionId ?? '')
   const submitDocuments = useSubmitDocuments(admissionId ?? '')
 
@@ -86,6 +89,8 @@ export function DirectAdmission() {
       if (count > 0) return `${err.message} Check the field${count > 1 ? 's' : ''} highlighted below.`
       return err.message
     }
+    // e.g. the payment window closed without paying (lib/paymentGateways).
+    if (err instanceof Error) return err.message
     return 'Something went wrong.'
   }
 
@@ -106,31 +111,23 @@ export function DirectAdmission() {
 
       if (step === 2) {
         if (!admissionId) return
-        const missingConsents = (bootstrap.data?.consent_types ?? []).filter(
-          (c) => c.is_mandatory && !consentDecisions[c.id],
-        )
-        if (missingConsents.length > 0) {
-          setError(
-            `Confirm all required consents before recording payment: ${missingConsents
-              .map((c) => c.label)
-              .join(', ')}.`,
-          )
+        // Already paid (a link the parent paid while this screen was open,
+        // or a payment recorded earlier) — nothing left to collect.
+        if (admission.data?.direct_payment) {
+          setStep(3)
           return
         }
-        const lines = Object.entries(feeAmounts)
-          .filter(([, amount]) => amount)
-          .map(([fee_head, amount]) => ({ fee_head, amount }))
-        await setFeeLines.mutateAsync(lines)
-        const decisions = Object.entries(consentDecisions).map(([consent_type, granted]) => ({
-          consent_type,
-          granted,
-        }))
-        await setConsents.mutateAsync({ decisions, declaredByName })
-        await recordPayment.mutateAsync({
-          payment_mode: paymentMode as 'upi' | 'cash' | 'cheque' | 'online_transfer',
-          payment_date: paymentDate,
+        const outcome = await collectFee.collect({
+          method: collectionMethod,
+          feeAmounts,
+          consentDecisions,
+          consentTypes: bootstrap.data?.consent_types ?? [],
+          declaredByName,
+          paymentMode,
+          paymentDate,
         })
-        setStep(3)
+        // A link stays on this step, showing its status until it's paid.
+        if (outcome !== 'link_sent') setStep(3)
         return
       }
 
@@ -154,18 +151,35 @@ export function DirectAdmission() {
     }
   }
 
-  const isSaving =
-    create.isPending ||
-    setFeeLines.isPending ||
-    setConsents.isPending ||
-    recordPayment.isPending ||
-    submitDocuments.isPending
-
   // submit_documents 409s until Accounts has verified the payment
   // (DirectAdmissionStateMachine: payment_recorded -> payment_verified is
   // a separate transition) — next_actions is the server's own reachability
   // + permission check, so gating on it here can't drift from that guard.
   const canSubmitDocuments = admission.data?.next_actions?.includes('submit_documents') ?? false
+
+  const isSaving = create.isPending || collectFee.isPending || submitDocuments.isPending
+
+  const alreadyPaid = Boolean(admission.data?.direct_payment)
+  const linkPending =
+    admission.data?.online_payment?.kind === 'link' &&
+    admission.data.online_payment.status === 'created'
+  const actionLabel =
+    step === 2
+      ? alreadyPaid
+        ? 'Continue to documents'
+        : PAY_ACTION[collectionMethod].label
+      : ACTION_LABEL[step]
+  const actionNote =
+    step === 2
+      ? alreadyPaid
+        ? 'Payment recorded.'
+        : linkPending
+          ? 'Waiting for the parent to pay the link — or choose another way to pay.'
+          : PAY_ACTION[collectionMethod].note
+      : step === 3 && !canSubmitDocuments
+        ? 'Verify the payment above first.'
+        : ACTION_NOTE[step]
+
 
   return (
     <div className="min-h-screen bg-[var(--surface-2)] px-4 py-8">
@@ -204,6 +218,8 @@ export function DirectAdmission() {
                     onConsentChange={(id, granted) =>
                       setConsentDecisions((prev) => ({ ...prev, [id]: granted }))
                     }
+                    collectionMethod={collectionMethod}
+                    onCollectionMethodChange={setCollectionMethod}
                     paymentMode={paymentMode}
                     onPaymentModeChange={setPaymentMode}
                     paymentDate={paymentDate}
@@ -211,7 +227,13 @@ export function DirectAdmission() {
                     declaredByName={declaredByName}
                     onDeclaredByNameChange={setDeclaredByName}
                     guardianName={intake.guardian_name ?? ''}
+                    guardianMobile={intake.guardian_mobile ?? ''}
                   />
+                )}
+                {step === 2 && admission.data && (
+                  <div className="mt-6">
+                    <OnlinePaymentStatus admission={admission.data} />
+                  </div>
                 )}
                 {step === 3 && (
                   <StepDocuments
@@ -234,16 +256,12 @@ export function DirectAdmission() {
                   {error && <span className="text-xs text-red-600">{error}</span>}
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-[var(--ink-3)]">
-                    {step === 3 && !canSubmitDocuments
-                      ? 'Verify the payment above first.'
-                      : ACTION_NOTE[step]}
-                  </span>
+                  <span className="text-xs text-[var(--ink-3)]">{actionNote}</span>
                   <Button
                     onClick={() => void handleContinue()}
                     disabled={isSaving || (step === 3 && !canSubmitDocuments)}
                   >
-                    {isSaving ? 'Saving…' : ACTION_LABEL[step]}
+                    {isSaving ? 'Saving…' : actionLabel}
                   </Button>
                 </div>
               </div>

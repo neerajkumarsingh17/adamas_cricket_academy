@@ -7,6 +7,10 @@ export type RecordPayment = components['schemas']['RecordPayment']
 export type Person = components['schemas']['Person']
 export type PersonLookupResult = components['schemas']['PersonLookupResult']
 export type CurrentFee = components['schemas']['CurrentFee']
+export type OnlinePayment = components['schemas']['OnlinePayment']
+export type OnlinePaymentSetup = components['schemas']['OnlinePaymentSetup']
+export type LedgerOnlinePayment = components['schemas']['LedgerOnlinePayment']
+export type LedgerCheckoutResponse = components['schemas']['LedgerCheckoutResponse']
 
 export interface ListResponse<T> {
   next: string | null
@@ -69,6 +73,41 @@ export const paymentApi = {
   // Only ever available once status is settled (409 otherwise — see
   // apps.finance.payment.views.InvoiceNotAvailable).
   invoicePdf: (paymentId: string) => requestBlob(`/payments/${paymentId}/invoice.pdf/`),
+
+  // --- Online collection through the payment gateway --- //
+
+  /** Null when no gateway is set up — record-by-hand only. */
+  onlineSetup: () => request<OnlinePaymentSetup | null>('/payments/online/setup/'),
+
+  /** Open links/windows, plus paid ones flagged for a person to act on. */
+  onlineList: () => request<ListResponse<OnlinePayment>>('/payments/online/'),
+
+  onlineCheckout: (body: LedgerOnlinePayment) =>
+    request<LedgerCheckoutResponse>('/payments/online/checkout/', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  onlineSendLink: (body: LedgerOnlinePayment) =>
+    request<OnlinePayment>('/payments/online/send-link/', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  onlineConfirm: (id: string, payload: Record<string, string>) =>
+    request<OnlinePayment>(`/payments/online/${id}/confirm/`, {
+      method: 'POST',
+      body: JSON.stringify({ payload }),
+    }),
+
+  onlineSync: (id: string) =>
+    request<OnlinePayment>(`/payments/online/${id}/sync/`, { method: 'POST' }),
+
+  onlineResend: (id: string) =>
+    request<OnlinePayment>(`/payments/online/${id}/resend-link/`, { method: 'POST' }),
+
+  onlineCancel: (id: string) =>
+    request<OnlinePayment>(`/payments/online/${id}/cancel-link/`, { method: 'POST' }),
 }
 
 // The caller owns the resulting blob: URL's lifetime — pass it to

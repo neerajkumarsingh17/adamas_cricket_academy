@@ -24,4 +24,34 @@ urlpatterns = [
         views.AdmissionDocumentVerificationViewSet.as_view({"post": "verify"}),
         name="admission-verify-documents",
     ),
+    path(
+        "admissions/<uuid:pk>/online-payment/checkout/",
+        views.AdmissionOnlinePaymentViewSet.as_view({"post": "checkout"}),
+        name="admission-online-payment-checkout",
+    ),
+    path(
+        "admissions/<uuid:pk>/online-payment/confirm/",
+        views.AdmissionOnlinePaymentViewSet.as_view({"post": "confirm"}),
+        name="admission-online-payment-confirm",
+    ),
+    path(
+        "admissions/<uuid:pk>/online-payment/send-link/",
+        views.AdmissionOnlinePaymentViewSet.as_view({"post": "send_link"}),
+        name="admission-online-payment-send-link",
+    ),
+    path(
+        "admissions/<uuid:pk>/online-payment/resend-link/",
+        views.AdmissionOnlinePaymentViewSet.as_view({"post": "resend_link"}),
+        name="admission-online-payment-resend-link",
+    ),
+    path(
+        "admissions/<uuid:pk>/online-payment/cancel-link/",
+        views.AdmissionOnlinePaymentViewSet.as_view({"post": "cancel_link"}),
+        name="admission-online-payment-cancel-link",
+    ),
+    path(
+        "admissions/<uuid:pk>/online-payment/sync/",
+        views.AdmissionOnlinePaymentViewSet.as_view({"post": "sync"}),
+        name="admission-online-payment-sync",
+    ),
 ] + router.urls

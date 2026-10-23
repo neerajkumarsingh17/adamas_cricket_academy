@@ -252,19 +252,14 @@ def _guard_ready_for_payment(admission: Admission, **_) -> bool:
     if not services.mandatory_consents_granted(admission):
         from .models import ConsentType
 
-        granted_ids = set(admission.consent_records.filter(granted=True).values_list(
-            "consent_type_id", flat=True
-        ))
+        granted_ids = set(
+            admission.consent_records.filter(granted=True).values_list("consent_type_id", flat=True)
+        )
         missing = ConsentType.objects.filter(is_mandatory=True, is_active=True).exclude(
             id__in=granted_ids
         )
         raise ValidationError(
-            {
-                "consents": (
-                    "Missing required consent(s): "
-                    + ", ".join(c.label for c in missing)
-                )
-            }
+            {"consents": ("Missing required consent(s): " + ", ".join(c.label for c in missing))}
         )
 
     from apps.core.models import FeeHead
@@ -276,8 +271,7 @@ def _guard_ready_for_payment(admission: Admission, **_) -> bool:
         raise ValidationError(
             {
                 "fee_lines": (
-                    "Missing required fee line(s): "
-                    + ", ".join(h.label for h in missing_heads)
+                    "Missing required fee line(s): " + ", ".join(h.label for h in missing_heads)
                 )
             }
         )

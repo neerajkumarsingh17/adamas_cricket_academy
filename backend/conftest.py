@@ -16,3 +16,20 @@ def seeded_roles(django_db_setup, django_db_blocker):
     with django_db_blocker.unblock():
         if not Role.objects.exists():
             call_command("seed_roles")
+
+
+@pytest.fixture
+def fake_gateway(settings):
+    """Online payments against apps.finance.payment.tests.fake_gateway
+    instead of a real provider; yields the FakeGateway class so a test can
+    set what the "gateway" reports."""
+    from unittest import mock
+
+    from apps.finance.payment.gateways import GATEWAYS
+    from apps.finance.payment.tests.fake_gateway import FakeGateway
+
+    settings.PAYMENT_GATEWAY = "fake"
+    FakeGateway.statuses = {}
+    FakeGateway.cancelled = []
+    with mock.patch.dict(GATEWAYS, {"fake": FakeGateway}):
+        yield FakeGateway

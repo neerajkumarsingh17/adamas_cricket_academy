@@ -57,6 +57,18 @@ def record_payment(
     machine.apply(PaymentLedgerStatus.CONFIRMED, user=user)
     payment.full_clean()
     payment.save()
+
+    if billing_period:
+        # That month is paid now, whichever way — an open online link for it
+        # must not take a second payment.
+        from . import online
+        from .models import OnlinePayment
+
+        online.close_all(
+            OnlinePayment.objects.filter(
+                person=person, payment_type=payment_type, billing_period=billing_period
+            )
+        )
     return payment
 
 

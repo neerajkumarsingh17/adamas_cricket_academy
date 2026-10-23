@@ -168,6 +168,20 @@ STORAGES = {
 
 NOTIFICATION_BACKEND = env("NOTIFICATION_BACKEND", default="console")
 
+# Online fee collection (direct-admission desk checkout + payment links).
+# PAYMENT_GATEWAY picks the adapter in apps.finance.payment.gateways —
+# switching provider is a new adapter plus its own keys below, nothing
+# else. Blank, or a gateway whose keys are blank, simply hides the online
+# options; cash collection works without any of this.
+PAYMENT_GATEWAY = env("PAYMENT_GATEWAY", default="")
+
+# Razorpay — test-mode keys (rzp_test_...) in dev.
+RAZORPAY_KEY_ID = env("RAZORPAY_KEY_ID", default="")
+RAZORPAY_KEY_SECRET = env("RAZORPAY_KEY_SECRET", default="")
+# Dashboard -> Webhooks -> secret for /api/v1/payments/gateway/razorpay/webhook/.
+# Optional: without it, staff use "Check payment status" instead.
+RAZORPAY_WEBHOOK_SECRET = env("RAZORPAY_WEBHOOK_SECRET", default="")
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",

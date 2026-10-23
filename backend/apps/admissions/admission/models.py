@@ -195,9 +195,7 @@ class AdmissionChecklistItem(AuditedModel):
         return f"{self.admission}: {self.document_type}"
 
 
-_PIN_CODE_VALIDATOR = RegexValidator(
-    r"^[1-9][0-9]{5}$", "Enter a valid 6-digit PIN code."
-)
+_PIN_CODE_VALIDATOR = RegexValidator(r"^[1-9][0-9]{5}$", "Enter a valid 6-digit PIN code.")
 
 
 class AdmissionCategory(models.TextChoices):
@@ -229,9 +227,7 @@ class AdmissionIntake(AuditedModel):
     season = models.ForeignKey(Season, on_delete=models.PROTECT, related_name="+")
     admission_category = models.CharField(max_length=16, choices=AdmissionCategory.choices)
     days_per_week = models.SmallIntegerField(choices=DaysPerWeek.choices, null=True, blank=True)
-    preferred_slot = models.CharField(
-        max_length=10, choices=PreferredSlot.choices, blank=True
-    )
+    preferred_slot = models.CharField(max_length=10, choices=PreferredSlot.choices, blank=True)
 
     # Student
     full_name = models.CharField(max_length=120)
@@ -301,9 +297,7 @@ class AdmissionIntake(AuditedModel):
                 errors[field_name] = "Not a valid mobile number."
 
         if self.guardian_mobile and self.emergency_contact == self.guardian_mobile:
-            errors["emergency_contact"] = (
-                "Must be someone other than the guardian above."
-            )
+            errors["emergency_contact"] = "Must be someone other than the guardian above."
         if self.student_mobile and self.student_mobile == self.guardian_mobile:
             errors["student_mobile"] = "Must be different from the guardian's mobile."
 

@@ -1,7 +1,11 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from apps.finance.payment.serializers import AdmissionPaymentSerializer
+from apps.finance.payment.serializers import (
+    AdmissionPaymentSerializer,
+    OnlineCheckoutSerializer,
+    OnlinePaymentSerializer,
+)
 from apps.people.models import Person
 from apps.people.serializers import PersonSerializer
 
@@ -127,6 +131,7 @@ class AdmissionSerializer(serializers.ModelSerializer):
     registration_no = serializers.CharField(source="application_no", read_only=True)
     next_actions = serializers.SerializerMethodField()
     direct_payment = serializers.SerializerMethodField()
+    online_payment = serializers.SerializerMethodField()
 
     class Meta:
         model = Admission
@@ -157,6 +162,7 @@ class AdmissionSerializer(serializers.ModelSerializer):
             "portal_enabled",
             "intake",
             "direct_payment",
+            "online_payment",
             "next_actions",
             "created_at",
             "updated_at",
@@ -172,6 +178,15 @@ class AdmissionSerializer(serializers.ModelSerializer):
     def get_direct_payment(self, obj: Admission) -> dict | None:
         payment = getattr(obj, "payment", None)
         return AdmissionPaymentSerializer(payment).data if payment is not None else None
+
+    @extend_schema_field(OnlinePaymentSerializer(allow_null=True))
+    def get_online_payment(self, obj: Admission) -> dict | None:
+        from apps.finance.payment.models import OnlinePaymentStatus
+
+        attempt = obj.online_payments.exclude(
+            status__in=[OnlinePaymentStatus.CANCELLED, OnlinePaymentStatus.EXPIRED]
+        ).first()
+        return OnlinePaymentSerializer(attempt).data if attempt is not None else None
 
     def get_next_actions(self, obj: Admission) -> list[str]:
         from . import services
@@ -312,3 +327,11 @@ class VerifyPaymentSerializer(serializers.Serializer):
 
 class CancelAdmissionSerializer(serializers.Serializer):
     reason = serializers.CharField()
+
+
+class StartCheckoutResponseSerializer(serializers.Serializer):
+    """`checkout` is null when the fee turned out to be paid already (an
+    earlier window or link) — `admission` has moved on instead."""
+
+    checkout = OnlineCheckoutSerializer(allow_null=True)
+    admission = AdmissionSerializer()

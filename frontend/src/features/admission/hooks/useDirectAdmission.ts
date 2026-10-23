@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
-import type { AdmissionIntakeInput } from '../api/admission'
+import type { Admission, AdmissionIntakeInput } from '../api/admission'
 import { directAdmissionApi } from '../api/admission'
 import { randomId } from '../../../lib/id'
 
@@ -106,6 +106,46 @@ export function useRecordDirectPayment(id: string) {
     }) => directAdmissionApi.recordPayment(id, body, idempotencyKey.current),
     onSuccess: (admission) => queryClient.setQueryData(['admissions', id], admission),
   })
+}
+
+// Each online-payment call returns the admission, written straight into
+// the same ['admissions', id] cache entry every other mutation here uses.
+function useOnlinePaymentMutation<T>(id: string, call: (vars: T) => Promise<Admission>) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: call,
+    onSuccess: (admission) => queryClient.setQueryData(['admissions', id], admission),
+  })
+}
+
+export function useStartCheckout(id: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => directAdmissionApi.startCheckout(id),
+    onSuccess: (result) => queryClient.setQueryData(['admissions', id], result.admission),
+  })
+}
+
+export function useConfirmCheckout(id: string) {
+  return useOnlinePaymentMutation(id, (body: { gateway_id: string; payload: Record<string, string> }) =>
+    directAdmissionApi.confirmCheckout(id, body),
+  )
+}
+
+export function useSendPaymentLink(id: string) {
+  return useOnlinePaymentMutation(id, () => directAdmissionApi.sendPaymentLink(id))
+}
+
+export function useResendPaymentLink(id: string) {
+  return useOnlinePaymentMutation(id, () => directAdmissionApi.resendPaymentLink(id))
+}
+
+export function useCancelPaymentLink(id: string) {
+  return useOnlinePaymentMutation(id, () => directAdmissionApi.cancelPaymentLink(id))
+}
+
+export function useSyncOnlinePayment(id: string) {
+  return useOnlinePaymentMutation(id, () => directAdmissionApi.syncOnlinePayment(id))
 }
 
 export function useVerifyDirectPayment(id: string) {

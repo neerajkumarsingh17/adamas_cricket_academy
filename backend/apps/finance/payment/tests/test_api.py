@@ -379,4 +379,3 @@ def test_parent_can_download_their_childs_receipt(api_client, seeded_roles):
     response = api_client.get(f"/api/v1/payments/{payment.id}/receipt.pdf/")
 
     assert response.status_code == 200
-
