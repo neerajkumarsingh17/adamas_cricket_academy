@@ -149,6 +149,10 @@ class Admission(AuditedModel):
                 name="admission_source_matches_enquiry_and_trial",
             ),
         ]
+        indexes = [
+            models.Index(fields=["created_at"], name="admission_created_idx"),
+            models.Index(fields=["step", "created_at"], name="admission_step_created_idx"),
+        ]
 
     def __str__(self) -> str:
         return self.application_no
@@ -156,8 +160,13 @@ class Admission(AuditedModel):
     @property
     def fee_total(self) -> Decimal:
         # Never a stored column — see apps.finance.fee.models.AdmissionFeeLine's
-        # docstring. Aggregate returns None on an empty queryset; a decimal
-        # zero, not None, is the correct "nothing collected yet" value.
+        # docstring. AdmissionViewSet's list annotates it for every row in
+        # one query; otherwise it's aggregated here. Aggregate returns None
+        # on an empty queryset; a decimal zero, not None, is the correct
+        # "nothing collected yet" value.
+        annotated = self.__dict__.get("annotated_fee_total")
+        if annotated is not None:
+            return Decimal(annotated)
         return self.fee_lines.aggregate(total=Sum("amount"))["total"] or Decimal("0")
 
     @property

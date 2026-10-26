@@ -1,3 +1,4 @@
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 
 from apps.admissions.admission.models import Admission
@@ -76,6 +77,14 @@ class Student(AuditedModel):
     )
     withdrawn_on = models.DateField(null=True, blank=True)
     completed_on = models.DateField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["created_at"], name="student_created_idx"),
+            models.Index(fields=["status", "created_at"], name="student_status_created_idx"),
+            # "contains" search on the code (StudentLookupView) — pg_trgm, core 0001.
+            GinIndex(fields=["student_code"], name="student_code_trgm", opclasses=["gin_trgm_ops"]),
+        ]
 
     def __str__(self) -> str:
         return self.student_code

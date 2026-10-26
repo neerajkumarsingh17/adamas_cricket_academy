@@ -7,6 +7,7 @@ import { Card } from '../../../components/Card'
 import { Field, inputClass } from '../../../components/Field'
 import { PageHeader } from '../../../components/PageHeader'
 import { useAgeCategories, useCreateSlot, useTrialSlots, useVenues } from '../hooks/useTrials'
+import { LoadMore } from '../../../components/LoadMore'
 
 function NewSlotForm({ onDone }: { onDone: () => void }) {
   const { data: venues } = useVenues()
@@ -87,7 +88,8 @@ function NewSlotForm({ onDone }: { onDone: () => void }) {
 }
 
 export function TrialCalendarPage() {
-  const { data, isPending, isError, error, refetch } = useTrialSlots()
+  const trialSlotsQuery = useTrialSlots()
+  const { data, isPending, isError, error, refetch } = trialSlotsQuery
   const [showForm, setShowForm] = useState(false)
 
   return (
@@ -141,6 +143,7 @@ export function TrialCalendarPage() {
             </div>
           )}
         </AsyncBoundary>
+        <LoadMore query={trialSlotsQuery} noun="slots" />
       </div>
     </div>
   )

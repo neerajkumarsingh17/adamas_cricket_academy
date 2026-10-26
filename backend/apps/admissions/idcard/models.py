@@ -27,5 +27,10 @@ class IDCard(AuditedModel):
         "iam.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
     )
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["created_at"], name="idcard_created_idx"),
+        ]
+
     def __str__(self) -> str:
         return self.card_no

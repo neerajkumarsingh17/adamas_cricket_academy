@@ -141,6 +141,9 @@ class OnlinePayment(AuditedModel):
                 name="online_payment_for_admission_or_ledger",
             ),
         ]
+        indexes = [
+            models.Index(fields=["status", "created_at"], name="onlinepay_status_created_idx"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.gateway}:{self.gateway_id}"
@@ -229,6 +232,10 @@ class Payment(AuditedModel):
                 condition=models.Q(billing_period__isnull=False),
                 name="unique_person_payment_type_period",
             ),
+        ]
+        indexes = [
+            models.Index(fields=["created_at"], name="payment_created_idx"),
+            models.Index(fields=["status", "created_at"], name="payment_status_created_idx"),
         ]
 
     def clean(self):

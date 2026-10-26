@@ -6,13 +6,15 @@ import { Card } from '../../../components/Card'
 import { FilePreviewModal } from '../../../components/FilePreviewModal'
 import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
-import { useStudents } from '../../student/hooks/useStudents'
+import { useAllStudents } from '../../student/hooks/useStudents'
 import { blobToUrl, idcardApi } from '../api/idcard'
 import { useIDCards, useIssueCard } from '../hooks/useIDCards'
+import { LoadMore } from '../../../components/LoadMore'
 
 export function IDCardListPage() {
-  const { data, isPending, isError, error, refetch } = useIDCards()
-  const { data: students } = useStudents('active')
+  const idCardsQuery = useIDCards()
+  const { data, isPending, isError, error, refetch } = idCardsQuery
+  const { data: students } = useAllStudents('active')
   const issueCard = useIssueCard()
   const [selectedStudent, setSelectedStudent] = useState('')
   const [selectedCards, setSelectedCards] = useState<Set<string>>(new Set())
@@ -146,6 +148,7 @@ export function IDCardListPage() {
             </div>
           )}
         </AsyncBoundary>
+        <LoadMore query={idCardsQuery} noun="cards" />
       </div>
 
       {preview && (

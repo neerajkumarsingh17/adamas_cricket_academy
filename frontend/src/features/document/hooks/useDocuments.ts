@@ -1,12 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { fetchAllPages, useCursorList } from '../../../lib/pagination'
 import { documentApi } from '../api/document'
 
 export function useDocuments(status?: string) {
-  return useQuery({
-    queryKey: ['documents', status ?? 'all'],
-    queryFn: () => documentApi.list({ status }),
-    staleTime: 15_000,
-  })
+  return useCursorList(['documents', status ?? 'all'], () => documentApi.list({ status }), { staleTime: 15_000 })
 }
 
 // One child's documents on the parent portal's detail page — scoped
@@ -16,7 +13,7 @@ export function useDocuments(status?: string) {
 export function useOwnerDocuments(ownerObjectId: string | undefined) {
   return useQuery({
     queryKey: ['documents', 'owner', ownerObjectId],
-    queryFn: () => documentApi.list({ ownerObjectId }),
+    queryFn: () => fetchAllPages(() => documentApi.list({ ownerObjectId })),
     enabled: !!ownerObjectId,
     staleTime: 15_000,
   })
@@ -25,7 +22,7 @@ export function useOwnerDocuments(ownerObjectId: string | undefined) {
 export function useDocumentTypes() {
   return useQuery({
     queryKey: ['master', 'document-types'],
-    queryFn: documentApi.types,
+    queryFn: () => fetchAllPages(() => documentApi.types()),
     staleTime: 5 * 60_000,
   })
 }

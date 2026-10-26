@@ -1,3 +1,4 @@
+from django.contrib.postgres.indexes import GinIndex
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -49,6 +50,21 @@ class Person(AuditedModel):
     blood_group = models.CharField(max_length=3, choices=BloodGroup.choices, blank=True)
 
     dedupe_key = models.CharField(max_length=64, db_index=True, editable=False, blank=True)
+
+    class Meta:
+        indexes = [
+            # resolve_person()'s fuzzy match narrows by (date_of_birth OR mobile)
+            # before scoring name similarity — mobile is indexed on the field.
+            models.Index(fields=["date_of_birth"], name="person_dob_idx"),
+            # "contains" search (PersonLookupView, StudentLookupView) — pg_trgm.
+            GinIndex(
+                fields=["first_name"], name="person_first_name_trgm", opclasses=["gin_trgm_ops"]
+            ),
+            GinIndex(
+                fields=["last_name"], name="person_last_name_trgm", opclasses=["gin_trgm_ops"]
+            ),
+            GinIndex(fields=["mobile"], name="person_mobile_trgm", opclasses=["gin_trgm_ops"]),
+        ]
 
     def save(self, *args, **kwargs):
         self.mobile = normalize_mobile_e164(self.mobile)

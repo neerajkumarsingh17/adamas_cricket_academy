@@ -9,6 +9,7 @@ import { Pill } from '../../../components/Pill'
 import type { Document } from '../api/document'
 import { DocumentPreviewLink } from '../components/DocumentUploader'
 import { useDocuments, useRejectDocument, useVerifyDocument } from '../hooks/useDocuments'
+import { LoadMore } from '../../../components/LoadMore'
 
 function DocumentRow({ document }: { document: Document }) {
   const verify = useVerifyDocument()
@@ -77,7 +78,8 @@ function DocumentRow({ document }: { document: Document }) {
 }
 
 export function DocumentVerificationQueuePage() {
-  const { data, isPending, isError, error, refetch } = useDocuments('submitted')
+  const documentsQuery = useDocuments('submitted')
+  const { data, isPending, isError, error, refetch } = documentsQuery
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
@@ -115,6 +117,7 @@ export function DocumentVerificationQueuePage() {
             </div>
           )}
         </AsyncBoundary>
+        <LoadMore query={documentsQuery} noun="documents" />
       </div>
     </div>
   )

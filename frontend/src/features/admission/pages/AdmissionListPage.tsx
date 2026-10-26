@@ -6,9 +6,11 @@ import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { ADMISSION_STEPS } from '../api/admission'
 import { useAdmissions } from '../hooks/useAdmissions'
+import { LoadMore } from '../../../components/LoadMore'
 
 export function AdmissionListPage() {
-  const { data, isPending, isError, error, refetch } = useAdmissions()
+  const admissionsQuery = useAdmissions()
+  const { data, isPending, isError, error, refetch } = admissionsQuery
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
@@ -61,6 +63,7 @@ export function AdmissionListPage() {
             </div>
           )}
         </AsyncBoundary>
+        <LoadMore query={admissionsQuery} noun="admissions" />
 
         <p className="mt-4 text-xs text-gray-400">
           Steps: {ADMISSION_STEPS.join(' → ')}

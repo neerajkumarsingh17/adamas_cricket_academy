@@ -183,14 +183,24 @@ class AdmissionSerializer(serializers.ModelSerializer):
     def get_online_payment(self, obj: Admission) -> dict | None:
         from apps.finance.payment.models import OnlinePaymentStatus
 
-        attempt = obj.online_payments.exclude(
-            status__in=[OnlinePaymentStatus.CANCELLED, OnlinePaymentStatus.EXPIRED]
-        ).first()
+        # AdmissionViewSet prefetches these (newest first); anything else
+        # serializing a single admission falls back to one query.
+        prefetched = getattr(obj, "active_online_payments", None)
+        if prefetched is not None:
+            attempt = prefetched[0] if prefetched else None
+        else:
+            attempt = obj.online_payments.exclude(
+                status__in=[OnlinePaymentStatus.CANCELLED, OnlinePaymentStatus.EXPIRED]
+            ).first()
         return OnlinePaymentSerializer(attempt).data if attempt is not None else None
 
     def get_next_actions(self, obj: Admission) -> list[str]:
+        """Empty on list rows — see AdmissionViewSet.get_serializer_context;
+        GET /admissions/{id}/ carries the real list."""
         from . import services
 
+        if not self.context.get("include_next_actions", True):
+            return []
         request = self.context.get("request")
         user = getattr(request, "user", None) if request else None
         return services.next_actions_for(obj, user)
@@ -205,6 +215,9 @@ class AdmissionSerializer(serializers.ModelSerializer):
 
         if obj.person_id is None:
             return False
+        annotated = getattr(obj, "has_portal_user", None)  # AdmissionViewSet's annotation
+        if annotated is not None:
+            return bool(annotated)
         return User.objects.filter(person_id=obj.person_id).exists()
 
 

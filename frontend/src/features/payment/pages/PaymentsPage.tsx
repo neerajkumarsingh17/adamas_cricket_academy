@@ -28,6 +28,7 @@ import {
   useRecordPayment,
   useSettlePayment,
 } from '../hooks/usePayments'
+import { LoadMore } from '../../../components/LoadMore'
 
 const SUBMIT_LABEL: Record<CollectionMethod, [idle: string, busy: string]> = {
   desk: ['Record payment', 'Recording…'],
@@ -344,7 +345,8 @@ function PaymentRow({ payment }: { payment: Payment }) {
 }
 
 export function PaymentsPage() {
-  const { data, isPending, isError, error, refetch } = usePayments()
+  const paymentsQuery = usePayments()
+  const { data, isPending, isError, error, refetch } = paymentsQuery
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
@@ -391,6 +393,7 @@ export function PaymentsPage() {
             </div>
           )}
         </AsyncBoundary>
+        <LoadMore query={paymentsQuery} noun="payments" />
       </div>
     </div>
   )

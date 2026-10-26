@@ -130,18 +130,19 @@ def admission_fee_paid(admission, admission_payment, *, user) -> Payment:
     )
 
 
-def _current_month_recurring_payment(person):
-    today = datetime.date.today()
-    return (
-        Payment.objects.filter(
-            person=person,
-            payment_type__is_recurring=True,
-            billing_period=today.replace(day=1),
-            status__in=[PaymentLedgerStatus.CONFIRMED, PaymentLedgerStatus.SETTLED],
-        )
-        .order_by("-created_at")
-        .first()
+def current_month_paid_payments():
+    """Recurring payments covering this month that count as paid — the one
+    definition of "paid this month", for a single person (below) or as a
+    subquery over many (BatchEnrollmentViewSet's fee_status annotation)."""
+    return Payment.objects.filter(
+        payment_type__is_recurring=True,
+        billing_period=datetime.date.today().replace(day=1),
+        status__in=[PaymentLedgerStatus.CONFIRMED, PaymentLedgerStatus.SETTLED],
     )
+
+
+def _current_month_recurring_payment(person):
+    return current_month_paid_payments().filter(person=person).order_by("-created_at").first()
 
 
 def is_current_month_paid(person) -> bool:

@@ -42,6 +42,9 @@ class Attendance(AuditedModel):
                 fields=["session", "student"], name="unique_attendance_per_session_student"
             ),
         ]
+        indexes = [
+            models.Index(fields=["created_at"], name="attendance_created_idx"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.student} — {self.session} — {self.status}"
@@ -69,6 +72,11 @@ class AttendanceCorrection(AuditedModel):
         "iam.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
     )
     approved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["status", "created_at"], name="correction_status_created_idx"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.attendance}: {self.from_status} -> {self.to_status}"

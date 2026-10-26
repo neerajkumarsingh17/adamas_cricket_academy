@@ -1,12 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useCursorList } from '../../../lib/pagination'
 import { idcardApi } from '../api/idcard'
 
 export function useIDCards() {
-  return useQuery({
-    queryKey: ['id-cards'],
-    queryFn: idcardApi.list,
-    staleTime: 15_000,
-  })
+  return useCursorList(['id-cards'], idcardApi.list, { staleTime: 15_000 })
 }
 
 export function useIssueCard() {

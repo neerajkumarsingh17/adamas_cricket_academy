@@ -8,9 +8,11 @@ import { Pill } from '../../../components/Pill'
 import { formatTime, formatWeekdays } from '../../../lib/dates'
 import { BatchFormModal } from '../components/BatchFormModal'
 import { useBatches } from '../hooks/useBatches'
+import { LoadMore } from '../../../components/LoadMore'
 
 export function BatchListPage() {
-  const { data, isPending, isError, error, refetch } = useBatches()
+  const batchesQuery = useBatches()
+  const { data, isPending, isError, error, refetch } = batchesQuery
   const [showCreate, setShowCreate] = useState(false)
 
   return (
@@ -93,6 +95,7 @@ export function BatchListPage() {
             </div>
           )}
         </AsyncBoundary>
+        <LoadMore query={batchesQuery} noun="batches" />
       </div>
     </div>
   )

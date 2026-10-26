@@ -1,11 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { fetchAllPages, useCursorList } from '../../../lib/pagination'
 import type { BatchWriteBody, EnrolBody, TransferBody, TrainingSessionUpdateBody } from '../api/batch'
 import { batchApi, masterApi, sessionApi } from '../api/batch'
 
 export function useBatches() {
+  return useCursorList(['batches'], batchApi.list, { staleTime: 15_000 })
+}
+
+/** Every batch (all pages) — for pickers such as the transfer target. */
+export function useAllBatches() {
   return useQuery({
-    queryKey: ['batches'],
-    queryFn: batchApi.list,
+    queryKey: ['batches', 'all-pages'],
+    queryFn: () => fetchAllPages(() => batchApi.list()),
     staleTime: 15_000,
   })
 }
@@ -22,7 +28,7 @@ export function useBatch(id: string | undefined) {
 export function useBatchEnrollments(batchId: string | undefined) {
   return useQuery({
     queryKey: ['enrollments', batchId],
-    queryFn: () => batchApi.enrollments({ batch: batchId, isActive: true }),
+    queryFn: () => fetchAllPages(() => batchApi.enrollments({ batch: batchId, isActive: true })),
     enabled: !!batchId,
     staleTime: 15_000,
   })
@@ -57,7 +63,7 @@ export function useDeleteBatch() {
 export function useAgeCategories() {
   return useQuery({
     queryKey: ['master', 'age-categories'],
-    queryFn: masterApi.ageCategories,
+    queryFn: () => fetchAllPages(() => masterApi.ageCategories()),
     staleTime: 5 * 60_000,
   })
 }
@@ -65,7 +71,7 @@ export function useAgeCategories() {
 export function useVenues() {
   return useQuery({
     queryKey: ['master', 'venues'],
-    queryFn: masterApi.venues,
+    queryFn: () => fetchAllPages(() => masterApi.venues()),
     staleTime: 5 * 60_000,
   })
 }
@@ -73,7 +79,7 @@ export function useVenues() {
 export function useCoaches() {
   return useQuery({
     queryKey: ['master', 'coaches'],
-    queryFn: masterApi.coaches,
+    queryFn: () => fetchAllPages(() => masterApi.coaches()),
     staleTime: 5 * 60_000,
   })
 }
@@ -102,12 +108,7 @@ export function useTransfer() {
 }
 
 export function useBatchSessions(batchId: string | undefined) {
-  return useQuery({
-    queryKey: ['sessions', 'batch', batchId],
-    queryFn: () => sessionApi.list({ batch: batchId }),
-    enabled: !!batchId,
-    staleTime: 15_000,
-  })
+  return useCursorList(['sessions', 'batch', batchId], () => sessionApi.list({ batch: batchId }), { enabled: !!batchId, staleTime: 15_000 })
 }
 
 export function useSession(id: string | undefined) {
@@ -122,7 +123,7 @@ export function useSession(id: string | undefined) {
 export function useTrainingTypes() {
   return useQuery({
     queryKey: ['master', 'training-types'],
-    queryFn: masterApi.trainingTypes,
+    queryFn: () => fetchAllPages(() => masterApi.trainingTypes()),
     staleTime: 5 * 60_000,
   })
 }

@@ -9,6 +9,7 @@ import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { useTrialSlots } from '../../trial/hooks/useTrials'
 import { useAddFollowUp, useConvertToTrial, useEnquiry } from '../hooks/useEnquiries'
+import { LoadMore } from '../../../components/LoadMore'
 
 function FollowUpForm({ enquiryId }: { enquiryId: string }) {
   const addFollowUp = useAddFollowUp(enquiryId)
@@ -57,7 +58,8 @@ function FollowUpForm({ enquiryId }: { enquiryId: string }) {
 }
 
 function ConvertToTrialPanel({ enquiryId }: { enquiryId: string }) {
-  const { data: slots, isPending, isError, error, refetch } = useTrialSlots()
+  const trialSlotsQuery = useTrialSlots()
+  const { data: slots, isPending, isError, error, refetch } = trialSlotsQuery
   const convert = useConvertToTrial(enquiryId)
   const navigate = useNavigate()
   const [selectedSlot, setSelectedSlot] = useState('')
@@ -100,6 +102,7 @@ function ConvertToTrialPanel({ enquiryId }: { enquiryId: string }) {
           </div>
         )}
       </AsyncBoundary>
+      <LoadMore query={trialSlotsQuery} noun="slots" />
     </Card>
   )
 }

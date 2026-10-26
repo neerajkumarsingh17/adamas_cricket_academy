@@ -61,7 +61,10 @@ class NotificationLog(TimeStampedModel):
     sent_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        indexes = [models.Index(fields=["recipient", "channel"])]
+        indexes = [
+            models.Index(fields=["recipient", "channel"]),
+            models.Index(fields=["created_at"], name="notificationlog_created_idx"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.channel}:{self.recipient} ({self.status})"

@@ -1,12 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { fetchAllPages, useCursorList } from '../../../lib/pagination'
 import { trialApi, type ScoreInput } from '../api/trial'
 
 export function useTrialSlots(date?: string) {
-  return useQuery({
-    queryKey: ['trials', 'slots', date ?? 'all'],
-    queryFn: () => trialApi.listSlots({ date }),
-    staleTime: 15_000,
-  })
+  return useCursorList(['trials', 'slots', date ?? 'all'], () => trialApi.listSlots({ date }), { staleTime: 15_000 })
 }
 
 export function useCreateSlot() {
@@ -30,11 +27,7 @@ export function useBookSlot() {
 }
 
 export function useTrialRegistrations(params: { slot?: string; outcome?: string } = {}) {
-  return useQuery({
-    queryKey: ['trials', 'registrations', params],
-    queryFn: () => trialApi.listRegistrations(params),
-    staleTime: 15_000,
-  })
+  return useCursorList(['trials', 'registrations', params], () => trialApi.listRegistrations(params), { staleTime: 15_000 })
 }
 
 export function useTrialRegistration(id: string | undefined) {
@@ -74,7 +67,7 @@ export function useDeclareResult(id: string) {
 export function useAssessmentCriteria() {
   return useQuery({
     queryKey: ['master', 'assessment-criteria'],
-    queryFn: trialApi.criteria,
+    queryFn: () => fetchAllPages(() => trialApi.criteria()),
     staleTime: 5 * 60_000,
   })
 }
@@ -82,7 +75,7 @@ export function useAssessmentCriteria() {
 export function useAgeCategories() {
   return useQuery({
     queryKey: ['master', 'age-categories'],
-    queryFn: trialApi.ageCategories,
+    queryFn: () => fetchAllPages(() => trialApi.ageCategories()),
     staleTime: 5 * 60_000,
   })
 }
@@ -90,7 +83,7 @@ export function useAgeCategories() {
 export function useVenues() {
   return useQuery({
     queryKey: ['master', 'venues'],
-    queryFn: trialApi.venues,
+    queryFn: () => fetchAllPages(() => trialApi.venues()),
     staleTime: 5 * 60_000,
   })
 }

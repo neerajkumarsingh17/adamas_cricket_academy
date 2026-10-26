@@ -6,6 +6,7 @@ import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import type { Enquiry } from '../api/enquiry'
 import { useEnquiries } from '../hooks/useEnquiries'
+import { LoadMore } from '../../../components/LoadMore'
 
 const COLUMNS: { status: string; label: string }[] = [
   { status: 'new', label: 'New' },
@@ -50,7 +51,8 @@ function EnquiryCard({ enquiry }: { enquiry: Enquiry }) {
 }
 
 function Column({ status, label }: { status: string; label: string }) {
-  const { data, isPending, isError, error, refetch } = useEnquiries({ status })
+  const enquiriesQuery = useEnquiries({ status })
+  const { data, isPending, isError, error, refetch } = enquiriesQuery
   const style = COLUMN_STYLES[status] ?? COLUMN_STYLES.new
 
   return (
@@ -77,6 +79,7 @@ function Column({ status, label }: { status: string; label: string }) {
           </div>
         )}
       </AsyncBoundary>
+      <LoadMore query={enquiriesQuery} noun="enquiries" />
     </div>
   )
 }

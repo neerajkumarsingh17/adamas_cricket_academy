@@ -1,12 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { fetchAllPages, useCursorList } from '../../../lib/pagination'
 import { enquiryApi, type EnquiryFilters, type EnquiryWrite } from '../api/enquiry'
 
 export function useEnquiries(filters: EnquiryFilters = {}) {
-  return useQuery({
-    queryKey: ['enquiries', filters],
-    queryFn: () => enquiryApi.list(filters),
-    staleTime: 15_000,
-  })
+  return useCursorList(['enquiries', filters], () => enquiryApi.list(filters), { staleTime: 15_000 })
 }
 
 export function useEnquiry(id: string | undefined) {
@@ -20,7 +17,7 @@ export function useEnquiry(id: string | undefined) {
 export function useEnquirySources() {
   return useQuery({
     queryKey: ['master', 'enquiry-sources'],
-    queryFn: enquiryApi.sources,
+    queryFn: () => fetchAllPages(() => enquiryApi.sources()),
     staleTime: 5 * 60_000,
   })
 }

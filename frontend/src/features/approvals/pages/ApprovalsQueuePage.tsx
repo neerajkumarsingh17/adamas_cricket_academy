@@ -7,6 +7,7 @@ import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import type { ApprovalRequest } from '../api/approvals'
 import { useApproveRequest, useApprovals, useRejectRequest } from '../hooks/useApprovals'
+import { LoadMore } from '../../../components/LoadMore'
 
 // Only `admission` and `students` currently raise approval requests
 // (apps.core.management.commands.seed_master_data's ApprovalRule seeds) —
@@ -88,7 +89,8 @@ function ApprovalRow({ approvalRequest }: { approvalRequest: ApprovalRequest }) 
 }
 
 export function ApprovalsQueuePage() {
-  const { data, isPending, isError, error, refetch } = useApprovals()
+  const approvalsQuery = useApprovals()
+  const { data, isPending, isError, error, refetch } = approvalsQuery
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
@@ -126,6 +128,7 @@ export function ApprovalsQueuePage() {
             </div>
           )}
         </AsyncBoundary>
+        <LoadMore query={approvalsQuery} noun="requests" />
       </div>
     </div>
   )

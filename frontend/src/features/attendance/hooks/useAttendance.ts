@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCursorList } from '../../../lib/pagination'
 import type { AttendanceMark, CorrectionStatus } from '../api/attendance'
 import { attendanceApi } from '../api/attendance'
 
@@ -32,11 +33,7 @@ export function useAttendanceReport(batchId: string | undefined, month: string) 
 }
 
 export function useCorrections(status?: CorrectionStatus) {
-  return useQuery({
-    queryKey: ['corrections', status ?? 'all'],
-    queryFn: () => attendanceApi.corrections(status),
-    staleTime: 15_000,
-  })
+  return useCursorList(['corrections', status ?? 'all'], () => attendanceApi.corrections(status), { staleTime: 15_000 })
 }
 
 export function useApproveCorrection() {

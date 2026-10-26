@@ -3,9 +3,11 @@ import { AsyncBoundary, DefaultEmptyState, RowSkeleton } from '../../../componen
 import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import { useStudents } from '../hooks/useStudents'
+import { LoadMore } from '../../../components/LoadMore'
 
 export function StudentListPage() {
-  const { data, isPending, isError, error, refetch } = useStudents()
+  const studentsQuery = useStudents()
+  const { data, isPending, isError, error, refetch } = studentsQuery
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
@@ -44,6 +46,7 @@ export function StudentListPage() {
             </div>
           )}
         </AsyncBoundary>
+        <LoadMore query={studentsQuery} noun="students" />
       </div>
     </div>
   )

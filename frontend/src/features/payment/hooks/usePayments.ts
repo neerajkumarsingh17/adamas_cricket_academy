@@ -1,19 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { fetchAllPages, useCursorList } from '../../../lib/pagination'
 import type { LedgerOnlinePayment, RecordPayment } from '../api/payment'
 import { paymentApi } from '../api/payment'
 
 export function usePayments(status?: string) {
-  return useQuery({
-    queryKey: ['payments', status ?? 'all'],
-    queryFn: () => paymentApi.list({ status }),
-    staleTime: 15_000,
-  })
+  return useCursorList(['payments', status ?? 'all'], () => paymentApi.list({ status }), { staleTime: 15_000 })
 }
 
 export function usePaymentTypes() {
   return useQuery({
     queryKey: ['master', 'payment-types'],
-    queryFn: paymentApi.types,
+    queryFn: () => fetchAllPages(() => paymentApi.types()),
     staleTime: 5 * 60_000,
   })
 }
@@ -48,7 +45,7 @@ export function useOnlinePaymentSetup() {
 export function useOnlinePayments() {
   return useQuery({
     queryKey: ['online-payments', 'list'],
-    queryFn: paymentApi.onlineList,
+    queryFn: () => fetchAllPages(() => paymentApi.onlineList()),
     staleTime: 10_000,
   })
 }

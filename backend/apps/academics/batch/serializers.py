@@ -157,7 +157,9 @@ class BatchEnrollmentSerializer(serializers.ModelSerializer):
     def get_fee_status(self, obj) -> str:
         from apps.finance.payment.services import is_current_month_paid
 
-        return "paid" if is_current_month_paid(obj.student.person) else "due"
+        annotated = getattr(obj, "current_month_paid", None)  # BatchEnrollmentViewSet
+        paid = annotated if annotated is not None else is_current_month_paid(obj.student.person)
+        return "paid" if paid else "due"
 
 
 class TrainingSessionSerializer(serializers.ModelSerializer):

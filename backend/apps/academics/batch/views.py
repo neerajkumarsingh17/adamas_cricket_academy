@@ -121,6 +121,24 @@ class BatchEnrollmentViewSet(_NoDirectWriteMixin, ModuleScopedViewSet):
     module = "batch"
     serializer_class = BatchEnrollmentSerializer
     queryset = BatchEnrollment.objects.select_related("student__person", "batch").all()
+
+    def get_queryset(self):
+        # fee_status for every row in one query instead of one per row —
+        # same condition as finance.payment.services.is_current_month_paid.
+        from django.db.models import Exists, OuterRef
+
+        from apps.finance.payment.services import current_month_paid_payments
+
+        return (
+            super()
+            .get_queryset()
+            .annotate(
+                current_month_paid=Exists(
+                    current_month_paid_payments().filter(person_id=OuterRef("student__person_id"))
+                )
+            )
+        )
+
     filterset_class = BatchEnrollmentFilter
 
     def filter_to_own(self, queryset):

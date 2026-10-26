@@ -8,6 +8,7 @@ import { PageHeader } from '../../../components/PageHeader'
 import { Pill } from '../../../components/Pill'
 import type { AttendanceCorrection, CorrectionStatus } from '../api/attendance'
 import { useApproveCorrection, useCorrections, useRejectCorrection } from '../hooks/useAttendance'
+import { LoadMore } from '../../../components/LoadMore'
 
 const STATUS_FILTERS: { value: CorrectionStatus | ''; label: string }[] = [
   { value: 'pending', label: 'Pending' },
@@ -76,7 +77,8 @@ function CorrectionRow({ correction }: { correction: AttendanceCorrection }) {
 
 export function CorrectionsQueuePage() {
   const [status, setStatus] = useState<CorrectionStatus | ''>('pending')
-  const { data, isPending, isError, error, refetch } = useCorrections(status || undefined)
+  const correctionsQuery = useCorrections(status || undefined)
+  const { data, isPending, isError, error, refetch } = correctionsQuery
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
@@ -124,6 +126,7 @@ export function CorrectionsQueuePage() {
             </ul>
           )}
         </AsyncBoundary>
+        <LoadMore query={correctionsQuery} noun="corrections" />
       </div>
     </div>
   )

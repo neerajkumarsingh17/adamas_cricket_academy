@@ -57,9 +57,63 @@ class AdmissionViewSet(ModuleScopedViewSet):
     """
 
     module = "admission"
-    queryset = Admission.objects.select_related("person", "programme", "trial_registration").all()
+    queryset = Admission.objects.select_related(
+        "person", "programme", "trial_registration", "intake__age_category", "payment"
+    ).all()
     filterset_class = AdmissionFilter
     http_method_names = ["get", "post", "put", "patch", "head", "options"]
+
+    def get_queryset(self):
+        # Everything AdmissionSerializer reads per row, loaded in bulk —
+        # without this the list ran ~9 queries per admission. List only:
+        # the actions on a single admission change it and then serialize
+        # it, and must not read a total/checklist loaded before the change.
+        if self.action != "list":
+            return super().get_queryset()
+
+        from django.db.models import DecimalField, Exists, OuterRef, Prefetch, Sum, Value
+        from django.db.models.functions import Coalesce
+
+        from apps.finance.payment.models import OnlinePayment, OnlinePaymentStatus
+        from apps.iam.models import User
+
+        from .models import AdmissionChecklistItem
+
+        return (
+            super()
+            .get_queryset()
+            .prefetch_related(
+                Prefetch(
+                    "checklist_items",
+                    queryset=AdmissionChecklistItem.objects.select_related(
+                        "document_type", "document"
+                    ),
+                ),
+                Prefetch(
+                    "online_payments",
+                    queryset=OnlinePayment.objects.exclude(
+                        status__in=[OnlinePaymentStatus.CANCELLED, OnlinePaymentStatus.EXPIRED]
+                    ),
+                    to_attr="active_online_payments",
+                ),
+            )
+            .annotate(
+                has_portal_user=Exists(User.objects.filter(person_id=OuterRef("person_id"))),
+                annotated_fee_total=Coalesce(
+                    Sum("fee_lines__amount"),
+                    Value(0),
+                    output_field=DecimalField(max_digits=12, decimal_places=2),
+                ),
+            )
+        )
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        # next_actions runs the state machine's guards — several queries
+        # per admission. Only the single-admission screens use it, so list
+        # rows skip it (AdmissionSerializer.get_next_actions).
+        context["include_next_actions"] = self.action != "list"
+        return context
 
     def get_serializer_class(self):
         if self.action == "partial_update":

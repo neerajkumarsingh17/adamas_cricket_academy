@@ -1,12 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useCursorList } from '../../../lib/pagination'
 import { approvalsApi } from '../api/approvals'
 
 export function useApprovals() {
-  return useQuery({
-    queryKey: ['approvals'],
-    queryFn: approvalsApi.list,
-    staleTime: 15_000,
-  })
+  return useCursorList(['approvals'], approvalsApi.list, { staleTime: 15_000 })
 }
 
 export function useApproveRequest() {

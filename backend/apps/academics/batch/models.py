@@ -76,6 +76,9 @@ class BatchEnrollment(AuditedModel):
                 name="unique_active_enrollment_per_student",
             ),
         ]
+        indexes = [
+            models.Index(fields=["created_at"], name="enrollment_created_idx"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.student} in {self.batch}"
@@ -108,6 +111,10 @@ class TrainingSession(AuditedModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["batch", "date"], name="unique_batch_date_session"),
+        ]
+        indexes = [
+            # UpcomingSessionPagination orders by date, start_time.
+            models.Index(fields=["date", "start_time"], name="session_date_start_idx"),
         ]
 
     def __str__(self) -> str:

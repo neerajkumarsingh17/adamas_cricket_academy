@@ -26,12 +26,13 @@ import {
   useBatch,
   useBatchEnrollments,
   useBatchSessions,
-  useBatches,
+  useAllBatches,
   useDeleteBatch,
   useDeleteSession,
   useEnrol,
   useTransfer,
 } from '../hooks/useBatches'
+import { LoadMore } from '../../../components/LoadMore'
 
 function errorMessage(error: unknown, fallback: string) {
   return error instanceof ApiError ? error.message : fallback
@@ -153,7 +154,7 @@ function TransferForm({
   enrollment: BatchEnrollment
   onDone: () => void
 }) {
-  const { data: batches } = useBatches()
+  const { data: batches } = useAllBatches()
   const transfer = useTransfer()
   const [toBatch, setToBatch] = useState('')
   const [effectiveDate, setEffectiveDate] = useState(today())
@@ -328,27 +329,31 @@ function SessionRow({ session }: { session: TrainingSession }) {
 }
 
 function SessionsList({ batchId }: { batchId: string }) {
-  const { data, isPending, isError, error, refetch } = useBatchSessions(batchId)
+  const batchSessionsQuery = useBatchSessions(batchId)
+  const { data, isPending, isError, error, refetch } = batchSessionsQuery
 
   return (
-    <AsyncBoundary
-      isPending={isPending}
-      isError={isError}
-      error={error}
-      data={data}
-      onRetry={() => void refetch()}
-      skeleton={<RowSkeleton rows={3} />}
-      isEmpty={(d) => d.results.length === 0}
-      empty={<DefaultEmptyState message="No sessions generated for this batch yet." />}
-    >
-      {(d) => (
-        <ul className="space-y-2">
-          {d.results.map((session) => (
-            <SessionRow key={session.id} session={session} />
-          ))}
-        </ul>
-      )}
-    </AsyncBoundary>
+    <>
+      <AsyncBoundary
+        isPending={isPending}
+        isError={isError}
+        error={error}
+        data={data}
+        onRetry={() => void refetch()}
+        skeleton={<RowSkeleton rows={3} />}
+        isEmpty={(d) => d.results.length === 0}
+        empty={<DefaultEmptyState message="No sessions generated for this batch yet." />}
+      >
+        {(d) => (
+          <ul className="space-y-2">
+            {d.results.map((session) => (
+              <SessionRow key={session.id} session={session} />
+            ))}
+          </ul>
+        )}
+      </AsyncBoundary>
+      <LoadMore query={batchSessionsQuery} noun="sessions" />
+    </>
   )
 }
 

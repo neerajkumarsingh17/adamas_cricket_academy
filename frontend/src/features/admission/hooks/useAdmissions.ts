@@ -1,12 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { fetchAllPages, useCursorList } from '../../../lib/pagination'
 import { admissionApi } from '../api/admission'
 
 export function useAdmissions(step?: string) {
-  return useQuery({
-    queryKey: ['admissions', step ?? 'all'],
-    queryFn: () => admissionApi.list({ step }),
-    staleTime: 15_000,
-  })
+  return useCursorList(['admissions', step ?? 'all'], () => admissionApi.list({ step }), { staleTime: 15_000 })
 }
 
 export function useAdmission(id: string | undefined) {
@@ -20,7 +17,7 @@ export function useAdmission(id: string | undefined) {
 export function useProgrammes() {
   return useQuery({
     queryKey: ['master', 'programmes'],
-    queryFn: () => admissionApi.programmes(),
+    queryFn: () => fetchAllPages(() => admissionApi.programmes()),
     staleTime: 5 * 60_000, // master data, changes rarely
   })
 }

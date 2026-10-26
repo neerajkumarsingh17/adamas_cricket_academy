@@ -53,7 +53,10 @@ class Document(AuditedModel):
     expires_on = models.DateField(null=True, blank=True)
 
     class Meta:
-        indexes = [models.Index(fields=["owner_content_type", "owner_object_id"])]
+        indexes = [
+            models.Index(fields=["owner_content_type", "owner_object_id"]),
+            models.Index(fields=["status", "created_at"], name="document_status_created_idx"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.document_type}: {self.original_filename}"

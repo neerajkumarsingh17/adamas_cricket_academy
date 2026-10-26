@@ -1,3 +1,4 @@
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 
 from apps.core.models import AuditedModel, EnquirySource
@@ -98,6 +99,22 @@ class Enquiry(AuditedModel):
         blank=True,
         related_name="owned_enquiries",
     )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["created_at"], name="enquiry_created_idx"),
+            models.Index(fields=["status", "created_at"], name="enquiry_status_created_idx"),
+            # "contains" search (EnquiryFilter.filter_search) — pg_trgm, core 0001.
+            GinIndex(
+                fields=["student_name"], name="enquiry_student_trgm", opclasses=["gin_trgm_ops"]
+            ),
+            GinIndex(
+                fields=["guardian_name"], name="enquiry_guardian_trgm", opclasses=["gin_trgm_ops"]
+            ),
+            GinIndex(
+                fields=["guardian_mobile"], name="enquiry_mobile_trgm", opclasses=["gin_trgm_ops"]
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"{self.enquiry_no} — {self.student_name}"

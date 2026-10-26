@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { fetchAllPages, useCursorList } from '../../../lib/pagination'
 import {
   masterApi,
   studentApi,
@@ -8,9 +9,14 @@ import {
 } from '../api/student'
 
 export function useStudents(status?: string) {
+  return useCursorList(['students', status ?? 'all'], () => studentApi.list({ status }), { staleTime: 15_000 })
+}
+
+/** Every student (all pages) — for pickers, which must offer everyone. */
+export function useAllStudents(status?: string) {
   return useQuery({
-    queryKey: ['students', status ?? 'all'],
-    queryFn: () => studentApi.list({ status }),
+    queryKey: ['students', 'all-pages', status ?? 'all'],
+    queryFn: () => fetchAllPages(() => studentApi.list({ status })),
     staleTime: 15_000,
   })
 }
@@ -124,7 +130,7 @@ export function useUpdateAccommodation(id: string) {
 export function useBuildings() {
   return useQuery({
     queryKey: ['master', 'buildings'],
-    queryFn: masterApi.buildings,
+    queryFn: () => fetchAllPages(() => masterApi.buildings()),
     staleTime: 5 * 60_000,
   })
 }

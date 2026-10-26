@@ -58,6 +58,11 @@ class TrialRegistration(AuditedModel):
     payment_reference = models.CharField(max_length=100, blank=True)
     attended = models.BooleanField(default=False)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["created_at"], name="trialreg_created_idx"),
+        ]
+
     def __str__(self) -> str:
         return self.trial_id
 

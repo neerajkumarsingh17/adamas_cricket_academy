@@ -83,9 +83,20 @@ class TrialRegistrationViewSet(ModuleScopedViewSet):
 
     module = "trial"
     serializer_class = TrialRegistrationSerializer
-    queryset = TrialRegistration.objects.select_related(
-        "person", "enquiry", "slot", "slot__venue", "slot__age_category", "assessment", "result"
-    ).all()
+    queryset = (
+        TrialRegistration.objects.select_related(
+            "person",
+            "enquiry",
+            "slot",
+            "slot__venue",
+            "slot__age_category",
+            "assessment__assessed_by__person",
+            "result",
+        )
+        # Per-row reads in TrialRegistrationSerializer, loaded in bulk.
+        .prefetch_related("assessment__scores__criterion", "admissions")
+        .all()
+    )
     filterset_class = TrialRegistrationFilter
     http_method_names = ["get", "post", "patch", "head", "options"]
 

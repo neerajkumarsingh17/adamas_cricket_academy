@@ -133,8 +133,11 @@ class TrialRegistrationSerializer(serializers.ModelSerializer):
         never names this field — added so the UI has something to open an
         admission *from*, which nothing exposed before).
         """
-        admission = obj.admissions.first()
-        return str(admission.id) if admission else None
+        # .all() (not .first()) so the view's prefetch is used — .first()
+        # re-orders and would query again for every row.
+        # Lowest pk first, exactly as .first() picked on this unordered model.
+        admissions = sorted(obj.admissions.all(), key=lambda a: a.pk)
+        return str(admissions[0].id) if admissions else None
 
 
 class AttendanceSerializer(serializers.Serializer):

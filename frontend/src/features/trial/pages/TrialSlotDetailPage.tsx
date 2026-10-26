@@ -13,6 +13,7 @@ import {
   useSetAttendance,
   useTrialRegistrations,
 } from '../hooks/useTrials'
+import { LoadMore } from '../../../components/LoadMore'
 
 const OUTCOMES = ['selected', 'shortlisted', 'waitlisted', 'not_selected', 're_trial']
 
@@ -149,7 +150,8 @@ function AdmissionCell({ registration }: { registration: TrialRegistration }) {
 
 export function TrialSlotDetailPage() {
   const { slotId } = useParams<{ slotId: string }>()
-  const { data, isPending, isError, error, refetch } = useTrialRegistrations({ slot: slotId })
+  const trialRegistrationsQuery = useTrialRegistrations({ slot: slotId })
+  const { data, isPending, isError, error, refetch } = trialRegistrationsQuery
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
@@ -187,6 +189,7 @@ export function TrialSlotDetailPage() {
             </div>
           )}
         </AsyncBoundary>
+        <LoadMore query={trialRegistrationsQuery} noun="registrations" />
       </div>
     </div>
   )
